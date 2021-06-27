@@ -21,12 +21,6 @@ def organize(path, t, m, d, o, s):
             for c in range(len(file)):
                 if get_ext(file[c]) == t:
                     sh.move(os.path.join(root, file[c]), f'({t}) Files')
-
-
-
-
-
-
     else:
         if m:
             os.mkdir('Midia') if 'Midia' not in files else files.remove('Midia')

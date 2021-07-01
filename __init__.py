@@ -15,6 +15,7 @@ def Global():
 # Global Commands
 Global.add_command(random)
 Global.add_command(organize)
+Global.add_command(autoclick)
 
 
 # Groups declaration

@@ -3,7 +3,7 @@ from file_handler import *
 from app_math import *
 from ExtraTools import *
 from webTools import *
-from logger import *
+from ExtraTools.logger import *
 
 
 
@@ -16,6 +16,7 @@ def Global():
 Global.add_command(random)
 Global.add_command(organize)
 Global.add_command(autoclick)
+Global.add_command(keyhold)
 
 
 # Groups declaration

@@ -3,7 +3,7 @@ import pynput.keyboard as kb
 from keyboard import is_pressed
 
 
-@click.command(help='Key-holder')
+@click.command(help='hold a keyboard key')
 @click.argument('key', metavar='<key>', type=click.STRING)
 def keyhold(key):
     k = kb.Controller()
@@ -17,3 +17,4 @@ def keyhold(key):
             k.press(key)
     except:
         pass
+    pass

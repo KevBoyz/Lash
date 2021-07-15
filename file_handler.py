@@ -69,9 +69,9 @@ def Zip():
     ...
 
 
-@Zip.command(help='Compress all path FILES in zip')
+@Zip.command(help='Compress files in zip archive')
 @click.argument('path', metavar='<path>', type=click.Path(exists=True))
-@click.option('-fn', type=click.STRING, default='ZipFile', help='Zip file name')
+@click.option('-fn', type=click.STRING, default='ZipFile', help='Output file name')
 @click.option('-v', is_flag=True, default=True, show_default=True, help='Verbose mode')
 def compress(path, fn, v):
     os.chdir(path)
@@ -95,7 +95,7 @@ def compress(path, fn, v):
     zip.close()
 
 
-@Zip.command()
+@Zip.command(help='Extract zipfile')
 @click.argument('path', metavar='<path>', type=click.Path(exists=True))
 @click.argument('fn', metavar='<file_name>', type=click.STRING)
 @click.option('-v', '-verbose', is_flag=True, default=False, show_default=True, help='Verbose mode')

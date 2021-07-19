@@ -1,6 +1,6 @@
 import os, click
 from pynput.keyboard import Listener
-from Exportables.ikeyboard import *
+from ..Exportables.ikeyboard import *
 
 
 @click.group('log', help='Simple loggers to rec events')
@@ -17,5 +17,3 @@ def keyboard(p):
     listener.start()
     listener.join()
     print(f'> Process Finished <')
-
-

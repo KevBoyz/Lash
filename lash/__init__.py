@@ -1,9 +1,8 @@
 from click import group
-from file_handler import *
-from app_math import *
-from ExtraTools import *
-from webTools import *
-from ExtraTools.logger import *
+from .file_handler import *
+from .app_math import *
+from .webTools import *
+from .ExtraTools import *
 
 
 

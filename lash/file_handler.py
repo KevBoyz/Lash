@@ -1,5 +1,5 @@
 import click, zipfile, os, shutil as sh
-from Exportables.fileTools import *
+from .Exportables.fileTools import *
 
 
 @click.command(help='Organize your files')
@@ -17,7 +17,7 @@ def organize(path, t, m, d, o, s):
         if t.find('.'):
             t = '.' + t
         os.mkdir(f'({t}) Files') if f'({t}) Files' not in files else None
-        for root, folders, file in os.walk('.'):
+        for root, folders, file in os.walk('..'):
             for c in range(len(file)):
                 if get_ext(file[c]) == t:
                     sh.move(os.path.join(root, file[c]), f'({t}) Files')
@@ -25,14 +25,14 @@ def organize(path, t, m, d, o, s):
         if m:
             os.mkdir('Midia') if 'Midia' not in files else files.remove('Midia')
             os.chdir('Midia')
-            if os.listdir('.') == 0:
+            if os.listdir('..') == 0:
                 os.mkdir('Images')
                 os.mkdir('Videos')
                 os.mkdir('Musics')
             else:
-                os.mkdir('Images') if 'Images' not in os.listdir('.') else None
-                os.mkdir('Videos') if 'Videos' not in os.listdir('.') else None
-                os.mkdir('Musics') if 'Musics' not in os.listdir('.') else None
+                os.mkdir('Images') if 'Images' not in os.listdir('..') else None
+                os.mkdir('Videos') if 'Videos' not in os.listdir('..') else None
+                os.mkdir('Musics') if 'Musics' not in os.listdir('..') else None
             os.chdir(path)
         if d:
             os.mkdir('Docs') if 'Docs' not in files else files.remove('Docs')
@@ -82,12 +82,12 @@ def compress(path, fn, v):
     print(f'Compacting archives, please wait...')
     print() if v else None
     print('  - - Process list - -') if v else None
-    for folder, sub_folders, files in os.walk('.'):
+    for folder, sub_folders, files in os.walk('..'):
         for file in files:
             if file != fn and file and file not in zip.namelist():
                 print(f'Compacting: {file}') if v else None
                 zip.write(os.path.join(folder, file),
-                          os.path.relpath(os.path.join(folder, file), '.'),
+                          os.path.relpath(os.path.join(folder, file), '..'),
                           compress_type=zipfile.ZIP_DEFLATED)
                 arch += 1
     print() if v else None

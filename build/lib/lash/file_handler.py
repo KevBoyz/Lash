@@ -11,7 +11,6 @@ from .Exportables.fileTools import *
 @click.option('-s', is_flag=True, default=False, show_default=True, help='Organize sub-folders       ')
 def organize(path, t, m, d, o, s):
     """Organize your files
-
     \b
     Organize a folder in a simple way, by predefined execution that separates files
     according to their context or in a personalized way searching for a specific type.

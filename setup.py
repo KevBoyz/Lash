@@ -1,11 +1,11 @@
-from setuptools import setup
+import setuptools
+import os.path
 
-setup(
+setuptools.setup(
     name='lash',
     version='1.0.0',
     author='Kevin Emmanuel',
     author_email='kevinho_gameplays@hotmail.com',
-    packages=['lash'],
     description='Tools package to desktop',
     url='https://github.com/KevBoyz/Lash',
     license='MIT',
@@ -17,6 +17,12 @@ setup(
         'schedule~=1.1.0',
         'setuptools~=56.0.0'
     ],
+
+    packages=setuptools.find_packages(
+        os.path.join(
+            os.path.dirname(__file__))),
+    zip_safe=True,
+
     classifiers=[
         'Development Status :: 5 - Production/Stable',
         'Programming Language :: Python :: 3.9',

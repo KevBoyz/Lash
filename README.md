@@ -1,4 +1,4 @@
-# Description
+# About Lash
 This package provides a set of desktop tools that simplify and  
 automate repetitive processes. Lash also has utility functions  
 that cover some needs of desktop users. 

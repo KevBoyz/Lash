@@ -88,12 +88,12 @@ def compress(path, fn, v):
     print(f'Compacting archives, please wait...')
     print() if v else None
     print('  - - Process list - -') if v else None
-    for folder, sub_folders, files in os.walk('..'):
+    for folder, sub_folders, files in os.walk('.'):
         for file in files:
             if file != fn and file and file not in zip.namelist():
                 print(f'Compacting: {file}') if v else None
                 zip.write(os.path.join(folder, file),
-                          os.path.relpath(os.path.join(folder, file), '..'),
+                          os.path.relpath(os.path.join(folder, file), '.'),
                           compress_type=zipfile.ZIP_DEFLATED)
                 arch += 1
     print() if v else None

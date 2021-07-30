@@ -8,6 +8,7 @@ from .ExtraTools import *
 
 @group('global')
 def Global():
+    """ - Lash 1.0.0 by KevBoyz ~ https://github.com/KevBoyz/Lash"""
     ...
 
 

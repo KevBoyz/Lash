@@ -15,6 +15,7 @@ def organize(path, t, m, d, o, s):
     \b
     Organize a folder in a simple way, by predefined execution that separates files
     according to their context or in a personalized way searching for a specific type.
+    \b
     """
     os.chdir(path)
     files = os.listdir()
@@ -77,13 +78,11 @@ def Zip():
 
 @Zip.command(help='Compress files in zip archive')
 @click.argument('path', metavar='<path>', type=click.Path(exists=True))
-@click.option('-fn', type=click.STRING, default='ZipFile', help='Output file name')
-@click.option('-v', is_flag=True, default=True, show_default=True, help='Verbose mode ')
-def compress(path, fn, v):
+@click.option('-v', is_flag=True, default=False, show_default=True, help='Verbose mode ')
+def compress(path, v):
+    fn = get_ext(path=path) + '.zip'
     os.chdir(path)
     arch = 0
-    if fn.rfind('.zip'):
-        fn += '.zip'
     zip = zipfile.ZipFile(fn, 'w')
     print(f'Compacting archives, please wait...')
     print() if v else None
@@ -97,8 +96,14 @@ def compress(path, fn, v):
                           compress_type=zipfile.ZIP_DEFLATED)
                 arch += 1
     print() if v else None
-    print(f'process completed, {arch} files compacted')
+    print(f'Process completed, {arch} files compacted')
     zip.close()
+    print('Moving zipfile to parent folder...')
+    if fn in os.listdir('..'):
+        raise Exception(f'Error "{fn}" already exists in {os.path.dirname(os.getcwd())}')
+    else:
+        sh.move(fn, '..')
+        print('Concluded successfully')
 
 
 @Zip.command(help='Extract zipfile')

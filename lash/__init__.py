@@ -4,6 +4,8 @@ from .app_math import *
 from .webTools import *
 from .ExtraTools import *
 
+CONTEXT_SETTINGS = dict(help_option_names=['-help'])
+
 
 @group('global')
 def Global():

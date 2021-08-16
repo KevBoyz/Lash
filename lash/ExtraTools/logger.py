@@ -1,6 +1,7 @@
 import os, click
 from pynput.keyboard import Listener
 from ..Exportables.ikeyboard import *
+from ..executor import playbp
 
 
 @click.group('log', help='Simple loggers to rec events')
@@ -16,4 +17,5 @@ def keyboard(p):
     listener = Listener(on_press=key_down, on_release=key_up)
     listener.start()
     listener.join()
+    playbp()
     print(f'> Process Finished <')

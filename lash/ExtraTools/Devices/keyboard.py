@@ -1,6 +1,7 @@
 import click
 import pynput.keyboard as kb
 from keyboard import is_pressed
+from lash.executor import playbp
 
 
 @click.command(help='hold a keyboard key')
@@ -10,6 +11,7 @@ def keyhold(key):
     print('initialized, f4 to start, f3 to stop')
     while True:
         if is_pressed('f4'):
+            playbp()
             print('[== -- *typing* -- ==]')
             break
     try:

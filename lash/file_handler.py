@@ -19,7 +19,6 @@ def organize(path, t, m, d, o, s):
     \b
     Organize a folder in a simple way, by predefined execution that separates files
     according to their context or in a personalized way searching for a specific type.
-    \b
     """
     os.chdir(path)
     files = os.listdir()

@@ -11,10 +11,18 @@ try:
 except IOError:
     README = ''
 
+# Load the release notes
+try:
+    with open(os.path.join(
+            os.path.dirname(__file__),
+            'Release-notes.md'), 'rb') as f:
+        CHANGES = f.read().decode('utf-8')
+except IOError:
+    CHANGES = ''
 
 setuptools.setup(
     name='lash',
-    version='1.0.0',
+    version='1.1.0',
     author='Kevin Emmanuel',
     author_email='kevinho_gameplays@hotmail.com',
     description='Tools package to desktop',
@@ -34,7 +42,8 @@ setuptools.setup(
     packages=setuptools.find_packages(
         os.path.join(os.path.dirname(__file__))),
     zip_safe=True,
-    data_files=[('additional_files', [r'lash\additional_files\beep.wav'])],
+    data_files=[('additional_files', [r'lash\additional_files\beep.wav']),  # Non python files to pkg
+                ('additional_files', [r'lash\additional_files\web_pkg.zip'])],
     classifiers=[
         'Development Status :: 5 - Production/Stable',
         'Programming Language :: Python :: 3.9',

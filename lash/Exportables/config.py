@@ -1,8 +1,4 @@
-import os
-from playsound2 import playsound
-
-
-# Configure file, edit only the values of variables.
+# Configure file, edit only the values of keys.
 
 
 def config():

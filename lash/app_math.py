@@ -2,7 +2,6 @@ import click
 from random import randint
 
 
-
 # Groups
 
 

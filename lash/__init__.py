@@ -7,7 +7,8 @@ from .ExtraTools import *
 
 @group('global')
 def Global():
-    """ - Lash 1.1.0 by KevBoyz ~ https://github.com/KevBoyz/Lash\b
+    """\b
+        - Lash 1.1.0 by KevBoyz ~ https://github.com/KevBoyz/Lash\b
         Edit the package configs manually in /Exportables/config.py"""
     ...
 

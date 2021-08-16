@@ -34,6 +34,7 @@ setuptools.setup(
     packages=setuptools.find_packages(
         os.path.join(os.path.dirname(__file__))),
     zip_safe=True,
+    data_files=[('additional_files', [r'lash\additional_files\beep.wav'])],
     classifiers=[
         'Development Status :: 5 - Production/Stable',
         'Programming Language :: Python :: 3.9',

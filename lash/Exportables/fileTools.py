@@ -1,4 +1,7 @@
-import os
+from lash.Exportables.config import config
+from playsound2 import playsound
+
+config = config()
 
 
 def bar_template():
@@ -21,9 +24,7 @@ def file_types():
             'docs': ('.pdf', '.ppt', '.docx', '.txt', '.xls', '.doc')}
 
 
-def count_files(path, n=0):
-    for r, d, f in os.walk(path):
-        n += len(d) + len(f)
-    print(n)
+def playbp():
+    playsound(config['beep_path'])
 
 

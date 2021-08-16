@@ -1,5 +1,9 @@
 import click, zipfile, os, shutil as sh
 from .Exportables.fileTools import *
+from .Exportables.config import config
+from .executor import playbp
+
+config = config()
 
 
 @click.command()
@@ -66,6 +70,7 @@ def organize(path, t, m, d, o, s):
                         sh.move(os.path.join(path, files[c]), os.path.join('Sub-folders', files[c]))
                     else:
                         continue
+    playbp()
 
 
 # Groups
@@ -76,10 +81,13 @@ def Zip():
     ...
 
 
-@Zip.command(help='Compress files in zip archive')
+@Zip.command()
 @click.argument('path', metavar='<path>', type=click.Path(exists=True))
 @click.option('-v', is_flag=True, default=False, show_default=True, help='Verbose mode ')
 def compress(path, v):
+    """Compress files in zip archive
+    Recommended usage: zip compress ./folder
+    """
     fn = get_ext(path=path) + '.zip'
     os.chdir(path)
     arch = 0
@@ -89,7 +97,7 @@ def compress(path, v):
     print('  - - Process list - -') if v else None
     for folder, sub_folders, files in os.walk('.'):
         for file in files:
-            if file != fn and file and file not in zip.namelist():
+            if file != fn and file not in zip.namelist():
                 print(f'Compacting: {file}') if v else None
                 zip.write(os.path.join(folder, file),
                           os.path.relpath(os.path.join(folder, file), '.'),
@@ -100,21 +108,25 @@ def compress(path, v):
     zip.close()
     print('Moving zipfile to parent folder...')
     if fn in os.listdir('..'):
-        raise Exception(f'Error "{fn}" already exists in {os.path.dirname(os.getcwd())}')
+        try:
+            raise Exception(f'Error "{fn}" already exists in {os.path.dirname(os.getcwd())}')
+        except Exception as e:
+            print(e)
     else:
         sh.move(fn, '..')
         print('Concluded successfully')
+        playbp()
 
 
 @Zip.command(help='Extract zipfile')
-@click.argument('path', metavar='<path>', type=click.Path(exists=True))
 @click.argument('fn', metavar='<file_name>', type=click.STRING)
+@click.argument('path', metavar='<path>', type=click.Path(exists=True), default=".", required=False)
 @click.option('-v', '-verbose', is_flag=True, default=False, show_default=True, help='Verbose mode ')
 def extract(path, fn, v, ex=0):
     os.chdir(path)
     if fn.rfind('.zip'):
         fn += '.zip'
-    assert zipfile.is_zipfile(fn), f'Assertion error, can\'t find <file> on <path>'
+    assert zipfile.is_zipfile(fn), f'Assertion error, can\'t find {fn} on {os.getcwd()}'
     zip = zipfile.ZipFile(fn, 'r')
     list = zip.namelist()
     click.secho(f'{len(list)} Files founded in {fn}') if v else None  # Verbose
@@ -130,3 +142,4 @@ def extract(path, fn, v, ex=0):
                 print(e) if v else None
     zip.close()
     click.secho(f'{ex} files extracted')
+    playbp()

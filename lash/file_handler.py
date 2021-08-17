@@ -7,69 +7,76 @@ config = config()
 
 
 @click.command()
-@click.argument('path', metavar='<path>', type=click.Path(exists=True))
+@click.argument('path', metavar='<path>', type=click.Path(exists=True), required=False, default='.')
 @click.option('-t', type=click.STRING, help='[Flag] Organize files per type')
 @click.option('-m', is_flag=True, default=False, show_default=True, help='Midia organize             ')
 @click.option('-d', is_flag=True, default=True, show_default=True, help='Docs organize              ')
 @click.option('-o', is_flag=True, default=True, show_default=True, help='Create ~Others~ folder     ')
 @click.option('-s', is_flag=True, default=False, show_default=True, help='Organize sub-folders       ')
-def organize(path, t, m, d, o, s):
+@click.option('-v', is_flag=True, default=True, show_default=True, help='Verbose mode       ')
+def organize(path, t, m, d, o, s, v):
     """Organize your files
-
     \b
     Organize a folder in a simple way, by predefined execution that separates files
     according to their context or in a personalized way searching for a specific type.
+    [!Important] - Do not use ('') to declarate TYPE on -t option set the value like: -t pdf
     """
-    os.chdir(path)
-    files = os.listdir()
-    ft = file_types()
-    if t:
-        if t.find('.'):
-            t = '.' + t
-        os.mkdir(f'({t}) Files') if f'({t}) Files' not in files else None
-        for root, folders, file in os.walk('.'):
-            for c in range(len(file)):
-                if get_ext(file[c]) == t:
-                    sh.move(os.path.join(root, file[c]), f'({t}) Files')
-    else:
-        if m:
-            os.mkdir('Midia') if 'Midia' not in files else files.remove('Midia')
-            os.chdir('Midia')
-            if os.listdir('..') == 0:
-                os.mkdir('Images')
-                os.mkdir('Videos')
-                os.mkdir('Musics')
-            else:
-                os.mkdir('Images') if 'Images' not in os.listdir('..') else None
-                os.mkdir('Videos') if 'Videos' not in os.listdir('..') else None
-                os.mkdir('Musics') if 'Musics' not in os.listdir('..') else None
-            os.chdir(path)
-        if d:
-            os.mkdir('Docs') if 'Docs' not in files else files.remove('Docs')
-        if o:
-            os.mkdir('Others') if 'Others' not in files else files.remove('Others')
-        if s:
-            os.mkdir('Sub-Folders') if 'Sub-Folders' not in files else files.remove('Sub-Folders')
-
-        with click.progressbar(range(len(files)), empty_char='─', fill_char='█', bar_template=bar_template()) as p:
-            for c in p:
-                if not os.path.isdir(files[c]):
-                    if get_ext(files[c]) in ft['midia']['images']:
-                        sh.move(os.path.join(path, files[c]), os.path.join('Midia', 'Images', files[c]))
-                    elif get_ext(files[c]) in ft['midia']['videos']:
-                        sh.move(os.path.join(path, files[c]), os.path.join('Midia', 'Videos', files[c]))
-                    elif get_ext(files[c]) in ft['midia']['musics']:
-                        sh.move(os.path.join(path, files[c]), os.path.join('Midia', 'Musics', files[c]))
-                    elif get_ext(files[c]) in ft['docs']:
-                        sh.move(os.path.join(path, files[c]), os.path.join('Docs', files[c]))
-                    else:
-                        sh.move(os.path.join(path, files[c]), os.path.join('Others', files[c]))
+    try:
+        os.chdir(path)
+        files = os.listdir()
+        if t:
+            if t.find('.'):
+                t = '.' + t  # t -> .t
+            cfiles = list()
+            os.mkdir(f'({t}) Files') if f'({t}) Files' not in files else None
+            for root, folders, file in os.walk('.'):
+                for c in range(len(file)):
+                    if get_ext(file[c]) == t and file[c] not in cfiles:
+                        print(f'Moving: {file[c]}') if v else None
+                        sh.move(os.path.join(root, file[c]), f'({t}) Files')
+                        cfiles.append(file[c])
+        else:
+            ft = file_types()
+            if m:
+                os.mkdir('Midia') if 'Midia' not in files else files.remove('Midia')
+                os.chdir('Midia')
+                if os.listdir('..') == 0:
+                    os.mkdir('Images')
+                    os.mkdir('Videos')
+                    os.mkdir('Musics')
                 else:
-                    if s:
-                        sh.move(os.path.join(path, files[c]), os.path.join('Sub-folders', files[c]))
+                    os.mkdir('Images') if 'Images' not in os.listdir('..') else None
+                    os.mkdir('Videos') if 'Videos' not in os.listdir('..') else None
+                    os.mkdir('Musics') if 'Musics' not in os.listdir('..') else None
+                os.chdir(path)
+            if d:
+                os.mkdir('Docs') if 'Docs' not in files else files.remove('Docs')
+            if o:
+                os.mkdir('Others') if 'Others' not in files else files.remove('Others')
+            if s:
+                os.mkdir('Sub-Folders') if 'Sub-Folders' not in files else files.remove('Sub-Folders')
+
+            with click.progressbar(range(len(files)), empty_char='─', fill_char='█', bar_template=bar_template()) as p:
+                for c in p:
+                    print(c, p)
+                    if not os.path.isdir(files[c]):
+                        if get_ext(files[c]) in ft['midia']['images']:
+                            sh.move(os.path.join(path, files[c]), os.path.join('Midia', 'Images', files[c]))
+                        elif get_ext(files[c]) in ft['midia']['videos']:
+                            sh.move(os.path.join(path, files[c]), os.path.join('Midia', 'Videos', files[c]))
+                        elif get_ext(files[c]) in ft['midia']['musics']:
+                            sh.move(os.path.join(path, files[c]), os.path.join('Midia', 'Musics', files[c]))
+                        elif get_ext(files[c]) in ft['docs']:
+                            sh.move(os.path.join(path, files[c]), os.path.join('Docs', files[c]))
+                        else:
+                            sh.move(os.path.join(path, files[c]), os.path.join('Others', files[c]))
                     else:
-                        continue
-    playbp()
+                        if s:
+                            sh.move(os.path.join(path, files[c]), os.path.join('Sub-folders', files[c]))
+                        else:
+                            continue
+    except:
+        pass
 
 
 # Groups

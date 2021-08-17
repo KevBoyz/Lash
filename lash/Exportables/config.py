@@ -6,5 +6,3 @@ def config():
         {
             'beep': True,  # *Beep* when finish a task
         }
-
-

@@ -6,9 +6,8 @@
 * Bug fix and upgrades in `organize` command.
 * Bug fixed in `web new` command, generate default new web project.
 * Implementing `configs`, additional configurations to package.
-* Implementing `task-killer` command, kill chain of tasks to otimization.
+* Implementing `task-killer` command, kill chain of tasks to optimization.
 * Change licence to
 * New features for sched command:
-* * Options: `-b, -al` -> play alarm or beep when execute task
 * * Sub-command: `exec` -> 
-* * Sub-command: `wait` -> 
+* * Sub-command: `wait` -> Wait x time, run a task once and exit

@@ -1,10 +1,4 @@
-from lash.Exportables.config import config
-from playsound2 import playsound
-
-config = config()
-
-
-def bar_template():
+def bar_template():  # Template for load bar
     return '%(label)s  %(bar)s  %(info)s'
 
 
@@ -24,7 +18,6 @@ def file_types():
             'docs': ('.pdf', '.ppt', '.docx', '.txt', '.xls', '.doc')}
 
 
-def playbp():
-    playsound(config['beep_path'])
+
 
 

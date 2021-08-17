@@ -4,13 +4,11 @@ from .app_math import *
 from .webTools import *
 from .ExtraTools import *
 
-CONTEXT_SETTINGS = dict(help_option_names=['-help'])
-
 
 @group('global')
 def Global():
     """\b
-        - Lash 1.1.0 by KevBoyz ~ https://github.com/KevBoyz/Lash\b
+        - Lash 1.1.0 by KevBoyz ~ https://github.com/KevBoyz/Lash
         Edit the package configs manually in /Exportables/config.py"""
     ...
 

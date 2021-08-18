@@ -1,8 +1,9 @@
 from click import group
-from .file_handler import *
-from .app_math import *
-from .webTools import *
-from .ExtraTools import *
+from lash.file_handler import *
+from lash.app_math import *
+from lash.webTools import *
+from lash.ExtraTools import *
+from lash.executor import playbp
 
 
 @group('global')

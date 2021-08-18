@@ -11,7 +11,10 @@ def keyhold(key):
     print('initialized, f4 to start, f3 to stop')
     while True:
         if is_pressed('f4'):
-            playbp()
+            try:
+                playbp()
+            except:
+                pass
             print('[== -- *typing* -- ==]')
             break
     try:

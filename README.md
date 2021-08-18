@@ -6,31 +6,14 @@ that cover some needs of desktop users.
 Thought to be simple and effective, Lash was developed with a   
 command line interface that has self-help and semantic commands.
 
+![](Images/lash_print.png)
+
 ## Lash overview 
 _Installing:_ `pip install lash`  
-_Executing_: `python -m lash`
+_Executing_: `python -m lash`  
+**Getting help**: `python -m lash --help`  
 
-**Getting help**: `python -m lash --help`
-    
-    Usage: -m [OPTIONS] COMMAND [ARGS]...
-
-    - Lash 1.0.0 by KevBoyz ~ https://github.com/KevBoyz/Lash
-
-    Options:
-    --help  Show this message and exit.
-
-    Commands:
-    autoclick  Auto clicker
-    calc       Math utilities
-    keyhold    hold a keyboard key
-    log        Simple loggers to rec events
-    organize   Organize your files
-    random     Randomize numbers
-    sched      Schedule tasks at the command line level
-    web        Generic Web-Tools
-    zip        Zip tools
-
-_Please ignore all `-m` in __Usage__ line_.   
+_Please ignore all `-m` in __Usage__ line_.     
 ## Usage examples
 ---
     $ py -m lash zip compress --help
@@ -53,25 +36,22 @@ _Please ignore all `-m` in __Usage__ line_.
     process completed, 206 files compacted
 
 ---
-    $ python -m lash sched run --help
-    Usage: sched run [OPTIONS] command
+    $py -m lash sched run --help
+    Usage: -m sched run [OPTIONS] command <hours> <minutes> <seconds>
 
-    Run commands repetitively at a given interval starting from current moment.
+    Run commands repetitively at a given interval starting from
+    current moment.
 
-    Options:
-    -s INTEGER  Set delay seconds
-    -m INTEGER  Set delay minutes
-    -h INTEGER  Set delay hours
-
-    $ python -m lash sched run -s 5 "py -m lash random"
-    31139
-    15368
-    60600
+    $ py -m lash sched run "py -m lash random" 0 0 2
+    78311
+    13918
+    64280
     [...]
+    
     Aborted!
-## Final declarations
-The tool is under development and will have weekly updates with corrections
-and news, this project is still small and unknown by your target audience,
-if you liked the work, please share it with your contacts.  
+### Lash Configurations  
+From version 1.1.0, **configurations** were implemented in the package,   
+which can be edited manually in _/lash/Exportables/config.py_
+
 
 **Thanks for ReadMe**

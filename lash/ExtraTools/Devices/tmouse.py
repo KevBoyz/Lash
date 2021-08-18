@@ -26,13 +26,20 @@ def autoclick(cd, ch):
     else:
         while True:
             if is_pressed('f4'):
-                playbp()
+                try:
+                    playbp()
+                except:
+                    pass
                 while True:
                     if is_pressed('f3'):
                         break
                     else:
-                        sleep(cd)
+                        with sleep(cd):
+                            if is_pressed('f3'):
+                                break
                         mouse.press(Button.left)
                         mouse.release(Button.left)
+                        if is_pressed('f3'):
+                            break
             else:
                 continue

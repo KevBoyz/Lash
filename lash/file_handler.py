@@ -1,7 +1,7 @@
 import click, zipfile, os, shutil as sh
-from .Exportables.fileTools import *
-from .Exportables.config import config
-from .executor import playbp
+from lash.Exportables.fileTools import *
+from lash.Exportables.config import config
+from lash.executor import playbp
 
 config = config()
 
@@ -15,7 +15,9 @@ config = config()
 @click.option('-s', is_flag=True, default=False, show_default=True, help='Organize sub-folders       ')
 @click.option('-v', is_flag=True, default=True, show_default=True, help='Verbose mode       ')
 def organize(path, t, m, d, o, s, v):
-    """Organize your files
+    """
+    Organize your files
+
     \b
     Organize a folder in a simple way, by predefined execution that separates files
     according to their context or in a personalized way searching for a specific type.
@@ -91,8 +93,11 @@ def Zip():
 @click.argument('path', metavar='<path>', type=click.Path(exists=True))
 @click.option('-v', is_flag=True, default=False, show_default=True, help='Verbose mode ')
 def compress(path, v):
-    """Compress files in zip archive
-    Recommended usage: zip compress ./folder
+    """\b
+    Compress files in zip archive
+    \b
+    This command compress all files in one folder
+    Recommended usage: zip compress ./folder or /User/folder
     """
     fn = get_ext(path=path) + '.zip'
     os.chdir(path)
@@ -119,9 +124,13 @@ def compress(path, v):
         except Exception as e:
             print(e)
     else:
-        sh.move(fn, '..')
+        try:
+            sh.move(fn, '..')
+            playbp()
+        except:
+            pass
         print('Concluded successfully')
-        playbp()
+
 
 
 @Zip.command(help='Extract zipfile')
@@ -148,4 +157,7 @@ def extract(path, fn, v, ex=0):
                 print(e) if v else None
     zip.close()
     click.secho(f'{ex} files extracted')
-    playbp()
+    try:
+        playbp()
+    except:
+        pass

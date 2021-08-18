@@ -1,3 +1,6 @@
+import os
+
+
 def bar_template():  # Template for load bar
     return '%(label)s  %(bar)s  %(info)s'
 
@@ -16,6 +19,7 @@ def file_types():
                       'musics': ('.mp3', '.waw', '.ogg', '.wma'),
                       'videos': ('.mp4', '.avi', '.wmv', '.mov', '.avchd')},
             'docs': ('.pdf', '.ppt', '.docx', '.txt', '.xls', '.doc')}
+
 
 
 

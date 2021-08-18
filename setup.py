@@ -37,7 +37,8 @@ setuptools.setup(
         'pynput~=1.7.3',
         'keyboard~=0.13.5',
         'schedule~=1.1.0',
-        'setuptools~=56.0.0'
+        'setuptools~=56.0.0',
+        'playsound2~=0.1'
     ],
     packages=setuptools.find_packages(
         os.path.join(os.path.dirname(__file__))),

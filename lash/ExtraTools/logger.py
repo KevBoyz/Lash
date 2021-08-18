@@ -4,12 +4,12 @@ from ..Exportables.ikeyboard import *
 from ..executor import playbp
 
 
-@click.group('log', help='Simple loggers to rec events')
+@click.group('spy', help='Spy tools')
 def log():
     ...
 
 
-@log.command(help='Keyboard listener')
+@log.command(help='Keylogger')
 @click.option('-p', type=click.Path(exists=True), default='.', help='Path to send output file with info')
 def keyboard(p):
     print('<key logger on> f3 to stop record')

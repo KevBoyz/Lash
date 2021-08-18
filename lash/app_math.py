@@ -20,8 +20,11 @@ def prob(pc, fc, d):
             raise Exception('[fc > pc], Operation not possible')
         except Exception as e:
             click.echo(e)
-            return
     if d:
         click.echo(f'{fc / pc}')
     else:
-        click.echo(f'{int((fc / pc) * 100):.0f}%')
+        r = (fc / pc) * 100
+        if r <= 0.01:
+            print('[0.0%] For better result, use -d (flag)')
+        else:
+            click.echo(f'{r:.1f}%')

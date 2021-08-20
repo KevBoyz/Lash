@@ -5,11 +5,11 @@ from ..executor import playbp
 
 
 @click.group('spy', help='Spy tools')
-def log():
+def spy():
     ...
 
 
-@log.command(help='Keylogger')
+@spy.command(help='Keylogger')
 @click.option('-p', type=click.Path(exists=True), default='.', help='Path to send output file with info')
 def keyboard(p):
     print('<key logger on> f3 to stop record')

@@ -12,5 +12,5 @@
 * _Log_ command renamed to `spy`
 * New features for sched command:
 * * Support for _multi-time_ options in `run` command 
-* * Sub-command: `exec` -> 
+* * Sub-command: `exec` -> Execute a task from determined moment of day
 * * Sub-command: `wait` -> Wait x time, run a task once and exit

@@ -2,6 +2,8 @@ import click, schedule as sc
 from os import system
 from time import sleep
 from lash.executor import playbp
+from datetime import datetime
+from re import search
 
 
 @click.group('sched', help='Schedule tasks at the command line level')
@@ -52,4 +54,28 @@ def wait(command, h, m, s):
     except:
         pass
     system(command=command)
+
+
+@sched.command()
+@click.argument('time', metavar='time', type=click.STRING)
+@click.argument('command', metavar='<command>', type=click.STRING)
+def exec(time, command):
+    """\b
+        Execute a task from determined moment of day
+        \b
+        The time need to have this syntax: 10:30:0
+        Command example exec 10:30:0 "help"
+    """
+    if not search('\d\d:\d\d:\d', time):
+        return print('ERROR sytax incorrect, try use 10:30:0 with time')
+    while True:
+        if f'{datetime.now().hour}:{datetime.now().minute}:{datetime.now().second}' == time:
+            try:
+                playbp()
+            except:
+                pass
+            system(command=command)
+            return
+        else:
+            print(f'Waiting {time} -> {datetime.now().hour}:{datetime.now().minute}:{datetime.now().second}', end='\r')
 

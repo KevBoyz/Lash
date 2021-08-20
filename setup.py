@@ -22,11 +22,11 @@ except IOError:
 
 setuptools.setup(
     name='lash',
-    version='1.1.0',
+    version='1.1.2',
     author='Kevin Emmanuel',
     author_email='kevinho_gameplays@hotmail.com',
     description='Tools package to desktop',
-    long_description=README,
+    long_description=README + '\n\n' + CHANGES,
     long_description_content_type="text/markdown",
     url='https://github.com/KevBoyz/Lash',
     license='MIT',

@@ -1,6 +1,6 @@
 ## Release notes
 
-### v1.1.0
+### v1.1.0 - Bug fix and upgrades
 
 * Bug fix and upgrades in `zip compress/extract` command.
 * Bug fix and upgrades in `calc prob` command

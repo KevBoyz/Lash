@@ -29,7 +29,7 @@ setuptools.setup(
     long_description=README + '\n\n' + CHANGES,
     long_description_content_type="text/markdown",
     url='https://github.com/KevBoyz/Lash',
-    license='MIT',
+    license='GPL-3.0',
     keywords='toll tolls toolkit keylogger autoclick zip organize files file-handler os random',
     python_requires=">=3.8",
     install_requires=[

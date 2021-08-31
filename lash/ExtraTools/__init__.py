@@ -1,4 +1,4 @@
 from .Devices import *
-from .logger import *
+from .spy import *
 from .sched_manager import *
 from .bonus import *

@@ -1,5 +1,10 @@
 ## Release notes
 
+### v1.1.1 - Just a new function
+
+* New feature: Encrypt/Decrypt files with `spy crypt` command.
+* Licence error fix.
+
 ### v1.1.0 - Bug fix and upgrades
 
 * Bug fix and upgrades in `zip compress/extract` command.

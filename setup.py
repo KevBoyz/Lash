@@ -2,31 +2,13 @@ import setuptools
 import os.path
 
 
-# Load README
-try:
-    with open(os.path.join(
-            os.path.dirname(__file__),
-            'README.rst'), 'rb') as f:
-        README = f.read().decode('utf-8')
-except IOError:
-    README = ''
-
-# Load the release notes
-try:
-    with open(os.path.join(
-            os.path.dirname(__file__),
-            'Release-notes.rst'), 'rb') as f:
-        CHANGES = f.read().decode('utf-8')
-except IOError:
-    CHANGES = ''
-
 setuptools.setup(
     name='lash',
     version='1.1.1',
     author='Kevin Emmanuel',
     author_email='kevinho_gameplays@hotmail.com',
     description='Tools package to desktop',
-    long_description=README + '\n\n' + CHANGES,
+    long_description='Check the README in github page (url)',
     url='https://github.com/KevBoyz/Lash',
     license='GPL-3.0',
     keywords='toll tolls toolkit keylogger autoclick zip organize files file-handler os random',

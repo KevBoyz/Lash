@@ -1,23 +1,24 @@
 # About Lash
+
 This package provides a set of desktop tools that simplify and  
 automate repetitive processes. Lash also has utility functions  
-that cover some needs of desktop users. 
+that cover some needs of desktop users.
 
-Thought to be simple and effective, Lash was developed with a   
+Thought to be simple and effective, Lash was developed with a  
 command line interface that has self-help and semantic commands.
 
-![](Images/lash_print.png)
+![image][]
 
-## Lash overview 
-_Installing:_ `pip install lash`  
-_Executing_: `python -m lash`  
-**Getting help**: `python -m lash --help`  
+## Lash overview
 
-_Please ignore all `-m` in __Usage__ line_.     
-## Usage examples
----
-    $ py -m lash zip compress --help
-    Usage: -m zip compress [OPTIONS] <path>
+*Installing:* `pip install lash`  
+*Executing*: `python -m lash`  
+**Getting help**: `python -m lash --help`
+
+*Please ignore all -m in **Usage line**.  
+
+## Usage examples — $ py -m lash zip compress –help Usage: -m zip
+
 
     Compress files in zip archive
     Options:
@@ -35,7 +36,8 @@ _Please ignore all `-m` in __Usage__ line_.
     [...]
     process completed, 206 files compacted
 
----
+------------------------------------------------------------------------
+
     $py -m lash sched run --help
     Usage: -m sched run [OPTIONS] command <hours> <minutes> <seconds>
 
@@ -47,11 +49,15 @@ _Please ignore all `-m` in __Usage__ line_.
     13918
     64280
     [...]
-    
-    Aborted!
-### Lash Configurations  
-From version 1.1.0, **configurations** were implemented in the package,   
-which can be edited manually in _/lash/Exportables/config.py_
 
+    Aborted!
+
+### Lash Configurations
+
+From version 1.1.0, **configurations** were implemented in the
+package,  
+which can be edited manually in */lash/Exportables/config.py*
 
 **Thanks for ReadMe**
+
+  [image]: Images/lash_print.png

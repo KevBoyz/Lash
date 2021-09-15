@@ -2,7 +2,6 @@ import click
 from pynput.mouse import Controller, Button
 from keyboard import is_pressed
 from time import sleep
-from lash.executor import playbp
 
 
 @click.command(help='Auto clicker')
@@ -26,20 +25,12 @@ def autoclick(cd, ch):
     else:
         while True:
             if is_pressed('f4'):
-                try:
-                    playbp()
-                except:
-                    pass
                 while True:
                     if is_pressed('f3'):
                         break
                     else:
-                        with sleep(cd):
-                            if is_pressed('f3'):
-                                break
+                        sleep(cd)
                         mouse.press(Button.left)
                         mouse.release(Button.left)
-                        if is_pressed('f3'):
-                            break
             else:
                 continue

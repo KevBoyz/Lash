@@ -9,7 +9,7 @@ from lash.executor import playbp
 @group('global')
 def Global():
     """\b
-        - Lash 1.1.1 by KevBoyz ~ https://github.com/KevBoyz/Lash
+        - Lash 1.1.2 by KevBoyz ~ https://github.com/KevBoyz/Lash
         Edit the package configs manually in /Exportables/config.py"""
     ...
 

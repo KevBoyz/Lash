@@ -9,6 +9,8 @@ command line interface that has self-help and semantic commands.
 
 ![image][]
 
+Access [KevBoyz-Docs/lash](https://kevboyz.github.io/KevBoyz-Docs/sub-pages/documentations/lash/index.html) for the full documentation. 
+
 ## Lash overview
 
 *Installing:* `pip install lash`  

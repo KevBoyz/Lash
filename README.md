@@ -63,6 +63,10 @@ which can be edited manually in */lash/Exportables/config.py*
 
 # Release notes
 
+## v1.1.2 - Bug fix
+
+* Function autoclick fixed
+
 ## v1.1.1 - Just a new function
 
 * New feature: Encrypt/Decrypt files with `spy crypt` command.

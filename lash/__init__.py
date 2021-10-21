@@ -3,18 +3,18 @@ from lash.file_handler import *
 from lash.app_math import *
 from lash.webTools import *
 from lash.ExtraTools import *
-from lash.executor import playbp
 
 
 @group('global')
 def Global():
     """\b
-        - Lash 1.1.2 by KevBoyz ~ https://github.com/KevBoyz/Lash
-        Edit the package configs manually in /Exportables/config.py"""
+        - Lash 1.1.3 by KevBoyz ~ https://github.com/KevBoyz/Lash
+    """
     ...
 
 
 # Global Commands
+Global.add_command(getConfig)
 Global.add_command(random)
 Global.add_command(organize)
 Global.add_command(autoclick)

@@ -1,9 +1,15 @@
 import click
 from random import randint
 from lash.Exportables.config import config
+from lash.executor import abs_path_config
 from os import system, name
 
 config = config()
+
+
+@click.command(help='Get the config.py path')
+def getConfig():
+    print(f'\n[ {abs_path_config()} ]')
 
 
 @click.command(help='Randomize numbers')
@@ -29,6 +35,7 @@ def random(s, e, c, nl):
 def taskkiller():
     """\b
         Kill multiple processes with single command
+
         \b
         This command is automation to close processes, to use it, you need
         to put the process names in the configuration file so that they
@@ -38,10 +45,11 @@ def taskkiller():
         lash/Exportables/config.py, there you will have instructions on how to use it.
     """
     if len(config['black_list']) == 0:
-        print("""
-    - None process find in <black_list>
-    To use this command correctly, you need add processes 
-    name manually in [/config.py]. To more information's use --help""")
+        print(f"""
+- None process name funded on <black_list> value
+To use this command correctly, you need add the processes names manually in\n[{abs_path_config()}]
+To more details use --help option
+    """)
     if name == 'nt':
         for p in config['black_list']:
             system(f'taskkill /F /IM {p} /T') if name == 'nt' else system(f'pkill {p}')

@@ -1,7 +1,8 @@
 import click
 import os
-import zipfile as zip
-from lash.executor import adf_path
+from lash.Exportables.config import config
+
+config = config()
 
 
 @click.group('web', help='Generic Web-Tools')
@@ -9,11 +10,18 @@ def web():
     ...
 
 
-@web.command(help='Start a new web project')
+@web.command()
 @click.argument('path', metavar='<destiny>', type=click.Path(exists=True), default='.', required=False)
 def new(path):
-    web_pkg = zip.ZipFile(adf_path('web_pkg.zip'))
+    '''Start a new web project
+
+    \b
+    This command will create html5, css3 and javascript files in the destination folder
+    You can also edit the files code in the config.py file, to find the location of this
+    archive use the getConfig, in the file, you will receive more instructions
+    '''
     os.chdir(path)
-    print(adf_path('web_pkg.zip'))
-    web_pkg.extractall()
-    print('Files extracted ')
+    index = open('index.html', 'w')
+    index.write(config['html_code'])
+    index.close()
+    print('Files Generated')

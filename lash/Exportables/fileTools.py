@@ -1,6 +1,3 @@
-import os
-
-
 def bar_template():  # Template for load bar
     return '%(label)s  %(bar)s  %(info)s'
 

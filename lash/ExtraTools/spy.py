@@ -1,7 +1,6 @@
 import os, click
 from pynput.keyboard import Listener
 from lash.Exportables.ikeyboard import *
-from lash.executor import playbp
 import pyaes as pya
 
 
@@ -18,7 +17,6 @@ def keyboard(p):
     listener = Listener(on_press=key_down, on_release=key_up)
     listener.start()
     listener.join()
-    playbp()
     print(f'> Process Finished <')
 
 
@@ -38,7 +36,6 @@ def crypt(file, key, p, dc=False):
     """
     bkey = str.encode(key)  # Convert to bytes
     fp = p + '\\' + file
-
     file = open(fp, 'rb')
     crip = pya.AESModeOfOperationCTR(bkey)
     if dc:
@@ -49,7 +46,6 @@ def crypt(file, key, p, dc=False):
     else:
         data = crip.encrypt(file.read())
         file.close()
-
         crypted = open(fp, 'wb')
         crypted.write(data)
         print(f'\nFile encrypted with key: {key}')

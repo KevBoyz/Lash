@@ -1,7 +1,6 @@
 import click, zipfile, os, shutil as sh
 from lash.Exportables.fileTools import *
 from lash.Exportables.config import config
-from lash.executor import playbp
 
 config = config()
 
@@ -124,11 +123,6 @@ def compress(path, v):
         except Exception as e:
             print(e)
     else:
-        try:
-            sh.move(fn, '..')
-            playbp()
-        except:
-            pass
         print('Concluded successfully')
 
 
@@ -139,7 +133,7 @@ def compress(path, v):
 @click.option('-v', '-verbose', is_flag=True, default=False, show_default=True, help='Verbose mode ')
 def extract(path, fn, v, ex=0):
     os.chdir(path)
-    if fn.rfind('.zip'):
+    if not fn.endswith('.zip'):
         fn += '.zip'
     assert zipfile.is_zipfile(fn), f'Assertion error, can\'t find {fn} on {os.getcwd()}'
     zip = zipfile.ZipFile(fn, 'r')
@@ -157,7 +151,3 @@ def extract(path, fn, v, ex=0):
                 print(e) if v else None
     zip.close()
     click.secho(f'{ex} files extracted')
-    try:
-        playbp()
-    except:
-        pass

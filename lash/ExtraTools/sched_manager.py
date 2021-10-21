@@ -1,7 +1,7 @@
 import click, schedule as sc
 from os import system
 from time import sleep
-from lash.executor import playbp
+
 from datetime import datetime
 from re import search
 
@@ -49,10 +49,6 @@ def wait(command, h, m, s):
         print(f'Time remaining: {(t - i) // 60 // 60}h {(t - i) // 60}m {t - i}s ', end="\r")
     sleep(1)
     print(f'Time remaining: 0h 0m 0s ', end="\r")
-    try:
-        playbp()
-    except:
-        pass
     system(command=command)
 
 
@@ -70,10 +66,6 @@ def exec(time, command):
         return print('ERROR sytax incorrect, try use 10:30:0 with time')
     while True:
         if f'{datetime.now().hour}:{datetime.now().minute}:{datetime.now().second}' == time:
-            try:
-                playbp()
-            except:
-                pass
             system(command=command)
             return
         else:

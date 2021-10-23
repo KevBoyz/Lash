@@ -8,7 +8,7 @@ from lash.ExtraTools import *
 @group('global')
 def Global():
     """\b
-        - Lash 1.1.3 by KevBoyz ~ https://github.com/KevBoyz/Lash
+        - Lash 1.1.3.1 by KevBoyz ~ https://github.com/KevBoyz/Lash
     """
     ...
 

@@ -69,7 +69,7 @@ which can be edited manually in */lash/Exportables/config.py*
 
 ## v1.1.3.1 - Readme from Pypi page
 
-* Rst readme created to be showed at Pypi page
+* Rst text added to Pipy page
 
 ## v1.1.3 - Bug fix
 

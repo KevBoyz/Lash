@@ -1,16 +1,6 @@
 import setuptools
 import os.path
 
-# Load the read me ~ This code was taken from github.com/moses-palmer/pynput/blob/master/setup.py
-try:
-    with open(os.path.join(
-            os.path.dirname(__file__),
-            'README.rst'), 'rb') as f:
-        README = f.read().decode('utf-8')
-except IOError:
-    README = ''
-# End of code block
-
 
 setuptools.setup(
     name='lash',
@@ -18,7 +8,18 @@ setuptools.setup(
     author='Kevin Emmanuel',
     author_email='kevinho_gameplays@hotmail.com',
     description='Tools package to desktop',
-    long_description=README,
+    long_description="""
+About lash
+----------
+This package provides a set of desktop tools that simplify and
+automate repetitive processes. Lash also has utility functions
+that cover some needs of desktop users.
+
+Thought to be simple and effective, Lash was developed with a
+command line interface that has self-help and semantic commands.
+
+Access the full documentation on `KevBoyz Docs <https://kevboyz.github.io/KevBoyz-Docs/sub-pages/documentations/lash/index.html>`_
+""",
     url='https://github.com/KevBoyz/Lash',
     keywords='''toll tolls toolkit keylogger autoclick zip organize files file-handler os random schedule spy spyware
              ransomware crypt encrypt system utility''',

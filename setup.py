@@ -1,6 +1,16 @@
 import setuptools
 import os.path
 
+# Load the read me ~ This code was taken from github.com/moses-palmer/pynput/blob/master/setup.py
+try:
+    with open(os.path.join(
+            os.path.dirname(__file__),
+            'README.rst'), 'rb') as f:
+        README = f.read().decode('utf-8')
+except IOError:
+    README = ''
+# End of code block
+
 
 setuptools.setup(
     name='lash',

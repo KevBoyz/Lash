@@ -14,11 +14,11 @@ except IOError:
 
 setuptools.setup(
     name='lash',
-    version='1.1.3',
+    version='1.1.3.1',
     author='Kevin Emmanuel',
     author_email='kevinho_gameplays@hotmail.com',
     description='Tools package to desktop',
-    long_description='Please, check the README in the Homepage (url)',
+    long_description=README,
     url='https://github.com/KevBoyz/Lash',
     keywords='''toll tolls toolkit keylogger autoclick zip organize files file-handler os random schedule spy spyware
              ransomware crypt encrypt system utility''',

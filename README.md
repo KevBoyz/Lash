@@ -65,6 +65,23 @@ which can be edited manually in */lash/Exportables/config.py*
 
 # Release notes
 
+
+
+## v1.1.3.1 - Readme from Pypi page
+
+* Rst readme created to be showed at Pypi page
+
+## v1.1.3 - Bug fix
+
+* Auto-help text sections updated
+* web new command now create the template files using the code declared as string at config.py
+* New command: getconfig See the config file path
+* beep.waw and web_pkg.zip removed from package
+* Error .zip.zip fixed in zip extract command
+* Licence classifier added to setup.py
+* Brave.exe removed from config file
+* -o Option added to autoclick, do a only single
+
 ## v1.1.2 - Bug fix
 
 * Function autoclick fixed

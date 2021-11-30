@@ -13,7 +13,7 @@ def config():
     """
     return \
         {
-            'black_list': ['Brave.exe'],
+            'black_list': [],
             'html_code': '''
 <!DOCTYPE html>
 <html lang="en">

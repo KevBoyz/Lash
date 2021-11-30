@@ -25,7 +25,7 @@ Access the full documentation on `KevBoyz Docs <https://kevboyz.github.io/KevBoy
              ransomware crypt encrypt system utility''',
     python_requires=">=3.8",
     install_requires=[
-        'click~=8.0.1',
+        'click~=8.0.1',  # bs4, tqdm
         'pynput~=1.7.3',
         'keyboard~=0.13.5',
         'schedule~=1.1.0',

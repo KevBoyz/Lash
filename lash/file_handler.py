@@ -126,7 +126,6 @@ def compress(path, v):
         print('Concluded successfully')
 
 
-
 @Zip.command(help='Extract zipfile')
 @click.argument('fn', metavar='<file_name>', type=click.STRING)
 @click.argument('path', metavar='<path>', type=click.Path(exists=True), default=".", required=False)

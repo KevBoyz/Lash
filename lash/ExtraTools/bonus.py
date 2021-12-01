@@ -31,7 +31,7 @@ def random(c, n, l, s, ul):
                     letter = letter.upper()
                 rand_l.append(letter)
         else:
-            rand_l.append('qwertyuiopasdfghjklzxcvbnm')
+            rand_l.append(letters)
     if s:
         rand_l.append('!?@#$%&*')
     if len(rand_l) > 0:

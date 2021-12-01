@@ -91,7 +91,8 @@ def Zip():
 @Zip.command()
 @click.argument('path', metavar='<path>', type=click.Path(exists=True))
 @click.option('-v', is_flag=True, default=False, show_default=True, help='Verbose mode ')
-def compress(path, v):
+@click.option('-fo', is_flag=True, default=False, show_default=True, help='Files only mode')
+def compress(path, v, fo):
     """\b
     Compress files in zip archive
     \b
@@ -105,24 +106,40 @@ def compress(path, v):
     print(f'Compacting archives, please wait...')
     print() if v else None
     print('  - - Process list - -') if v else None
-    for folder, sub_folders, files in os.walk('.'):
-        for file in files:
-            if file != fn and file not in zip.namelist():
-                print(f'Compacting: {file}') if v else None
-                zip.write(os.path.join(folder, file),
-                          os.path.relpath(os.path.join(folder, file), '.'),
-                          compress_type=zipfile.ZIP_DEFLATED)
-                arch += 1
+    if fo:
+        way = os.getcwd()
+        for folder, sub_folders, files in os.walk('.'):
+            for file in files:
+                if file != fn:
+                    try:
+                        os.chdir(folder)
+                        print(f'Compacting: {file}') if v else None
+                        zip.write(file, compress_type=zipfile.ZIP_DEFLATED)
+                        arch += 1
+                        os.chdir(way)
+                    except:
+                        pass
+    else:
+        for folder, sub_folders, files in os.walk('.'):
+            for file in files:
+                if file != fn:
+                    print(f'Compacting: {file}') if v else None
+                    zip.write(os.path.join(folder, file),
+                              os.path.relpath(os.path.join(folder, file), '.'),
+                              compress_type=zipfile.ZIP_DEFLATED)
+                    arch += 1
     print() if v else None
     print(f'Process completed, {arch} files compacted')
     zip.close()
     print('Moving zipfile to parent folder...')
+    if fn == '..zip':  # If the path = '.'
+        dir_name = os.getcwd()[os.getcwd().rfind('\\')+1:] + '.zip'
+        os.rename(fn, dir_name)
+        fn = dir_name
     if fn in os.listdir('..'):
-        try:
-            raise Exception(f'Error "{fn}" already exists in {os.path.dirname(os.getcwd())}')
-        except Exception as e:
-            print(e)
+        print(f'Error "{fn}" already exists in {os.path.dirname(os.getcwd())}, the file still in root')
     else:
+        sh.move(fn, '..')
         print('Concluded successfully')
 
 

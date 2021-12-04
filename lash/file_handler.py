@@ -88,6 +88,27 @@ def Zip():
     ...
 
 
+@Zip.command(help='See the files on a zip')
+@click.argument('path', metavar='<path>', type=click.Path(exists=True))
+def view(path):
+    if os.name == 'nt':
+        os.chdir(path[:path.rfind('\\')])
+        fn = path[path.rfind('\\') + 1:]
+    else:
+        os.chdir(path[:path.rfind('/')])
+        fn = path[path.rfind('/') + 1:]
+    if not fn.endswith('.zip'):
+        fn += '.zip'
+    zip = zipfile.ZipFile(fn, 'r')
+    list = zip.namelist()
+    if len(list) <= 0:
+        print('Error, no the zip are empty or can\'t be readied')
+    else:
+        print()
+        for file in list:
+            print(file)
+
+
 @Zip.command()
 @click.argument('path', metavar='<path>', type=click.Path(exists=True))
 @click.option('-v', is_flag=True, default=True, show_default=True, help='Verbose mode ')
@@ -136,11 +157,12 @@ def compress(path, v, fo):
         dir_name = os.getcwd()[os.getcwd().rfind('\\')+1:] + '.zip'
         os.rename(fn, dir_name)
         fn = dir_name
-    if fn in os.listdir('..'):
-        print(f'Error "{fn}" already exists in {os.path.dirname(os.getcwd())}, the file still in root')
     else:
         os.chdir('..')
-        sh.move(fn, '.')
+        try:
+            sh.move(fn, '.')
+        except:
+            pass
     print(f'Concluded successfully -> {os.path.join(os.getcwd(), fn)}')
 
 
@@ -157,9 +179,6 @@ def extract(path, to, v, ex=0):
         fn = path[path.rfind('/') + 1:]
     if not fn.endswith('.zip'):
         fn += '.zip'
-    if not zipfile.is_zipfile(fn):
-        print(f'Error, can\'t find {fn} on {os.getcwd()}')
-        return
     zip = zipfile.ZipFile(fn, 'r')
     list = zip.namelist()
     click.secho(f'{len(list)} Files founded in {fn}') if v else None  # Verbose

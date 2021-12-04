@@ -14,7 +14,7 @@ def config():
     return \
         {
             'black_list': [],
-            'html_code': '''
+            'html_code': """
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -33,7 +33,7 @@ def config():
 
     <script src="script.js"></script>
 </body>
-</html>'''.strip(),
-            'css_code': '''''',
-            'js_code': '''''',
+</html>""".strip(),
+            'css_code': """""",
+            'js_code': """""",
         }

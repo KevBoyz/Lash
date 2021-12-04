@@ -16,18 +16,24 @@ def web():
 @web.command()
 @click.argument('path', metavar='<destiny>', type=click.Path(exists=True), default='.', required=False)
 def new(path):
-    '''Start a new web project
+    """Start a new web project
 
     \b
-    This command will create html5, css3 and javascript files in the destination folder
+    This command will create html5, css and javascript files in the destination folder
     You can also edit the files code in the config.py file, to find the location of this
-    archive use the getConfig, in the file, you will receive more instructions
-    '''
+    archive use the lash getconfig command, in the file, you will receive more instructions
+    """
     os.chdir(path)
-    index = open('index.html', 'w')
-    index.write(config['html_code'])
-    index.close()
-    print('Files Generated')
+    with open('index.html', 'w') as index:
+        index.write(config['html_code'])
+        index.close()
+    with open('style.css', 'w') as style:
+        style.write(config['css_code'])
+        style.close()
+    with open('script.js', 'w') as script:
+        script.write(config['js_code'])
+        script.close()
+    print('Files Created')
 
 
 @web.command(help='Scrape a Github profile')

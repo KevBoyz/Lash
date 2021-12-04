@@ -28,9 +28,13 @@ def run(command, s, m, h):
     except Exception as e:
         print(e)
     t = h * 3600 + m * 60 + s  # Converting to seconds
-    sc.every(t).seconds.do(system, command=command)
     while True:
-        sc.run_pending()
+        for i in range(0, t):
+            print(f'Time remaining: {(t - i) // 60 // 60}h {(t - i) // 60}m {t - i}s ', end="\r")
+            sleep(1)
+        print(f'Time remaining: 0h 0m 0s ', end="\r")
+        system(command=command)
+        print()
 
 
 @sched.command()
@@ -69,5 +73,5 @@ def exec(time, command):
             system(command=command)
             return
         else:
-            print(f'Waiting {time} -> {datetime.now().hour}:{datetime.now().minute}:{datetime.now().second}', end='\r')
+            print(f' Waiting {time} -> {datetime.now().hour}:{datetime.now().minute}:{datetime.now().second}', end='\r')
 

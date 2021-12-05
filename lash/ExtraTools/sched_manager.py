@@ -20,7 +20,7 @@ def run(command, s, m, h):
     """\b
        Run commands repetitively at a given interval starting from
        current moment.
-
+        \b
        Example: lash sched run "help" 0 0 5 """
     try:
         if h <= 0 and m <= 0 and s <= 0:
@@ -45,7 +45,9 @@ def run(command, s, m, h):
 def wait(command, h, m, s):
     """\b
         Wait x time, run a task once and exit
-        Example: lash sched wait "help" 0 0 10  """
+        \b
+        Example: lash sched wait "help" 0 0 10
+    """
     # assert h <= 0 and m <= 0 and s <= 0, 'Error: Time delay is not defined'
     t = h * 3600 + m * 60 + s  # Converting to seconds
     for i in range(0, t):

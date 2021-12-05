@@ -1,11 +1,10 @@
-# About Lash
+# Lash,  the py-package ![](Images/desktop.png)![](Images/lash_gif.gif)
 
-This package provides a set of desktop tools that simplify and  
-automate repetitive processes. Lash also has utility functions  
-that cover some needs of desktop users.
+This package provides a set of desktop tools that simplify and automate repetitive  
+processes. Lash also has utility functions that cover some needs of desktop users.
 
-Thought to be simple and effective, Lash was developed with a  
-command line interface that has self-help and semantic commands.
+Thinking about being simple and effective, Lash was developed with a command   
+line interface, having syntax similar to cli's linux, with options args and help sections.
 
 ![image][]
 
@@ -14,20 +13,11 @@ Access [KevBoyz-Docs/lash](https://kevboyz.github.io/KevBoyz-Docs/sub-pages/docu
 ## Lash overview
 
 *Installing:* `pip install lash`  
-*Executing*: `python -m lash`  
-**Getting help**: `python -m lash --help`
+*Executing*: `python -m lash`
 
-*Please ignore all -m in **Usage line**.  
+## Compress file in zip archive
 
-## Usage examples — $ py -m lash zip compress –help Usage: -m zip
-
-
-    Compress files in zip archive
-    Options:
-    -fn TEXT  Output file name
-    -v        Verbose mode   [default: True]
-
-    $ py -m lash zip compress -fn "Zip" C:\Users\Kevin\Documents
+    $ py -m lash zip compress C:\Users\User\Documents
     Compacting archives, please wait...
 
     - - Process list - -
@@ -38,9 +28,10 @@ Access [KevBoyz-Docs/lash](https://kevboyz.github.io/KevBoyz-Docs/sub-pages/docu
     [...]
     process completed, 206 files compacted
 
-------------------------------------------------------------------------
 
-    $py -m lash sched run --help
+# Scheduling commands execution
+
+    $ py -m lash sched run --help
     Usage: -m sched run [OPTIONS] command <hours> <minutes> <seconds>
 
     Run commands repetitively at a given interval starting from
@@ -57,15 +48,17 @@ Access [KevBoyz-Docs/lash](https://kevboyz.github.io/KevBoyz-Docs/sub-pages/docu
 ### Lash Configurations
 
 From version 1.1.0, **configurations** were implemented in the
-package,  
-which can be edited manually in */lash/Exportables/config.py*
+package, which can be edited manually in */lash/Exportables/config.py*  
+You can get the config.py path with `lash getconfig` command
 
 **Thanks for ReadMe**
 
 
 # Release notes
 
+## v1.2.0 - General Upgrade
 
+* 
 
 ## v1.1.3.1 - Readme from Pypi page
 

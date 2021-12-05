@@ -5,25 +5,25 @@ import os.path
 setuptools.setup(
     name='lash',
     version='1.2.0',
+    license='GNU GPLv3',
     author='Kevin Emmanuel',
     author_email='kevboyz@pm.me',
     description='Cli tools package to desktop',
     long_description="""
-About lash
-----------
-This package provides a set of desktop tools that simplify and
-automate repetitive processes. Lash also has utility functions
-that cover some needs of desktop users.
+This package provides a set of desktop tools that simplify and   
+automate repetitive processes. Lash also has utility functions   
+that cover some needs of desktop users.   
 
-Thought to be simple and effective, Lash was developed with a
-command line interface that has self-help and semantic commands.
+Thinking about being simple and effective, Lash was developed with a command      
+line interface, having syntax similar to cli's linux, with options args and help sections.   
 
-Access the full documentation on `KevBoyz Docs <https://kevboyz.github.io/KevBoyz-Docs/sub-pages/documentations/lash/index.html>`_
+Full ReadMe in page `Github <https://github.com/KevBoyz/lash>` page.
+Access the documentation on `KevBoyz Docs <https://kevboyz.github.io/KevBoyz-Docs/sub-pages/documentations/lash/index.html>`
 """,
     url='https://github.com/KevBoyz/Lash',
     keywords='''
                 toll tolls toolkit keylogger auto-clicker zip organize files file-handler os random schedule spy spyware
-                ransomware crypt encrypt system utility images edition cli hacker
+                ransomware crypt encrypt system utility images edition cli hacker utilities
              ''',
     python_requires=">=3.8",
     install_requires=[
@@ -42,11 +42,15 @@ Access the full documentation on `KevBoyz Docs <https://kevboyz.github.io/KevBoy
     zip_safe=True,
     classifiers=[
         'Development Status :: 5 - Production/Stable',
-        'Programming Language :: Python :: 3.9',
+        'Programming Language :: Python :: 3.10',
         'Intended Audience :: End Users/Desktop',
         'Natural Language :: English',
         'Operating System :: OS Independent',
         'Topic :: Desktop Environment :: File Managers',
+        'Topic :: Software Development :: Build Tools',
+        'Topic :: System :: Archiving :: Compression',
+        'Topic :: System :: Monitoring',
+        'Topic :: Utilities',
         'License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)'
     ]
 )

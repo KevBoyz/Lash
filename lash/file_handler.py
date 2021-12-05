@@ -20,7 +20,7 @@ def organize(path, t, m, d, o, s, v):
     \b
     Organize a folder in a simple way, by predefined execution that separates files
     according to their context or in a personalized way searching for a specific type.
-    [!Important] - Do not use ('') to declarate TYPE on -t option set the value like: -t pdf
+    [!Important] - Do not use ('') to declare TYPE on -t option set the value like: -t pdf
     """
     try:
         os.chdir(path)
@@ -104,17 +104,11 @@ def view(path):
             print(file)
 
 
-@Zip.command()
+@Zip.command(help='Compress a folder in zip archive')
 @click.argument('path', metavar='<path>', type=click.Path(exists=True))
 @click.option('-v', is_flag=True, default=True, show_default=True, help='Verbose mode ')
 @click.option('-fo', is_flag=True, default=False, show_default=True, help='Files only mode')
 def compress(path, v, fo):
-    """\b
-    Compress files in zip archive
-    \b
-    This command compress all files in one folder
-    Recommended usage: zip compress ./folder or /User/folder
-    """
     fn = get_ext(path=path) + '.zip'
     os.chdir(path)
     arch = 0

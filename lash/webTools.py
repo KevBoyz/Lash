@@ -55,11 +55,14 @@ def ghscrape(user_name):
             'nick': github.find('span', 'p-nickname vcard-username d-block').text.strip(),
             'contributions': github.find('h2', 'f4 text-normal mb-2').text.strip()[0:4].replace('\n', ''),
             'followers': github.find('span', 'text-bold color-fg-default').text.strip(),
+            'repos': github.find('span', 'Counter').text.strip(),
+            'bio': github.find('div', 'p-note user-profile-bio mb-3 js-user-profile-bio f4').text.strip(),
             '7days': week
         }
         print(f"""
-    Github :: {gh['nick']} -> {gh['contributions']} contributions, {gh['followers']} followers
-    Github :: Last 7 days commits, (7-1): {gh['7days']}""")
+    UsrInf :: {gh['nick']} -> {gh['contributions']} contributions, {gh['followers']} followers, {gh['repos']} repos
+    UsrBio :: {gh['bio']}
+    UsrAct :: Last 7 days commits, (7-1): {gh['7days']}""")
     except Exception as e:
         print(e)
 

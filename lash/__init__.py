@@ -1,5 +1,6 @@
 from click import group
 from lash.file_handler import *
+from lash.image_handler import *
 from lash.app_math import *
 from lash.webTools import *
 from lash.ExtraTools import *
@@ -26,6 +27,7 @@ Global.add_command(sched)
 Global.add_command(spy)
 Global.add_command(web)
 Global.add_command(Zip)
+Global.add_command(image)
 Global.add_command(calc)
 
 Global()

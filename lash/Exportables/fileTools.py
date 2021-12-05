@@ -1,3 +1,6 @@
+import os
+
+
 def bar_template():  # Template for load bar
     return '%(label)s  %(bar)s  %(info)s'
 
@@ -9,6 +12,16 @@ def get_ext(file='', path=''):
     else:
         index = file.rfind('.')  # Getting the type of file
         return file[index:].lower()
+
+
+def get_file(path):
+    if os.name == 'nt':
+        os.chdir(path[:path.rfind('\\')])
+        fn = path[path.rfind('\\') + 1:]
+    else:
+        os.chdir(path[:path.rfind('/')])
+        fn = path[path.rfind('/') + 1:]
+    return fn
 
 
 def file_types():

@@ -91,12 +91,7 @@ def Zip():
 @Zip.command(help='See the files on a zip')
 @click.argument('path', metavar='<path>', type=click.Path(exists=True))
 def view(path):
-    if os.name == 'nt':
-        os.chdir(path[:path.rfind('\\')])
-        fn = path[path.rfind('\\') + 1:]
-    else:
-        os.chdir(path[:path.rfind('/')])
-        fn = path[path.rfind('/') + 1:]
+    fn = get_file(path)
     if not fn.endswith('.zip'):
         fn += '.zip'
     zip = zipfile.ZipFile(fn, 'r')
@@ -162,7 +157,7 @@ def compress(path, v, fo):
         try:
             sh.move(fn, '.')
         except:
-            pass
+            print('Error: File not moved, still in root')
     print(f'Concluded successfully -> {os.path.join(os.getcwd(), fn)}')
 
 
@@ -171,12 +166,7 @@ def compress(path, v, fo):
 @click.option('-to', type=click.Path(exists=True), help='Extract to')
 @click.option('-v', is_flag=True, default=False, show_default=True, help='Verbose mode ')
 def extract(path, to, v, ex=0):
-    if os.name == 'nt':
-        os.chdir(path[:path.rfind('\\')])
-        fn = path[path.rfind('\\') + 1:]
-    else:
-        os.chdir(path[:path.rfind('/')])
-        fn = path[path.rfind('/') + 1:]
+    fn = get_file(path)
     if not fn.endswith('.zip'):
         fn += '.zip'
     zip = zipfile.ZipFile(fn, 'r')

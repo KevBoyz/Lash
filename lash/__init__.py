@@ -9,7 +9,7 @@ from lash.ExtraTools import *
 @group('global')
 def Global():
     """\b
-        - Lash 1.2.0x by KevBoyz ~ https://github.com/KevBoyz/Lash
+        - Lash 1.2.0 by KevBoyz ~ https://github.com/KevBoyz/Lash
     """
     ...
 

@@ -56,7 +56,7 @@ You can get the config.py path with `lash getconfig` command
 
 # Release notes
 
-## v1.2.0x - General upgrade
+## v1.2.0 - General upgrade
 
 * Image handling implemented: Flip\Resize
 * *Sched* group upgraded: better syntax and display

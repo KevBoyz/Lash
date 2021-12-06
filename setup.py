@@ -15,10 +15,11 @@ automate repetitive processes. Lash also has utility functions
 that cover some needs of desktop users.   
 
 Thinking about being simple and effective, Lash was developed with a command      
-line interface, having syntax similar to cli's linux, with options args and help sections.   
+line interface, having syntax similar to cli's linux, with options args and help sections.    
 
-Full ReadMe in page `Github <https://github.com/KevBoyz/lash>`_ page.
-Documentation on `KevBoyz Docs <https://kevboyz.github.io/KevBoyz-Docs/sub-pages/documentations/lash/index.html>`_
+Full ReadMe in `Github <https://github.com/KevBoyz/lash>`_ page.    
+
+Documentation on `KevBoyz Docs <https://kevboyz.github.io/KevBoyz-Docs/sub-pages/documentations/lash/index.html>`_.
 """,
     url='https://github.com/KevBoyz/Lash',
     keywords='''

@@ -6,12 +6,11 @@ processes. Lash also has utility functions that cover some needs of desktop user
 Thinking about being simple and effective, Lash was developed with a command   
 line interface, having syntax similar to cli's linux, with options args and help sections.
 
-![image][]
+~ **Installing:** `pip install lash` ~ **Executing:** `python -m lash` ~ **help-sec**: `--help`
 
-**Installing:** `pip install lash`  
-**Executing:** `python -m lash`
-
-Access [KevBoyz-Docs/lash](https://kevboyz.github.io/KevBoyz-Docs/sub-pages/documentations/lash/index.html) for documentation.
+![image][]   
+**Access [KevBoyz-Docs/lash](https://kevboyz.github.io/KevBoyz-Docs/sub-pages/documentations/lash/index.html) for documentation.
+[Pypi/lash](https://pypi.org/project/lash/1.2.0.0/) for Pypi page.**
 
 ## Some examples
 

@@ -8,14 +8,14 @@ line interface, having syntax similar to cli's linux, with options args and help
 
 ![image][]
 
-Access [KevBoyz-Docs/lash](https://kevboyz.github.io/KevBoyz-Docs/sub-pages/documentations/lash/index.html) for the full documentation. 
+**Installing:** `pip install lash`  
+**Executing:** `python -m lash`
 
-## Lash overview
+Access [KevBoyz-Docs/lash](https://kevboyz.github.io/KevBoyz-Docs/sub-pages/documentations/lash/index.html) for documentation.
 
-*Installing:* `pip install lash`  
-*Executing*: `python -m lash`
+## Some examples
 
-## Compress file in zip archive
+### Compress file in zip archive
 
     $ py -m lash zip compress C:\Users\User\Documents
     Compacting archives, please wait...
@@ -29,7 +29,7 @@ Access [KevBoyz-Docs/lash](https://kevboyz.github.io/KevBoyz-Docs/sub-pages/docu
     process completed, 206 files compacted
 
 
-# Scheduling commands execution
+### Scheduling commands execution
 
     $ py -m lash sched run --help
     Usage: -m sched run [OPTIONS] command <hours> <minutes> <seconds>
@@ -56,9 +56,17 @@ You can get the config.py path with `lash getconfig` command
 
 # Release notes
 
-## v1.2.0 - General Upgrade
+## v1.2.0x - General upgrade
 
-* 
+* Image handling implemented: Flip\Resize
+* *Sched* group upgraded: better syntax and display
+* *Zip* group upgraded: better syntax, display, no errors and new options
+* `spy crypt` upgraded: better syntax and new options (-cl, -ex)
+* `autoclick` upgraded: only single and double click option
+* `web new` fixed, generting files correctly now
+* `random upgraded`: Generate random sequences with numbers letters and specials
+* New command for `web` : `ghscrape` → scrap a Github profile
+* New command for `zip`: `zipview` → view the files inside a zip archive
 
 ## v1.1.3.1 - Readme from Pypi page
 

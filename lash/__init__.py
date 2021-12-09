@@ -30,4 +30,4 @@ Global.add_command(Zip)
 Global.add_command(image)
 Global.add_command(calc)
 
-Global()
+Global()  #

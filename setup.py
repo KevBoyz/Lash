@@ -36,7 +36,8 @@ Documentation on `KevBoyz Docs <https://kevboyz.github.io/KevBoyz-Docs/sub-pages
         'pyaes~=1.6.1',
         'requests~=2.26.0',
         'bs4~=0.0.1',
-        'pillow~=8.4.0'
+        'pillow~=8.4.0',
+        'matplotlib~3.5.0'
     ],
     packages=setuptools.find_packages(
         os.path.join(os.path.dirname(__file__))),

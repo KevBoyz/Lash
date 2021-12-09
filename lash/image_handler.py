@@ -64,4 +64,27 @@ def resize(path, axis, d, r, all):
         print('Process completed')
 
 
+@image.command(help='Ajust image(s) values')  # Add help section
+@click.argument('path', metavar='<path>', type=click.Path(exists=True))
+@click.option('-ctr', '-ct', type=click.FLOAT, help='Adjust the image contrast', default=1)
+@click.option('-b', '-br', type=click.FLOAT, help='Adjust the image brightness', default=1)
+@click.option('-s', '-cl', type=click.FLOAT, help='Adjust the image saturation', default=1)
+@click.option('-sharp', type=click.FLOAT, help='Sharp the image', default=1)
+@click.option('-comp', is_flag=True, help='Compare the original image with the edited')
+@click.option('-t', is_flag=True, help='Just test the editor, don\'t save the edition')
+def adjust(path, ctr, b, s, sharp, comp, t):
+    file = get_file(path)
+    im = Image.open(file)
+    mod_im = adjust_exec(im, ctr, b, s, sharp)
+    comp = True if t else None
+    if comp:
+        compare(im, mod_im)
+    if t:
+        print('Test concluded, nothing special happens')
+    else:
+        save(mod_im, file)
+        print('Process completed, image rewritten')
+
+
+
 

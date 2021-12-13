@@ -96,14 +96,14 @@ def resize(path, all, c, t, axis, d, r):
 
 @image.command()
 @click.argument('path', metavar='<path>', type=click.Path(exists=True))
+@click.option('-all', type=click.STRING, help='Edit all images on path with x extension')
+@click.option('-c', '-compare', is_flag=True, help='Compare the original image with the edited')
+@click.option('-t', '-test', is_flag=True, help='Just test the editor, don\'t save the edition')
 @click.option('-ct', '-contrast', type=click.FLOAT, help='Adjust the image contrast', default=1)
 @click.option('-b', '-brightness', type=click.FLOAT, help='Adjust the image brightness', default=1)
 @click.option('-s', '-saturation', type=click.FLOAT, help='Adjust the image saturation', default=1)
 @click.option('-sh', '-sharp', type=click.FLOAT, help='Sharp the image', default=1)
-@click.option('-all', type=click.STRING, help='Edit all images on path with x extension')
-@click.option('-c', '-compare', is_flag=True, help='Compare the original image with the edited')
-@click.option('-t', '-test', is_flag=True, help='Just test the editor, don\'t save the edition')
-def adjust(path, ct, b, s, sh, c, t, all):
+def adjust(path, all, c, t, ct, b, s, sh):
     """
     Adjust Image(s)
 

@@ -53,13 +53,17 @@ def compare(im, mod_im):
 # Exportable editors
 
 
-def f_flip(im, file, lr=False, tb=False):
+def f_flip(im, file, c, t, lr=False, tb=False):
+    if not c:
+        c = True if t else None
     if lr:
         im_flipped = im.transpose(Image.FLIP_LEFT_RIGHT)
-        save(im_flipped, file)
+        compare(im, im_flipped) if c else None
+        if not t:
+            save(im_flipped, file)
     elif tb:
         im_flipped = im.transpose(Image.FLIP_TOP_BOTTOM)
-        save(im_flipped, file)
+        save(im_flipped, file) if not t else None
 
 
 def re_size(im, file, axis, d, r):

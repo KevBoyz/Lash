@@ -12,9 +12,11 @@ def image():
 @image.command()
 @click.argument('path', metavar='<path>', type=click.Path(exists=True))
 @click.option('-all', type=click.STRING, help='Edit all images on path with x extension')
+@click.option('-c', '-compare', is_flag=True, help='Compare the original image with the edited')
+@click.option('-t', '-test', is_flag=True, help='Just test the editor, don\'t save the edition')
 @click.option('-lr', is_flag=True, help='Mirror left to right')
 @click.option('-tb', is_flag=True, help='Mirror top to bottom')
-def flip(path, all, lr, tb):
+def flip(path, all, c, t, lr, tb):
     r"""
     Flip Image(s)
 
@@ -38,18 +40,18 @@ def flip(path, all, lr, tb):
             for file in files:
                 if file.endswith(_type):
                     if lr:
-                        f_flip(Image.open(os.path.join(root, file)), file, lr=True)
+                        f_flip(Image.open(os.path.join(root, file)), file, c=c, t=t, lr=True)
                     elif tb:
-                        f_flip(Image.open(os.path.join(root, file)), file, tb=True)
+                        f_flip(Image.open(os.path.join(root, file)), file, c=c, t=t, tb=True)
                     n_editions += 1
         print(f'Process Completed, {n_editions} files edited')
     else:
         file = get_file(path)
         im = Image.open(file)
         if lr:
-            f_flip(im, file, lr=True)
+            f_flip(im, file, c=c, t=t, lr=True)
         elif tb:
-            f_flip(im, file, tb=True)
+            f_flip(im, file, c=c, t=t, tb=True)
         print('Process completed')
 
 

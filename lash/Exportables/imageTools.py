@@ -1,5 +1,5 @@
 import matplotlib.pyplot as plt
-from PIL import Image, ImageEnhance
+from PIL import Image, ImageEnhance, ImageFilter
 from lash.Exportables.fileTools import *
 
 # Local functions
@@ -94,5 +94,17 @@ def adjust_exec(im, contrast_v, brightness_v, color_v, sharpness_v):
     im = color(im, color_v)
     im = sharp(im, sharpness_v)
     return color(im, 1)  # Return the iterable obj, this func does nothing with img
+
+
+def filter_apply(im, b, c, d, e):
+    if b:
+        im = im.filter(ImageFilter.BLUR)
+    if c:
+        im = im.filter(ImageFilter.CONTOUR)
+    if d:
+        im = im.filter(ImageFilter.DETAIL)
+    if e:
+        im = im.filter(ImageFilter.EMBOSS)
+    im.show()
 
 

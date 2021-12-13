@@ -23,6 +23,7 @@ def flip(path, all, lr, tb):
     image with the edited without rewrite the file. Check the examples below:
 
     $~ lash image flip -lr -t C:\Users\User\Folder\image.png
+
     $~ lsh image flip -tb -all "png" C:\Users\User\Folder
     """
     if not lr and not tb:
@@ -67,6 +68,7 @@ def resize(path, axis, d, r, all):
     a custom size (x, y) with -axis as you want. Check the examples below:
 
     $~ lash image resize -axis 400 300 C:\Users\User\Folder\image.png
+
     $~ lash image resize -d -all "png" C:\Users\User\Folder
     """
     if all:
@@ -103,9 +105,10 @@ def adjust(path, ct, b, s, sh, c, t):
     You can modify the contrast, brightness, saturation or sharp the image, but ponder the
     values, all image values is 1 by default, to do a good editions, use values only between
     1 and 2. You can reduce the values passing 0, like 0.5 or 0.9. You can also check the
-    edition before save the file with -t and compare the images with -c. Check the examples below
+    edition before save the file with -t and compare the images with -c. Check the examples below:
 
     $~ lash image adjust -t -ct 1.2 -b 1.1 -s 1.3 C:\Users\Usr\Folder\img.png
+
     $~ lash image adjust -all -s 1.1 C:\Users\User\Folder
     """
     file = get_file(path)

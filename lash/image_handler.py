@@ -57,11 +57,14 @@ def flip(path, all, c, t, lr, tb):
 
 @image.command()
 @click.argument('path', metavar='<path>', type=click.Path(exists=True))
+@click.option('-all', type=click.STRING, help='Edit all images on path with x extension')
+@click.option('-c', '-compare', is_flag=True, help='Compare the original image with the edited')
+@click.option('-t', '-test', is_flag=True, help='Just test the editor, don\'t save the edition')
 @click.option('-axis', nargs=2, type=click.INT, help='Set new values for x, y dimensions')
 @click.option('-d', is_flag=True, help='Double image size')
 @click.option('-r', is_flag=True, help='Reduce image size (size / 2)')
-@click.option('-all', type=click.STRING, help='Edit all images on path with x extension')
-def resize(path, axis, d, r, all):
+
+def resize(path, all, c, t, axis, d, r):
     r"""
     Resize Image(s)
 
@@ -80,13 +83,13 @@ def resize(path, axis, d, r, all):
         for root, folders, files in os.walk('.'):
             for file in files:
                 if file.endswith(_type):
-                    re_size(Image.open(os.path.join(root, file)), file, axis, d, r)
+                    re_size(Image.open(os.path.join(root, file)), file, axis, d, r, c, t)
                     n_editions += 1
         print(f'Process completed, {n_editions} files edited')
     else:
         file = get_file(path)
         im = Image.open(file)
-        re_size(im, file, axis, d, r)
+        re_size(im, file, axis, d, r, c, t)
         print('Process completed')
 
 

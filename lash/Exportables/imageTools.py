@@ -66,20 +66,26 @@ def f_flip(im, file, c, t, lr=False, tb=False):
         save(im_flipped, file) if not t else None
 
 
-def re_size(im, file, axis, d, r):
+def re_size(im, file, axis, d, r, c, t):
     if not axis and not d and not r:
         print('Error, none action received, send some option, --help for more details')
+
     else:
+        if not c:
+            c = True if t else None
         if axis:
             x, y = axis
             im_rszd = im.resize((x, y))
-            save(im_rszd, file)
+            compare(im, im_rszd) if c else None
+            save(im_rszd, file) if not t else None
         elif d:
             im_rszd = im.resize((int(im.size[0] * 2), int(im.size[1] * 2)))
-            save(im_rszd, file)
+            compare(im, im_rszd) if c else None
+            save(im_rszd, file) if not t else None
         elif r:
             im_rszd = im.resize((int(im.size[0] / 2), int(im.size[1] / 2)))
-            save(im_rszd, file)
+            compare(im, im_rszd) if c else None
+            save(im_rszd, file) if not t else None
 
 
 def adjust_exec(im, contrast_v, brightness_v, color_v, sharpness_v):

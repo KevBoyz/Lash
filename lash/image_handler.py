@@ -152,8 +152,41 @@ def adjust(path, all, c, t, ct, b, s, sh):
 @click.option('-all', type=click.STRING, help='Edit all images on path with x extension')
 @click.option('-c', '-compare', is_flag=True, help='Compare the original image with the edited')
 @click.option('-t', '-test', is_flag=True, help='Just test the editor, don\'t save the edition')
-def filter(path, all, c, t):
-    file = get_file(path)
-    im = Image.open(file)
-    filter_apply(im, True, False, True, False)
+@click.option('-b', '-blur', is_flag=True, help='Apply blur filter')
+@click.option('-co', '-blur', is_flag=True, help='Apply contour filter')
+@click.option('-d', '-blur', is_flag=True, help='Apply detail filter')
+@click.option('-e', '-blur', is_flag=True, help='Apply emboss filter')
+@click.option('-k', '-kbzup', '-blur', is_flag=True, help='Apply kbzup filter')
+def filter(path, all, c, t, b, co, d, e, k):
+    """
+    Apply Filters
 
+    Apply simple filters on images with this command. The most recommended is -k (kbzup),
+    that do a simple upgrade in your image, test the filters with -t option and choose the
+    better for you.
+    \b
+
+    You can use multiple filters ore just one to run the command. See below:
+    \b
+
+    $~ lash image filter -t -k C:\\Users\\Usr\\Folder\\img.png
+    \b
+    $~ lash image adjust -all "jpeg" -k -d -b C:\\Users\\User\\Folder
+    """
+    if all:
+        _type = all
+        if _type[0] != '.':
+            _type = '.' + _type
+        n_editions = 0
+        os.chdir(path)
+        for root, folders, files in os.walk('.'):
+            for file in files:
+                if file.endswith(_type):
+                    filter_apply(Image.open(os.path.join(root, file)), file, t, c, b, co, d, e, k)
+                    n_editions += 1
+        print(f'Process completed, {n_editions} files edited')
+    else:
+        file = get_file(path)
+        im = Image.open(file)
+        filter_apply(im, file, t, c, b, co, d, e, k)
+        print('Process completed')

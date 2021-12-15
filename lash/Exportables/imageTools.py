@@ -66,10 +66,9 @@ def f_flip(im, file, c, t, lr=False, tb=False):
         save(im_flipped, file) if not t else None
 
 
-def re_size(im, file, axis, d, r, c, t):
+def re_size(im, file, root, axis, d, r, c, t):
     if not axis and not d and not r:
         print('Error, none action received, send some option, --help for more details')
-
     else:
         if not c:
             c = True if t else None
@@ -77,15 +76,15 @@ def re_size(im, file, axis, d, r, c, t):
             x, y = axis
             im_rszd = im.resize((x, y))
             compare(im, im_rszd) if c else None
-            save(im_rszd, file) if not t else None
+            save(im_rszd, os.path.join(root, file)) if not t else None
         elif d:
             im_rszd = im.resize((int(im.size[0] * 2), int(im.size[1] * 2)))
             compare(im, im_rszd) if c else None
-            save(im_rszd, file) if not t else None
+            save(im_rszd, os.path.join(root, file)) if not t else None
         elif r:
             im_rszd = im.resize((int(im.size[0] / 2), int(im.size[1] / 2)))
             compare(im, im_rszd) if c else None
-            save(im_rszd, file) if not t else None
+            save(im_rszd, os.path.join(root, file)) if not t else None
 
 
 def adjust_exec(im, contrast_v, brightness_v, color_v, sharpness_v):
@@ -119,7 +118,7 @@ def filter_apply(im, file, root, t, c, b, co, d, e, k):
     save(mod_im, os.path.join(root, file)) if not t else None
 
 
-def wmarke(text, file, im, c, t, tp, ts, tc, tf, axis):
+def wmarke(text, file, root, im, c, t, tp, ts, tc, tf, axis):
     if os.name != 'nt':
         print('Sorry, this command are not available for your operational system')
         return
@@ -143,7 +142,7 @@ def wmarke(text, file, im, c, t, tp, ts, tc, tf, axis):
         if not c:
             c = True if t else None
         compare(im, mod_im) if c else None
-        save(mod_im, file) if not t else None
+        save(mod_im, os.path.join(root, file)) if not t else None
     except OSError:
-        print('Error: Font not valid, try use arial.ttf or ebrima.ttf')
+        print('Error: Font not valid, try use arial or ebrima. --help for details')
 

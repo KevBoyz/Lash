@@ -28,7 +28,7 @@ def flip(path, all, c, t, lr, tb):
 
     \b
     $~ lash image flip -lr -t C:\\Users\\User\\Folder\\image.png
-    $~ lsh image flip -tb -all "png" C:\\Users\\User\\Folder
+    $~ lsh image flip -tb -all C:\\Users\\User\\Folder
     """
     if not lr and not tb:
         print('Error, none action received, send some option, --help for more details')
@@ -86,7 +86,7 @@ def resize(path, all, c, t, axis, d, r):
             for root, folders, files in os.walk('.'):
                 for file in files:
                     try:
-                        re_size(Image.open(os.path.join(root, file)), file, axis, d, r, c, t)
+                        re_size(Image.open(os.path.join(root, file)), file, root, axis, d, r, c, t)
                         n_editions += 1
                     except:
                         pass
@@ -95,7 +95,7 @@ def resize(path, all, c, t, axis, d, r):
     else:
         file = get_file(path)
         im = Image.open(file)
-        re_size(im, file, axis, d, r, c, t)
+        re_size(im, file, '.', axis, d, r, c, t)
         print('Process completed')
 
 
@@ -177,7 +177,7 @@ def filter(path, all, c, t, b, co, d, e, k):
 
     $~ lash image filter -t -k C:\\Users\\Usr\\Folder\\img.png
     \b
-    $~ lash image adjust -all "jpeg" -k -d -b C:\\Users\\User\\Folder
+    $~ lash image adjust -all -k -d -b C:\\Users\\User\\Folder
     """
     if all:
         n_editions = 0
@@ -211,12 +211,42 @@ def filter(path, all, c, t, b, co, d, e, k):
 @click.option('-tf', '-txfont', type=click.STRING, default='consolab.ttf', show_default=True, help='Text font')
 @click.option('-axis', nargs=2, type=click.INT, help='Set new values for x, y dimensions')
 def wmark(text, path, all, c, t, tp, ts, tc, tf, axis):
+    """
+    Apply a watermark on image(s)
+
+    You can configure the text size, text color and axis values for the
+    watermark, you can use a custom font to, but it needs be installed on
+    your machine and be .ttf, true type font to work. This command are only
+    available on Windows because the script only check the folder Win\fonts
+    for fonts. To discover your machine fonts access the font on control panel.
+    \b
+
+    See the execution examples below:
+    \b
+
+    $~ lash image wmark -tc green -ts 50 -c KevBz C:\\Users\\Usr\\Folder\\img.png
+    \b
+    lash image wmark -t -tp 10 -tf arial KevBz C:\\Users\\Usr\\Folder\\img.png
+    \b
+    $~ lash image wmark -all -axis 10 30 -tc black KevBz C:\\Users\\User\\Folder
+    """
     if all:
-        ...
+        n_editions = 0
+        os.chdir(path)
+        with tqdm(total=files_range()) as pbar:
+            for root, folders, files in os.walk('.'):
+                for file in files:
+                    try:
+                        wmarke(text, file, root, Image.open(file), c, t, tp, ts, tc, tf, axis)
+                        n_editions += 1
+                    except:
+                        pass
+                    pbar.update(1)
+        print(f'Process completed, {n_editions} images edited')
     else:
         file = get_file(path)
         im = Image.open(file)
-        wmarke(text, file, im, c, t, tp, ts, tc, tf, axis)
+        wmarke(text, file, '.', im, c, t, tp, ts, tc, tf, axis)
 
 
 

@@ -35,16 +35,18 @@ def flip(path, all, c, t, lr, tb):
     if all:
         n_editions = 0
         os.chdir(path)
-        for root, folders, files in os.walk('.'):
-            for file in files:
-                try:
-                    if lr:
-                        f_flip(Image.open(os.path.join(root, file)), file, c=c, t=t, lr=True)
-                    elif tb:
-                        f_flip(Image.open(os.path.join(root, file)), file, c=c, t=t, tb=True)
-                    n_editions += 1
-                except:
-                    pass
+        with tqdm(total=files_range()) as pbar:
+            for root, folders, files in os.walk('.'):
+                for file in files:
+                    try:
+                        if lr:
+                            f_flip(Image.open(os.path.join(root, file)), file, c=c, t=t, lr=True)
+                        elif tb:
+                            f_flip(Image.open(os.path.join(root, file)), file, c=c, t=t, tb=True)
+                        n_editions += 1
+                    except:
+                        pass
+                    pbar.update(1)
         print(f'Process Completed, {n_editions} files edited')
     else:
         file = get_file(path)
@@ -80,13 +82,15 @@ def resize(path, all, c, t, axis, d, r):
     if all:
         n_editions = 0
         os.chdir(path)
-        for root, folders, files in os.walk('.'):
-            for file in files:
-                try:
-                    re_size(Image.open(os.path.join(root, file)), file, axis, d, r, c, t)
-                    n_editions += 1
-                except:
-                    pass
+        with tqdm(total=files_range()) as pbar:
+            for root, folders, files in os.walk('.'):
+                for file in files:
+                    try:
+                        re_size(Image.open(os.path.join(root, file)), file, axis, d, r, c, t)
+                        n_editions += 1
+                    except:
+                        pass
+                    pbar.update(1)
         print(f'Process completed, {n_editions} files edited')
     else:
         file = get_file(path)
@@ -125,13 +129,15 @@ def adjust(path, all, c, t, ct, b, s, sh):
     if all:
         n_editions = 0
         os.chdir(path)
-        for root, folders, files in os.walk('.'):
-            for file in files:
-                try:
-                    save(adjust_exec(Image.open(os.path.join(root, file)), ct, b, s, sh), file)
-                    n_editions += 1
-                except:
-                    pass
+        with tqdm(total=files_range()) as pbar:
+            for root, folders, files in os.walk('.'):
+                for file in files:
+                    try:
+                        save(adjust_exec(Image.open(os.path.join(root, file)), ct, b, s, sh), file)
+                        n_editions += 1
+                    except:
+                        pass
+                    pbar.update(1)
         print(f'Process completed, {n_editions} files edited')
     else:
         file = get_file(path)
@@ -191,3 +197,28 @@ def filter(path, all, c, t, b, co, d, e, k):
         im = Image.open(file)
         filter_apply(im, file, os.getcwd(), t, c, b, co, d, e, k)
         print('Process completed')
+
+
+@image.command()
+@click.argument('text', metavar='<text>', type=click.STRING)
+@click.argument('path', metavar='<path>', type=click.Path(exists=True))
+@click.option('-all', is_flag=True, help='Edit all images on path')
+@click.option('-c', '-compare', is_flag=True, help='Compare the original image with the edited')
+@click.option('-t', '-test', is_flag=True, help='Just test the editor, don\'t save the edition')
+@click.option('-tp', '-txpadding', type=click.INT, default=5, show_default=True, help='Text padding')
+@click.option('-ts', '-txtsize', type=click.INT, default=40, show_default=True, help='Text size (px)')
+@click.option('-tc', '-txcolor', type=click.STRING, default='#ffffff', show_default=True, help='Text color')
+@click.option('-tf', '-txfont', type=click.STRING, default='consolab.ttf', show_default=True, help='Text font')
+@click.option('-axis', nargs=2, type=click.INT, help='Set new values for x, y dimensions')
+def wmark(text, path, all, c, t, tp, ts, tc, tf, axis):
+    if all:
+        ...
+    else:
+        file = get_file(path)
+        im = Image.open(file)
+        wmarke(text, file, im, c, t, tp, ts, tc, tf, axis)
+
+
+
+
+

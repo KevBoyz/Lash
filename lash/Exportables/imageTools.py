@@ -1,5 +1,5 @@
 import matplotlib.pyplot as plt
-from PIL import Image, ImageEnhance, ImageFilter
+from PIL import Image, ImageEnhance, ImageFilter, ImageFont, ImageDraw
 from lash.Exportables.fileTools import *
 
 # Local functions
@@ -118,4 +118,32 @@ def filter_apply(im, file, root, t, c, b, co, d, e, k):
         compare(im, mod_im) if c else None
     save(mod_im, os.path.join(root, file)) if not t else None
 
+
+def wmarke(text, file, im, c, t, tp, ts, tc, tf, axis):
+    if os.name != 'nt':
+        print('Sorry, this command are not available for your operational system')
+        return
+    if tf[-4:] != '.ttf':
+        tf = tf + '.ttf'
+    try:
+        font = ImageFont.truetype(os.path.join('C:\\', 'Windows', 'Fonts', tf), size=ts)
+        mod_im = im.copy()
+        draw = ImageDraw.Draw(mod_im)
+        if not axis:
+            pxlen = len(text) * ts
+            x = ((mod_im.size[0] - pxlen) + pxlen / 2.5) - tp + 5
+            y = mod_im.size[1] / 10 - 15
+            if y < ts + tp:
+                while y < ts + tp:
+                    y += tp
+            draw.text((x, mod_im.size[1] - y), text, font=font, fill=tc)
+        else:
+            x, y = axis
+            draw.text((x, y), text, font=font, fill=tc)
+        if not c:
+            c = True if t else None
+        compare(im, mod_im) if c else None
+        save(mod_im, file) if not t else None
+    except OSError:
+        print('Error: Font not valid, try use arial.ttf or ebrima.ttf')
 

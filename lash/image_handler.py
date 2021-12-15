@@ -21,8 +21,8 @@ def flip(path, all, c, t, lr, tb):
     """
     Flip Image(s)
 
-    Flip one or all images with same extension on a folder, you can flip left to right or
-    top to bottom, before do the flip, you can use the -t option to compare the original
+    Flip one or all images on a folder, you can flip left to right or top to
+    bottom, before do the flip, you can use the -t option to compare the original
     image with the edited without rewrite the file. Check the examples below:
     \b
 
@@ -70,8 +70,8 @@ def resize(path, all, c, t, axis, d, r):
     """
     Resize Image(s)
 
-    Resize one or all images with same extension on a folder, you can double or reduce by 2
-    the image size respecting the proportion with -d, -r or do something more customizable defining
+    Resize one or all images on a folder, you can double or reduce by 2 the image size
+    respecting the proportion with -d, -r or do something more customizable defining
     a custom size (x, y) with -axis as you want. Check the examples below:
     \b
 
@@ -112,7 +112,7 @@ def adjust(path, all, c, t, ct, b, s, sh):
     """
     Adjust Image(s)
 
-    Adjust one or all images with same extension on a folder. This command is a way to do a
+    Adjust one or all images on a folder. This command is a way to do a
     special edition on a specific image, the -all option is not recommended.
     \b
 
@@ -247,8 +247,3 @@ def wmark(text, path, all, c, t, tp, ts, tc, tf, axis):
         file = get_file(path)
         im = Image.open(file)
         wmarke(text, file, '.', im, c, t, tp, ts, tc, tf, axis)
-
-
-
-
-

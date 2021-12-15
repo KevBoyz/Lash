@@ -145,4 +145,3 @@ def wmarke(text, file, root, im, c, t, tp, ts, tc, tf, axis):
         save(mod_im, os.path.join(root, file)) if not t else None
     except OSError:
         print('Error: Font not valid, try use arial or ebrima. --help for details')
-

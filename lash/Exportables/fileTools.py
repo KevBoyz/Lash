@@ -1,8 +1,16 @@
 import os
 
 
-def bar_template():  # Template for load bar
+def bar_template():  # Template for load bar (click)
     return '%(label)s  %(bar)s  %(info)s'
+
+
+def files_range():
+    total = 0
+    for root, files, folders in os.walk('.'):
+        for file in files:
+            total += 1
+    return total
 
 
 def get_ext(file='', path=''):

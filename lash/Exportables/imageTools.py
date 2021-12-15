@@ -96,7 +96,7 @@ def adjust_exec(im, contrast_v, brightness_v, color_v, sharpness_v):
     return color(im, 1)  # Return the iterable obj, this func does nothing with img
 
 
-def filter_apply(im, file, t, c, b, co, d, e, k):
+def filter_apply(im, file, root, t, c, b, co, d, e, k):
     if not c:
         c = True if t else None
     mod_im = im.copy()
@@ -116,6 +116,6 @@ def filter_apply(im, file, t, c, b, co, d, e, k):
         compare(im, color(mod_im, 1)) if c else None
     if not k:
         compare(im, mod_im) if c else None
-    save(mod_im, file) if not t else None
+    save(mod_im, os.path.join(root, file)) if not t else None
 
 

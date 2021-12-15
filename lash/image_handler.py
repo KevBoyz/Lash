@@ -1,4 +1,5 @@
 import click, os
+from tqdm import tqdm
 from PIL import Image
 from lash.Exportables.fileTools import *
 from lash.Exportables.imageTools import *
@@ -11,7 +12,7 @@ def image():
 
 @image.command()
 @click.argument('path', metavar='<path>', type=click.Path(exists=True))
-@click.option('-all', type=click.STRING, help='Edit all images on path with x extension')
+@click.option('-all', is_flag=True, help='Edit all images on path')
 @click.option('-c', '-compare', is_flag=True, help='Compare the original image with the edited')
 @click.option('-t', '-test', is_flag=True, help='Just test the editor, don\'t save the edition')
 @click.option('-lr', is_flag=True, help='Mirror left to right')
@@ -32,19 +33,18 @@ def flip(path, all, c, t, lr, tb):
     if not lr and not tb:
         print('Error, none action received, send some option, --help for more details')
     if all:
-        _type = all
-        if _type[0] != '.':
-            _type = '.' + _type
         n_editions = 0
         os.chdir(path)
         for root, folders, files in os.walk('.'):
             for file in files:
-                if file.endswith(_type):
+                try:
                     if lr:
                         f_flip(Image.open(os.path.join(root, file)), file, c=c, t=t, lr=True)
                     elif tb:
                         f_flip(Image.open(os.path.join(root, file)), file, c=c, t=t, tb=True)
                     n_editions += 1
+                except:
+                    pass
         print(f'Process Completed, {n_editions} files edited')
     else:
         file = get_file(path)
@@ -58,7 +58,7 @@ def flip(path, all, c, t, lr, tb):
 
 @image.command()
 @click.argument('path', metavar='<path>', type=click.Path(exists=True))
-@click.option('-all', type=click.STRING, help='Edit all images on path with x extension')
+@click.option('-all', is_flag=True, help='Edit all images on path')
 @click.option('-c', '-compare', is_flag=True, help='Compare the original image with the edited')
 @click.option('-t', '-test', is_flag=True, help='Just test the editor, don\'t save the edition')
 @click.option('-axis', nargs=2, type=click.INT, help='Set new values for x, y dimensions')
@@ -78,14 +78,15 @@ def resize(path, all, c, t, axis, d, r):
     $~ lash image adjust -all -s 1.1 C:\\Users\\User\\Folder
     """
     if all:
-        _type = all
         n_editions = 0
         os.chdir(path)
         for root, folders, files in os.walk('.'):
             for file in files:
-                if file.endswith(_type):
+                try:
                     re_size(Image.open(os.path.join(root, file)), file, axis, d, r, c, t)
                     n_editions += 1
+                except:
+                    pass
         print(f'Process completed, {n_editions} files edited')
     else:
         file = get_file(path)
@@ -96,7 +97,7 @@ def resize(path, all, c, t, axis, d, r):
 
 @image.command()
 @click.argument('path', metavar='<path>', type=click.Path(exists=True))
-@click.option('-all', type=click.STRING, help='Edit all images on path with x extension')
+@click.option('-all', is_flag=True, help='Edit all images on path')
 @click.option('-c', '-compare', is_flag=True, help='Compare the original image with the edited')
 @click.option('-t', '-test', is_flag=True, help='Just test the editor, don\'t save the edition')
 @click.option('-ct', '-contrast', type=click.FLOAT, help='Adjust the image contrast', default=1)
@@ -122,16 +123,15 @@ def adjust(path, all, c, t, ct, b, s, sh):
     $~ lash image adjust -all -s 1.1 C:\\Users\\User\\Folder
     """
     if all:
-        _type = all
-        if _type[0] != '.':
-            _type = '.' + _type
         n_editions = 0
         os.chdir(path)
         for root, folders, files in os.walk('.'):
             for file in files:
-                if file.endswith(_type):
+                try:
                     save(adjust_exec(Image.open(os.path.join(root, file)), ct, b, s, sh), file)
                     n_editions += 1
+                except:
+                    pass
         print(f'Process completed, {n_editions} files edited')
     else:
         file = get_file(path)
@@ -149,7 +149,7 @@ def adjust(path, all, c, t, ct, b, s, sh):
 
 @image.command()
 @click.argument('path', metavar='<path>', type=click.Path(exists=True))
-@click.option('-all', type=click.STRING, help='Edit all images on path with x extension')
+@click.option('-all', is_flag=True, help='Edit all images on path')
 @click.option('-c', '-compare', is_flag=True, help='Compare the original image with the edited')
 @click.option('-t', '-test', is_flag=True, help='Just test the editor, don\'t save the edition')
 @click.option('-b', '-blur', is_flag=True, help='Apply blur filter')
@@ -174,19 +174,20 @@ def filter(path, all, c, t, b, co, d, e, k):
     $~ lash image adjust -all "jpeg" -k -d -b C:\\Users\\User\\Folder
     """
     if all:
-        _type = all
-        if _type[0] != '.':
-            _type = '.' + _type
         n_editions = 0
         os.chdir(path)
-        for root, folders, files in os.walk('.'):
-            for file in files:
-                if file.endswith(_type):
-                    filter_apply(Image.open(os.path.join(root, file)), file, t, c, b, co, d, e, k)
-                    n_editions += 1
-        print(f'Process completed, {n_editions} files edited')
+        with tqdm(total=files_range()) as pbar:
+            for root, folders, files in os.walk('.'):
+                for file in files:
+                    try:
+                        filter_apply(Image.open(os.path.join(root, file)), file, root, t, c, b, co, d, e, k)
+                        n_editions += 1
+                    except:
+                        pass
+                    pbar.update(1)
+        print(f'Process completed, {n_editions} images edited')
     else:
         file = get_file(path)
         im = Image.open(file)
-        filter_apply(im, file, t, c, b, co, d, e, k)
+        filter_apply(im, file, os.getcwd(), t, c, b, co, d, e, k)
         print('Process completed')

@@ -4,7 +4,7 @@ import os.path
 
 setuptools.setup(
     name='lash',
-    version='1.2.0.0',
+    version='1.2.1',
     license='GNU GPLv3',
     author='Kevin Emmanuel',
     author_email='kevboyz@pm.me',
@@ -12,7 +12,8 @@ setuptools.setup(
     long_description="""
 This package provides a set of desktop tools that simplify and   
 automate repetitive processes. Lash also has utility functions   
-that cover some needs of desktop users.   
+that cover some needs of desktop users, like image handling, spy
+tools, scheduling, math and others.
 
 Thinking about being simple and effective, Lash was developed with a command      
 line interface, having syntax similar to cli's linux, with options args and help sections.    

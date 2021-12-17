@@ -1,6 +1,6 @@
 import click, os
 from tqdm import tqdm
-from PIL import Image
+from PIL import Image, UnidentifiedImageError
 from lash.Exportables.fileTools import *
 from lash.Exportables.imageTools import *
 
@@ -50,12 +50,16 @@ def flip(path, all, c, t, lr, tb):
         print(f'Process Completed, {n_editions} files edited')
     else:
         file = get_file(path)
-        im = Image.open(file)
-        if lr:
-            f_flip(im, file, c=c, t=t, lr=True)
-        elif tb:
-            f_flip(im, file, c=c, t=t, tb=True)
-        print('Process completed')
+        try:
+            im = Image.open(file)
+            if lr:
+                f_flip(im, file, c=c, t=t, lr=True)
+            elif tb:
+                f_flip(im, file, c=c, t=t, tb=True)
+            print('Process completed')
+        except UnidentifiedImageError:
+            print('Error: the file is not a image or the type can\'t be identified')
+
 
 
 @image.command()
@@ -94,9 +98,12 @@ def resize(path, all, c, t, axis, d, r):
         print(f'Process completed, {n_editions} files edited')
     else:
         file = get_file(path)
-        im = Image.open(file)
-        re_size(im, file, '.', axis, d, r, c, t)
-        print('Process completed')
+        try:
+            im = Image.open(file)
+            re_size(im, file, '.', axis, d, r, c, t)
+            print('Process completed')
+        except UnidentifiedImageError:
+            print('Error: the file is not a image or the type can\'t be identified')
 
 
 @image.command()
@@ -141,16 +148,19 @@ def adjust(path, all, c, t, ct, b, s, sh):
         print(f'Process completed, {n_editions} files edited')
     else:
         file = get_file(path)
-        im = Image.open(file)
-        mod_im = adjust_exec(im, ct, b, s, sh)
-        c = True if t else None
-        if c:
-            compare(im, mod_im)
-        if t:
-            print('Test concluded, nothing special happens')
-        else:
-            save(mod_im, file)
-            print('Process completed, image rewritten')
+        try:
+            im = Image.open(file)
+            mod_im = adjust_exec(im, ct, b, s, sh)
+            c = True if t else None
+            if c:
+                compare(im, mod_im)
+            if t:
+                print('Test concluded, nothing special happens')
+            else:
+                save(mod_im, file)
+                print('Process completed, image rewritten')
+        except UnidentifiedImageError:
+            print('Error: the file is not a image or the type can\'t be identified')
 
 
 @image.command()
@@ -194,9 +204,12 @@ def filter(path, all, c, t, b, co, d, e, k):
         print(f'Process completed, {n_editions} images edited')
     else:
         file = get_file(path)
-        im = Image.open(file)
-        filter_apply(im, file, os.getcwd(), t, c, b, co, d, e, k)
-        print('Process completed')
+        try:
+            im = Image.open(file)
+            filter_apply(im, file, os.getcwd(), t, c, b, co, d, e, k)
+            print('Process completed')
+        except UnidentifiedImageError:
+            print('Error: the file is not a image or the type can\'t be identified')
 
 
 @image.command()
@@ -217,7 +230,7 @@ def wmark(text, path, all, c, t, tp, ts, tc, tf, axis):
     You can configure the text size, text color and axis values for the
     watermark, you can use a custom font to, but it needs be installed on
     your machine and be .ttf, true type font to work. This command are only
-    available on Windows because the script only check the folder Win\fonts
+    available on Windows because the script only check the folder Win\\fonts
     for fonts. To discover your machine fonts access the font on control panel.
     \b
 
@@ -226,9 +239,9 @@ def wmark(text, path, all, c, t, tp, ts, tc, tf, axis):
 
     $~ lash image wmark -tc green -ts 50 -c KevBz C:\\Users\\Usr\\Folder\\img.png
     \b
-    lash image wmark -t -tp 10 -tf arial KevBz C:\\Users\\Usr\\Folder\\img.png
+    $~ lash image wmark -t -tp 10 -tf arial KevBz C:\\Users\\Usr\\Folder\\img.png
     \b
-    $~ lash image wmark -all -axis 10 30 -tc black KevBz C:\\Users\\User\\Folder
+    $~ lash image wmark -all -axis 10 30 -tc #000000 KevBz C:\\Users\\User\\Folder
     """
     if all:
         n_editions = 0
@@ -245,5 +258,8 @@ def wmark(text, path, all, c, t, tp, ts, tc, tf, axis):
         print(f'Process completed, {n_editions} images edited')
     else:
         file = get_file(path)
-        im = Image.open(file)
-        wmarke(text, file, '.', im, c, t, tp, ts, tc, tf, axis)
+        try:
+            im = Image.open(file)
+            wmarke(text, file, '.', im, c, t, tp, ts, tc, tf, axis)
+        except UnidentifiedImageError:
+            print('Error: the file is not a image or the type can\'t be identified')

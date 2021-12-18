@@ -263,3 +263,50 @@ def wmark(text, path, all, c, t, tp, ts, tc, tf, axis):
             wmarke(text, file, '.', im, c, t, tp, ts, tc, tf, axis)
         except UnidentifiedImageError:
             print('Error: the file is not a image or the type can\'t be identified')
+
+
+@image.command()
+@click.argument('path', metavar='<path>', type=click.Path(exists=True))
+@click.option('-ps', type=click.Path(exists=True), help='Paste de copied image here')
+@click.option('-all', is_flag=True, help='Paste the copied image to all images on a path')
+@click.option('-c', '-compare', is_flag=True, help='Compare the original image with the edited')
+@click.option('-t', '-test', is_flag=True, help='Just test the editor, don\'t save the edition')
+@click.option('-axis', nargs=2, type=click.INT, default=(0, 0), help='Set new values for x, y dimensions')
+@click.option('-rs', is_flag=True, help='Resize the copied image to be pasted')
+def paste(path, ps, axis, rs, all, c, t):
+    if not c:
+        c = True if t else None
+    x, y = axis
+    try:
+        im = Image.open(get_file(path))
+        if all:
+            n_editions = 0
+            try:
+                os.chdir(ps)
+                with tqdm(total=files_range()) as pbar:
+                    for root, folders, files in os.walk('.'):
+                        for file in files:
+                            try:
+                                im2 = Image.open(file)
+                                im2.paste(im, (x, y))
+                                n_editions += 1
+                                compare(im, im2) if c else None
+                                save(im2, os.path.join(root, file)) if not t else None
+                            except:
+                                pass
+                            pbar.update(1)
+                print(f'Process completed, {n_editions} images edited')
+            except Exception as e:
+                print(e)
+        else:
+            if not ps:
+                print('Error, set a image to paste the copied with -pc, --help fot datails')
+            else:
+                im2 = Image.open(get_file(ps))
+                if rs:
+                    im = im.resize((im2.size[0], im2.size[1]))
+                im2.paste(im, (x, y))
+                compare(im, im2) if c else None
+                save(im2, get_file(path)) if not t else None
+    except UnidentifiedImageError:
+        print('Error: the file is not a image or the type can\'t be identified')

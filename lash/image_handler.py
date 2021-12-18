@@ -28,7 +28,7 @@ def flip(path, all, c, t, lr, tb):
 
     \b
     $~ lash image flip -lr -t C:\\Users\\User\\Folder\\image.png
-    $~ lsh image flip -tb -all C:\\Users\\User\\Folder
+    $~ lash image flip -tb -all C:\\Users\\User\\Folder
     """
     if not lr and not tb:
         print('Error, none action received, send some option, --help for more details')
@@ -172,7 +172,7 @@ def adjust(path, all, c, t, ct, b, s, sh):
 @click.option('-co', '-blur', is_flag=True, help='Apply contour filter')
 @click.option('-d', '-blur', is_flag=True, help='Apply detail filter')
 @click.option('-e', '-blur', is_flag=True, help='Apply emboss filter')
-@click.option('-k', '-kbzup', '-blur', is_flag=True, help='Apply kbzup filter')
+@click.option('-k', '-kbzup', is_flag=True, help='Apply kbzup filter')
 def filter(path, all, c, t, b, co, d, e, k):
     """
     Apply Filters
@@ -185,9 +185,9 @@ def filter(path, all, c, t, b, co, d, e, k):
     You can use multiple filters ore just one to run the command. See below:
     \b
 
-    $~ lash image filter -t -k C:\\Users\\Usr\\Folder\\img.png
+    $~ lash image filter -t -k -d C:\\Users\\User\\Folder\\image.png           >
     \b
-    $~ lash image adjust -all -k -d -b C:\\Users\\User\\Folder
+    $~ lash image filter -all -k -d -b C:\\Users\\User\\Folder
     """
     if all:
         n_editions = 0
@@ -229,7 +229,7 @@ def wmark(text, path, all, c, t, tp, ts, tc, tf, axis):
 
     You can configure the text size, text color and axis values for the
     watermark, you can use a custom font to, but it needs be installed on
-    your machine and be .ttf, true type font to work. This command are only
+    your machine and be .ttf (true type font), to work. This command are only
     available on Windows because the script only check the folder Win\\fonts
     for fonts. To discover your machine fonts access the font on control panel.
     \b

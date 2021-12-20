@@ -7,7 +7,7 @@ config = config()
 
 @click.command()
 @click.argument('path', metavar='<path>', type=click.Path(exists=True), required=False, default='.')
-@click.option('-t', type=click.STRING, help='[Flag] Organize files per type')
+@click.option('-t', type=click.STRING, help='Organize files per type')
 @click.option('-m', is_flag=True, default=False, show_default=True, help='Midia organize             ')
 @click.option('-d', is_flag=True, default=True, show_default=True, help='Docs organize              ')
 @click.option('-o', is_flag=True, default=True, show_default=True, help='Create ~Others~ folder     ')

@@ -274,6 +274,18 @@ def wmark(text, path, all, c, t, tp, ts, tc, tf, axis):
 @click.option('-axis', nargs=2, type=click.INT, default=(0, 0), help='Set new values for x, y dimensions')
 @click.option('-rs', is_flag=True, help='Resize the copied image to be pasted')
 def paste(path, ps, axis, rs, all, c, t):
+    """
+    Paste one image in other image(s)
+
+    In the path argument you need pass an image to be pasted, like a filter, effect, watermark or other,
+    second you need pass one or more images to be edited, -ps to one image or -all for all images on a
+    folder. You can set new axis to do de paste, by default x, y = 0, 0. Try to use the -axis option.
+    \b
+
+    \b
+    $~ lash image paste -rs -t C:\\Usrs\\Usr\\Fld\\im.png -ps C:\\Usrs\\Usr\\Fld\\im2.png
+    $~ lash image paste C:\\Usrs\\Usr\\Fld\\im.png -all C:\\Usrs\\Usr\\Fld -axis 50 50
+    """
     if not c:
         c = True if t else None
     x, y = axis

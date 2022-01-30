@@ -23,6 +23,8 @@ def get_ext(file='', path=''):
 
 
 def get_file(path):
+    if '\\' not in path:
+        return path
     if os.name == 'nt':
         os.chdir(path[:path.rfind('\\')])
         fn = path[path.rfind('\\') + 1:]

@@ -59,6 +59,9 @@ def ghscrape(user_name):
             'bio': github.find('div', 'p-note user-profile-bio mb-3 js-user-profile-bio f4').text.strip(),
             '7days': week
         }
+        if len(gh['bio']) > 60:
+            gh['bio'] = gh['bio'][:60]
+            gh['bio'] += '...'
         print(f"""
     UsrInf :: {gh['nick']} -> {gh['contributions']} contributions, {gh['followers']} followers, {gh['repos']} repos
     UsrBio :: {gh['bio']}

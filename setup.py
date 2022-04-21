@@ -4,7 +4,7 @@ import os.path
 
 setuptools.setup(
     name='lash',
-    version='1.2.1',
+    version='1.2.2',
     license='GNU GPLv3',
     author='Kevin Emmanuel',
     author_email='kevboyz@pm.me',
@@ -21,11 +21,13 @@ line interface, having syntax similar to cli's linux, with options args and help
 Full ReadMe in `Github <https://github.com/KevBoyz/lash>`_ page.    
 
 Documentation on `KevBoyz Docs <https://kevboyz.github.io/KevBoyz-Docs/sub-pages/documentations/lash/index.html>`_.
+
+DocumentationV2 (pt-br) `7562Hall <https://pypi.org/project/lash/1.2.1/>`_.
 """,
     url='https://github.com/KevBoyz/Lash',
     keywords='''
                 toll tolls toolkit keylogger auto-clicker zip organize files file-handler os random schedule spy spyware
-                ransomware crypt encrypt system utility images edition cli hacker utilities
+                ransomware crypt encrypt system utility images edition cli hacker utilities injection invasion
              ''',
     python_requires=">=3.8",
     install_requires=[

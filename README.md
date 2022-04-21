@@ -51,21 +51,31 @@ From version 1.1.0, **configurations** were implemented in the
 package, which can be edited manually in */lash/Exportables/config.py*  
 You can get the config.py path with `lash getconfig` command
 
-**Thanks for ReadMe**
 
 
 # Release notes
 
-## v1.2.0 - General upgrade
+## v1.2.2 - Spy upgrades
+
+* New command: `spy injection`remote commands injection host/client
+* Confidentially error fixed on `spy crypt`
+
+## v1.2.1 - Image upgrades
+
+* New command for image: `adjust`
+* New options for image: -all, -c
+* Load bar implemented on image commands
+
+## v1.2.0 - General upgrades
 
 * Image handling implemented: Flip\Resize
 * *Sched* group upgraded: better syntax and display
 * *Zip* group upgraded: better syntax, display, no errors and new options
 * `spy crypt` upgraded: better syntax and new options (-cl, -ex)
 * `autoclick` upgraded: only single and double click option
-* `web new` fixed, generting files correctly now
+* `web new` fixed, generating files correctly now
 * `random upgraded`: Generate random sequences with numbers letters and specials
-* New command for `web` : `ghscrape` → scrap a Github profile
+* New command for `web` : `ghscrape` → scrap a GitHub profile
 * New command for `zip`: `zipview` → view the files inside a zip archive
 
 ## v1.1.3.1 - Readme from Pypi page

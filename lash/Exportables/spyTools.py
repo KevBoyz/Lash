@@ -18,9 +18,7 @@ You need to use the custom commands instead the system defaults
     
 {"-" * 24}   Custom commands   {"-" * 24}
 [-chdir path]          Change the the remote directory
-[-start x]             Start something on host
 [-kill]                Kill server all, connections lost
-[-cls]                 Clear the client terminal like cls
 [-copy path_host]      Copy a file from host to your machine
 [-move path_local]     Move a file from your machine to host
 Move/Copy, gonna affect the local directory (host or client) 
@@ -36,10 +34,7 @@ def custom_server_manager(conn, buffer, path, command, command_arg1):
         os.chdir(path)
         return True
     elif command_arg1 == '-copy':
-        print(command)
-        print(command_arg1)
         file_name = ''.join(command[len(command_arg1):]).strip()
-        print(file_name)
         with open(file_name, 'r') as file:
             content = file.read()
         conn.send(bytes(file_name, 'utf-8'))

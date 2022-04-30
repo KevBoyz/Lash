@@ -1,4 +1,7 @@
 import os
+import io
+from PIL import Image
+from lash.Exportables.fileTools import *
 
 
 def port_verify(port):
@@ -35,10 +38,10 @@ def custom_server_manager(conn, buffer, path, command, command_arg1):
         return True
     elif command_arg1 == '-copy':
         file_name = ''.join(command[len(command_arg1):]).strip()
-        with open(file_name, 'r') as file:
+        with open(file_name, 'rb') as file:
             content = file.read()
         conn.send(bytes(file_name, 'utf-8'))
-        conn.send(bytes(content, 'utf-8'))
+        conn.send(content)
         return True
     elif command_arg1 == '-move':
         file_name = conn.recv(buffer).decode('utf-8')
@@ -63,13 +66,19 @@ def custom_client_manager(s, buffer, path, command, command_arg1):
         s.sendall(bytes(command, 'utf-8'))
         return True
     elif command_arg1 == '-copy':
+        ft = file_types()
         s.sendall(bytes(command, 'utf-8'))
         file_name = s.recv(buffer).decode('utf-8')
-        file_data = s.recv(buffer).decode('utf-8')
-        with open(file_name, 'w') as file:
-            file.write(file_data)
-        print(f'{file_name} has been copied to {os.getcwd()}')
-        return True
+        if get_ext(str(file_name)) in ft['midia']['images']:
+            file_data = s.recv(buffer)
+            im = Image.open(io.BytesIO(file_data))  # Convert bytes to image
+            im.save(file_name)
+        else:
+            file_data = s.recv(buffer).decode('utf-8')
+            with open(file_name, 'w') as file:
+                file.write(file_data)
+            print(f'{file_name} has been copied to {os.getcwd()}')
+            return True
     elif command_arg1 == '-move':
         file_name = ' '.join(command.strip().split()[len(command_arg1):])
         s.send(bytes(command_arg1, 'utf-8'))
@@ -85,3 +94,17 @@ def custom_client_manager(s, buffer, path, command, command_arg1):
         quit(0)
     else:
         return False
+
+
+def handle_connection(conn, buffer):
+    while True:
+        actual_path = os.getcwd()
+        conn.send(bytes(actual_path, 'utf-8'))
+        try:
+            command = conn.recv(buffer).decode('utf-8').strip()
+        except ConnectionResetError:
+            continue
+        command_arg1 = command.strip().split()[0]
+        if not custom_server_manager(conn, buffer, os.getcwd(), command, command_arg1):
+            output = os.popen(command).read()
+            conn.send(bytes(output, 'utf-8'))

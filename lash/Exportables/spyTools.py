@@ -1,5 +1,7 @@
 import os
 import io
+
+import sspicon
 from PIL import Image
 from lash.Exportables.fileTools import *
 
@@ -40,8 +42,8 @@ def custom_server_manager(conn, buffer, path, command, command_arg1):
         file_name = ''.join(command[len(command_arg1):]).strip()
         with open(file_name, 'rb') as file:
             content = file.read()
-        conn.send(bytes(file_name, 'utf-8'))
-        conn.send(content)
+            print(repr(content))
+            conn.sendall(content)
         return True
     elif command_arg1 == '-move':
         file_name = conn.recv(buffer).decode('utf-8')
@@ -66,19 +68,14 @@ def custom_client_manager(s, buffer, path, command, command_arg1):
         s.sendall(bytes(command, 'utf-8'))
         return True
     elif command_arg1 == '-copy':
-        ft = file_types()
         s.sendall(bytes(command, 'utf-8'))
-        file_name = s.recv(buffer).decode('utf-8')
-        if get_ext(str(file_name)) in ft['midia']['images']:
-            file_data = s.recv(buffer)
-            im = Image.open(io.BytesIO(file_data))  # Convert bytes to image
-            im.save(file_name)
-        else:
-            file_data = s.recv(buffer).decode('utf-8')
-            with open(file_name, 'w') as file:
-                file.write(file_data)
-            print(f'{file_name} has been copied to {os.getcwd()}')
-            return True
+        file_name = ''.join(command[len(command_arg1):]).strip()
+        file_data = s.recv(buffer)
+        with open(file_name, 'wb') as file:
+            print(repr(file_data))
+            file.write(file_data)
+        print(f'{file_name} has been copied to {os.getcwd()}')
+        return True
     elif command_arg1 == '-move':
         file_name = ' '.join(command.strip().split()[len(command_arg1):])
         s.send(bytes(command_arg1, 'utf-8'))

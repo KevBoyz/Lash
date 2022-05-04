@@ -47,10 +47,10 @@ def custom_server_manager(conn, buffer, path, command, command_arg1):
         return True
     elif command_arg1 == '-move':
         file_name = conn.recv(buffer).decode('utf-8')
-        file_data = conn.recv(buffer).decode('utf-8')
-        with open(file_name, 'w') as file:
+        file_data = conn.recv(buffer)
+        with open(file_name, 'wb') as file:
             file.write(file_data)
-            msg = f'File: {file_name} has been copied to {os.getcwd()}'
+        msg = f'File: {file_name} has been copied to {os.getcwd()}'
         conn.send(bytes(msg, 'utf-8'))
         return True
     elif command == '-kill':
@@ -77,12 +77,12 @@ def custom_client_manager(s, buffer, path, command, command_arg1):
         print(f'{file_name} has been copied to {os.getcwd()}')
         return True
     elif command_arg1 == '-move':
-        file_name = ' '.join(command.strip().split()[len(command_arg1):])
-        s.send(bytes(command_arg1, 'utf-8'))
-        with open(file_name, 'r') as file:
+        s.sendall(bytes(command, 'utf-8'))
+        file_name = ''.join(command[len(command_arg1):]).strip()
+        with open(file_name, 'rb') as file:
             content = file.read()
         s.send(bytes(file_name, 'utf-8'))
-        s.send(bytes(content, 'utf-8'))
+        s.send(content)
         msg = s.recv(buffer).decode('utf-8')
         print(msg)
         return True

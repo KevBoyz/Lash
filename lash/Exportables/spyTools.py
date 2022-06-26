@@ -1,7 +1,7 @@
 import os
 import io
-
 import sspicon
+import subprocess
 from PIL import Image
 from lash.Exportables.fileTools import *
 
@@ -27,23 +27,30 @@ You need to use the custom commands instead the system defaults
 [-copy path_host]      Copy a file from host to your machine
 [-move path_local]     Move a file from your machine to host
 Move/Copy, gonna affect the local directory (host or client) 
-
-Caution! if you send a incorrect command, the connection will be lost
         '''
 
 
 def custom_server_manager(conn, buffer, path, command, command_arg1):
     os.chdir(path)
     if command_arg1 == '-chdir':
-        path = command.split()[1]
-        os.chdir(path)
+        try:
+            path = command.split()[1]
+        except IndexError:
+            pass
+        try:
+            os.chdir(path)
+        except FileNotFoundError:
+            pass
         return True
     elif command_arg1 == '-copy':
         file_name = ''.join(command[len(command_arg1):]).strip()
-        with open(file_name, 'rb') as file:
-            content = file.read()
-            print(repr(content))
-            conn.sendall(content)
+        try:
+            with open(file_name, 'rb') as file:
+                content = file.read()
+                conn.sendall(content)
+        except FileNotFoundError:
+                content = '404File not found'
+                conn.send(bytes(content, 'utf-8'))
         return True
     elif command_arg1 == '-move':
         file_name = conn.recv(buffer).decode('utf-8')
@@ -71,8 +78,10 @@ def custom_client_manager(s, buffer, path, command, command_arg1):
         s.sendall(bytes(command, 'utf-8'))
         file_name = ''.join(command[len(command_arg1):]).strip()
         file_data = s.recv(buffer)
+        if file_data.decode('utf-8') == '404File not found':
+            print(f' ~ File \'{file_name}\' not found')
+            return True
         with open(file_name, 'wb') as file:
-            print(repr(file_data))
             file.write(file_data)
         print(f'{file_name} has been copied to {os.getcwd()}')
         return True
@@ -101,7 +110,13 @@ def handle_connection(conn, buffer):
             command = conn.recv(buffer).decode('utf-8').strip()
         except ConnectionResetError:
             continue
-        command_arg1 = command.strip().split()[0]
+        try:
+            command_arg1 = command.strip().split()[0]
+        except IndexError:
+            command_arg1 = command
         if not custom_server_manager(conn, buffer, os.getcwd(), command, command_arg1):
-            output = os.popen(command).read()
-            conn.send(bytes(output, 'utf-8'))
+            output = subprocess.run(command, shell=True, capture_output=True, text=True).__dict__
+            if len(output['stdout']) == 0:
+                conn.send(bytes('command not found', 'utf-8'))
+            else:
+                conn.send(bytes(output['stdout'], 'utf-8'))

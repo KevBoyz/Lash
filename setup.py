@@ -40,7 +40,8 @@ DocumentationV2 (pt-br) `7562Hall <https://pypi.org/project/lash/1.2.1/>`_.
         'requests~=2.26.0',
         'bs4~=0.0.1',
         'pillow~=8.4.0',
-        'matplotlib~=3.5.0',
+        'matplotlib~=3.5.1',
+        'numpy~=1.22.0',
         'tqdm~=4.62.3'
     ],
     packages=setuptools.find_packages(

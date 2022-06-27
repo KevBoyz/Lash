@@ -1,7 +1,7 @@
 from matplotlib import pyplot as plt
 
 
-def trinomial_graph():
+def cartesian_plan():
     fig = plt.figure()
     ax = fig.add_subplot(1, 1, 1)
     ax.spines['left'].set_position('center')

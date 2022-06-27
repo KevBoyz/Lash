@@ -55,7 +55,7 @@ def trinomial(coefs, r, v, xm, ym, d):
     yv = -delta / (4 * a)
 
     if d:
-        trinomial_graph()
+        cartesian_plan()
         x = np.linspace(xm * (-1), xm, ym)
         y = a * x ** 2 + b * x + c
         plt.plot(x, y, 'r')
@@ -67,3 +67,20 @@ def trinomial(coefs, r, v, xm, ym, d):
                 plt.plot(xv, yv, 'ro', color='b')
         plt.show()
     print(f'\nx1: {x1}\nx2: {x2}\nxv: {xv}\nyv: {yv}\ndelta: {delta}')
+
+
+@calc.command(help='Calculate a affine function')
+@click.argument('coefs', nargs=2, type=click.STRING)
+@click.option('-xm', type=click.INT, default=5)
+@click.option('-ym', type=click.INT, default=100)
+def binomial(coefs, xm, ym):
+    letters = get_signal(coefs)
+    a = letters[0]
+    b = letters[1]
+    x = np.linspace(xm * (-1), xm, ym)
+    y = a*x + b
+    cartesian_plan()
+    plt.plot(x, y, 'r')
+    plt.plot(0, b, 'ro')
+    plt.show()
+

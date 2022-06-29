@@ -36,9 +36,9 @@ def prob(pc, fc, d):
 @click.option('-r', is_flag=True, default=True)
 @click.option('-v', is_flag=True, default=True)
 @click.option('-xm', type=click.INT, default=5)
-@click.option('-ym', type=click.INT, default=100)
+@click.option('-t', type=click.INT, default=40)
 @click.option('-d', is_flag=True, default=True)
-def trinomial(coefs, r, v, xm, ym, d):
+def trinomial(coefs, r, v, xm, t, d):
     letters = get_signal(coefs)
     a = letters[0]
     b = letters[1]
@@ -56,7 +56,7 @@ def trinomial(coefs, r, v, xm, ym, d):
 
     if d:
         cartesian_plan()
-        x = np.linspace(xm * (-1), xm, ym)
+        x = np.linspace(xm * (-1), xm, t)
         y = a * x ** 2 + b * x + c
         plt.plot(x, y, 'r')
         if delta > 0:
@@ -72,15 +72,14 @@ def trinomial(coefs, r, v, xm, ym, d):
 @calc.command(help='Calculate a affine function')
 @click.argument('coefs', nargs=2, type=click.STRING)
 @click.option('-xm', type=click.INT, default=5)
-@click.option('-ym', type=click.INT, default=100)
-def binomial(coefs, xm, ym):
+@click.option('-t', type=click.INT, default=40)
+def binomial(coefs, xm, t):
     letters = get_signal(coefs)
     a = letters[0]
     b = letters[1]
-    x = np.linspace(xm * (-1), xm, ym)
+    x = np.linspace(xm * (-1), xm, t)
     y = a*x + b
     cartesian_plan()
     plt.plot(x, y, 'r')
     plt.plot(0, b, 'ro')
     plt.show()
-

@@ -1,7 +1,6 @@
-import click, schedule as sc
+import click
 from os import system
 from time import sleep
-
 from datetime import datetime
 from re import search
 
@@ -70,6 +69,8 @@ def exec(time, command):
     """
     if not search('\d\d:\d\d:\d', time):
         return print('ERROR sytax incorrect, try use 10:30:0 with time')
+    if time[-1] and time[-2] == 0:
+        time = time[:-1]
     while True:
         if f'{datetime.now().hour}:{datetime.now().minute}:{datetime.now().second}' == time:
             system(command=command)

@@ -55,10 +55,14 @@ def custom_server_manager(conn, buffer, path, command, command_arg1):
     elif command_arg1 == '-move':
         file_name = conn.recv(buffer).decode('utf-8')
         file_data = conn.recv(buffer)
-        with open(file_name, 'wb') as file:
-            file.write(file_data)
-        msg = f'File: {file_name} has been copied to {os.getcwd()}'
-        conn.send(bytes(msg, 'utf-8'))
+        if file_data.decode() == '404File not found':
+            msg = f'File \'{file_name}\' not found'
+            conn.send(bytes(msg, 'utf-8'))
+        else:
+            with open(file_name, 'wb') as file:
+                file.write(file_data)
+            msg = f'File: {file_name} has been copied to {os.getcwd()}'
+            conn.send(bytes(msg, 'utf-8'))
         return True
     elif command == '-kill':
         os.system('cls')
@@ -88,10 +92,13 @@ def custom_client_manager(s, buffer, path, command, command_arg1):
     elif command_arg1 == '-move':
         s.sendall(bytes(command, 'utf-8'))
         file_name = ''.join(command[len(command_arg1):]).strip()
-        with open(file_name, 'rb') as file:
-            content = file.read()
         s.send(bytes(file_name, 'utf-8'))
-        s.send(content)
+        try:
+            with open(file_name, 'rb') as file:
+                content = file.read()
+                s.send(content)
+        except FileNotFoundError:
+            s.send(bytes('404File not found', 'utf-8'))
         msg = s.recv(buffer).decode('utf-8')
         print(msg)
         return True

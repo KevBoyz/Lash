@@ -31,14 +31,21 @@ def prob(pc, fc, d):
             click.echo(f'{r:.1f}%')
 
 
-@calc.command(help='Calculate a quadratic function.')
+@calc.command()
 @click.argument('coefs', nargs=3, type=click.STRING)
-@click.option('-r', is_flag=True, default=True)
-@click.option('-v', is_flag=True, default=True)
-@click.option('-xm', type=click.INT, default=5)
-@click.option('-t', type=click.INT, default=40)
-@click.option('-d', is_flag=True, default=True)
-def trinomial(coefs, r, v, xm, t, d):
+@click.option('-d', is_flag=True, default=True, help='plot function graph', show_default=True)
+@click.option('-r', is_flag=True, default=True, help='plot function roots', show_default=True)
+@click.option('-v', is_flag=True, default=True, help='plot function vertices', show_default=True)
+@click.option('-xm', type=click.INT, default=5, help='x axis interval', show_default=True)
+@click.option('-t', type=click.INT, default=40, help='times calculated', show_default=True)
+def trinomial(coefs, d, r, v, xm, t):
+    """
+       Calculate a quadratic function
+
+       \b
+       Example: calc trinomial n3 4 7
+       use (n) to mark an coef value as negative
+       """
     letters = get_signal(coefs)
     a = letters[0]
     b = letters[1]

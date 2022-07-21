@@ -76,11 +76,18 @@ def trinomial(coefs, d, r, v, xm, t):
     print(f'\nx1: {x1}\nx2: {x2}\nxv: {xv}\nyv: {yv}\ndelta: {delta}')
 
 
-@calc.command(help='Calculate a affine function')
+@calc.command()
 @click.argument('coefs', nargs=2, type=click.STRING)
-@click.option('-xm', type=click.INT, default=5)
-@click.option('-t', type=click.INT, default=40)
+@click.option('-xm', type=click.INT, default=5, help='lim for x', show_default=True)
+@click.option('-t', type=click.INT, default=40, help='Times resolved to graph')
 def binomial(coefs, xm, t):
+    """
+       Calculate a affine function
+
+       \b
+       Example: calc trinomial n5 3
+       use (n) to mark an coef value as negative
+       """
     letters = get_signal(coefs)
     a = letters[0]
     b = letters[1]

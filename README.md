@@ -55,6 +55,13 @@ You can get the config.py path with `lash getconfig` command
 
 # Release notes
 
+## v1.2.3 - Bug fix and math
+
+* Handling errors in `spy injection`
+* New command for calc: `binomial`
+* New command for calc `trinomial`
+* Plot graph implemented for math functions
+
 ## v1.2.2 - Spy upgrades
 
 * New command: `spy injection`remote commands injection host/client

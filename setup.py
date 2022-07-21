@@ -42,7 +42,9 @@ DocumentationV2 (pt-br) `7562Hall <https://pypi.org/project/lash/1.2.1/>`_.
         'pillow~=8.4.0',
         'matplotlib~=3.5.1',
         'numpy~=1.22.0',
-        'tqdm~=4.62.3'
+        'tqdm~=4.62.3',
+        'rich~=12.2.0',
+        'pytube~=12.1.0',
     ],
     packages=setuptools.find_packages(
         os.path.join(os.path.dirname(__file__))),

@@ -1,5 +1,5 @@
 import click
-from pytube import YouTube
+from pytube import YouTube, Search
 import os
 import pathlib
 from timeit import default_timer
@@ -33,12 +33,13 @@ def on_progress(vid, chunk, bytes_remaining):
 
 @yt.command(help='download Yt video/audio')
 @click.option('-l', type=click.STRING, help='video link')
-@click.option('-a', is_flag=True, help='audio only')
+@click.option('-s', type=click.STRING, help='catch video searching')
 @click.option('-a', is_flag=True, help='audio only')
 @click.option('-f', type=click.Path(), default=downloads_file, show_default=True, help='output folder')
 @click.option('-low', is_flag=True, help='low resolution')
-def download(l, a, f, low):
-    yt = YouTube(l, on_progress_callback=on_progress)
+def download(l, s, a, f, low):
+    if not s:
+        yt = YouTube(l, on_progress_callback=on_progress)
     global p_bar
     print('Getting video', end='')
     if a:
@@ -52,6 +53,14 @@ def download(l, a, f, low):
         base, ext = os.path.splitext(out_file)
         new_file = base + '.mp3'
         os.rename(out_file, new_file)
+    elif s:
+        tic = default_timer()
+        search = Search(s)
+        video = search.results[0].streams.get_lowest_resolution()
+        toc = default_timer()
+        print(f' - Time Elapsed: {ceil((toc - tic) / 60)}min | Downloading: {video.title}')
+        totalsz = int((video.filesize / 1024) / 1024)
+        video.download(f)
     else:
         if low:
             tic = default_timer()

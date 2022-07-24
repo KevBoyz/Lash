@@ -68,9 +68,10 @@ def rec(path, t, w, c, b, f):
         print(0)
     fps = list()
     with mss() as mss_instance:
-        for c in range(0, 10000):
+        s = 0
+        while True:
+            s += 1
             last_time = time()
-            mss_instance.shot(output=f'{c}.jpeg')
+            mss_instance.shot(output=f'{s}.jpeg')
             fps.append(1 / (time() - last_time))
             print(np.mean(fps))
-

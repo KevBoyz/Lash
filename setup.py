@@ -46,6 +46,7 @@ DocumentationV2 (pt-br) `7562Hall <https://pypi.org/project/lash/1.2.1/>`_.
         'rich~=12.2.0',
         'pytube~=12.1.0',
         'python-opencv~=4.5.5.62',
+        'mss~=6.1.0',
     ],
     packages=setuptools.find_packages(
         os.path.join(os.path.dirname(__file__))),

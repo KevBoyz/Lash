@@ -74,12 +74,12 @@ def build(path, fps, n, num, r):
 @click.option('-f', is_flag=True, default=True, show_default=True, help='Delete frames after build')
 def rec(path, w, n, c, b, f):
     os.chdir(path)
+    image_folder = os.getcwd()
     if w:
         for c in range(0, w):
             print(f'{w-c}', end="\r")
             sleep(1)
         print('0', end="\r")
-        sleep(1)
     fps = list()
     if c:
         conf = open('conf.txt', 'w')
@@ -101,60 +101,11 @@ def rec(path, w, n, c, b, f):
         fps = ceil(np.mean(fps))
         if c:
             conf.close()
+    pbar = tqdm(total=len(os.listdir('.')), colour='green')
+    images = get_images(image_folder, pbar)
+    if c:
+        render_cursor(pbar, image_folder, images)
     if b:
-        pbar = resize_images(False)
-        image_folder = os.getcwd()
-        video_name = f'{n}.avi'
-        os.chdir('..')
-        images_list = [img for img in os.listdir(image_folder)
-                       if img.endswith(".jpeg")]
-        intnumbs = list()
-        for file in images_list:
-            intnumbs.append(file[:file.find('.')])
-            intnumbs.sort(key=int)
-        images = list()
-        for i in intnumbs:
-            images.append(i + '.jpeg')
-        if c:
-            pbar.reset()
-            pbar.set_description('Rendering cursor')
-            conf = open(f'{image_folder}/conf.txt', 'r')
-            for i, c in enumerate(conf.readlines()):
-                try:
-                    cord = c[:-1].split()
-                    x = int(cord[0])
-                    y = int(cord[1])
-                    im = Image.open(f'{image_folder}/{images[i]}')
-                    draw = ImageDraw.Draw(im)  # Set a Draw object
-                    draw.ellipse((x, y, x+20, y+20), fill=(255, 0, 0), outline=(0, 0, 0))
-                    im.save(f'{image_folder}/{images[i]}')
-                except Exception as e:
-                    print(c[:-2].split())
-                pbar.update(1)
-        if c:
-            conf.close()
-        pbar.update(pbar.total - pbar.n)
-        frame = cv2.imread(os.path.join(image_folder, images[0]))
-        height, width, layers = frame.shape
-        video = cv2.VideoWriter(video_name, 0, fps, (width, height))
-        pbar.reset()
-        pbar.set_description('Writing video')
-        for image in images:
-            video.write(cv2.imread(os.path.join(image_folder, image)))
-            pbar.update(1)
-        pbar.set_description('Process Compete')
-        pbar.update(pbar.total - pbar.n)
-        if f:
-            pbar.reset()
-            pbar.set_description('Clearing folder')
-            os.chdir(path)
-            for img in os.listdir('.'):
-                if img.endswith(".jpeg") or img.endswith(".txt"):
-                    os.remove(img)
-                pbar.update(1)
-        pbar.update(pbar.total - pbar.n)  # Fill 100%
-        pbar.close()
-        if c:
-            ...
-        os.chdir('..')
-        print(f'Video built and saved in {os.path.join(os.getcwd(), video_name)}')
+        alt_build(n=n, c=c, fps=fps, path=path, f=f, image_folder=image_folder, pbar=pbar, images=images)
+    else:
+        print(f'Process complete. Build with $ lash video build {path}')

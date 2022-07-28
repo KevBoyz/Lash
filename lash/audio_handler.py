@@ -1,6 +1,5 @@
 import click
 from moviepy.editor import VideoFileClip, AudioClip
-from lash.Exportables.fileTools import get_file
 
 
 @click.group('audio', help='Audio tools')

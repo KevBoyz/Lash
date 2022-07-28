@@ -40,8 +40,3 @@ def file_types():
                       'videos': ('.mp4', '.avi', '.wmv', '.mov', '.avchd')},
             'docs': ('.pdf', '.ppt', '.docx', '.txt', '.xls', '.doc')}
 
-
-
-
-
-

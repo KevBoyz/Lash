@@ -1,9 +1,13 @@
 import click
 from random import randint
+
+from rich.table import Table
+
 from lash.Exportables.config import config
 from lash.executor import abs_path_config
 from os import system, name
 from random import sample, randint
+
 
 config = config()
 
@@ -68,3 +72,48 @@ To more details use --help option
     else:
         ...
     print('\n<FUNCTION END>')
+
+
+import psutil as ps
+from rich.layout import Layout
+from rich.panel import Panel
+from rich.live import Live
+from rich import print
+from rich.progress import Progress, SpinnerColumn, BarColumn, TextColumn
+import time
+
+
+@click.command()
+def manege():
+    job_progress = Progress(
+        "{task.description}",
+        SpinnerColumn(),
+        BarColumn(),
+        TextColumn("[progress.percentage]{task.percentage:>3.0f}%"),
+    )
+    progress_table = Table.grid(expand=True)
+    progress_table.add_row(
+        Panel(job_progress, title="[b]Jobs", border_style="red", padding=(1, 2)),
+    )
+    job_progress.add_task("[cyan]Mixing", total=1000)
+    job_progress.add_task("[green]lowrin", total=2000)
+    job_progress.add_task("[green]lowrin", total=2000)
+    layout = Layout()
+    layout.split_column(
+        Layout(name='header'),
+        Layout(name='main'),
+        Layout(name='footer')
+    )
+    """ layout['main'].split_row(
+        Panel(f"{job_progress}", title="Welcome", subtitle="Thank you", style='cyan'),
+        Panel("Hello, [red]World!", title="Welcome", subtitle="Thank you", style='cyan')
+    )"""
+    layout['main'].update(progress_table)
+    with Live(layout, refresh_per_second=10):
+        while True:
+            time.sleep(0.00001)
+            for job in job_progress.tasks:
+                if not job.finished:
+                    job_progress.advance(job.id)
+
+

@@ -1,13 +1,10 @@
 import click
-from random import randint
-
-from rich.table import Table
-
 from lash.Exportables.config import config
 from lash.executor import abs_path_config
 from os import system, name
 from random import sample, randint
-
+from time import sleep
+import datetime
 
 config = config()
 
@@ -74,46 +71,83 @@ To more details use --help option
     print('\n<FUNCTION END>')
 
 
+import psutil
+
+
+def getListOfProcessSortedByMemory():
+    listOfProcObjects = []
+    for proc in psutil.process_iter():
+        try:
+            pinfo = proc.as_dict(attrs=['pid', 'name', 'username'])
+            pinfo['vms'] = proc.memory_info().vms / (1024 * 1024)
+            listOfProcObjects.append(pinfo)
+        except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
+            pass
+    # Sort list of dict by key vms i.e. memory usage
+    listOfProcObjects = sorted(listOfProcObjects, key=lambda procObj: procObj['vms'], reverse=True)
+    return listOfProcObjects
+
+
 import psutil as ps
-from rich.layout import Layout
-from rich.panel import Panel
-from rich.live import Live
-from rich import print
-from rich.progress import Progress, SpinnerColumn, BarColumn, TextColumn
-import time
+from dashing import *
 
 
-@click.command()
-def manege():
-    job_progress = Progress(
-        "{task.description}",
-        SpinnerColumn(),
-        BarColumn(),
-        TextColumn("[progress.percentage]{task.percentage:>3.0f}%"),
+@click.command(help='System panel')
+def manage():
+    tui = HSplit(
+        VSplit(
+            VGauge(val=100, title='Ram Usage', border_color=2),
+            VGauge(val=100, title='Disk Space', border_color=2)
+        ),
+        VSplit(
+            HGauge(val=100, title='Cpu Usage - x%', border_color=2),
+            HChart(val=100, title='Cpu graph', border_color=2, color=2)
+        ),
+        VSplit(
+            Text('Getting information...', border_color=2, title='Machine config', color=2),
+            Log('logs', border_color=2, color=2, title='Processes with highest memory usage')
+
+        ),
     )
-    progress_table = Table.grid(expand=True)
-    progress_table.add_row(
-        Panel(job_progress, title="[b]Jobs", border_style="red", padding=(1, 2)),
-    )
-    job_progress.add_task("[cyan]Mixing", total=1000)
-    job_progress.add_task("[green]lowrin", total=2000)
-    job_progress.add_task("[green]lowrin", total=2000)
-    layout = Layout()
-    layout.split_column(
-        Layout(name='header'),
-        Layout(name='main'),
-        Layout(name='footer')
-    )
-    """ layout['main'].split_row(
-        Panel(f"{job_progress}", title="Welcome", subtitle="Thank you", style='cyan'),
-        Panel("Hello, [red]World!", title="Welcome", subtitle="Thank you", style='cyan')
-    )"""
-    layout['main'].update(progress_table)
-    with Live(layout, refresh_per_second=10):
-        while True:
-            time.sleep(0.00001)
-            for job in job_progress.tasks:
-                if not job.finished:
-                    job_progress.advance(job.id)
+    cpu_percent = tui.items[1].items[0]
+    cpu_graph = tui.items[1].items[1]
+    ram_percent = tui.items[0].items[0]
+    disk_percent = tui.items[0].items[1]
+
+    machine_config = tui.items[2].items[0]
+    processes = tui.items[2].items[1]
+
+    while True:
+        cpu_perc = ps.cpu_percent(1)
+        vmomory = ps.virtual_memory()
+        disk = ps.disk_usage('.')
+
+        cpu_percent.value = cpu_perc
+        cpu_percent.title = f'Cpu Usage - {cpu_perc}%'
+
+        cpu_graph.append(cpu_perc)
+
+        ram_percent.value = vmomory.percent
+        ram_percent.title = f'Ram Usage - {vmomory.percent}%'
+
+        disk_percent.value = disk.percent
+        disk_percent.title = f'Disk Usage - {disk.percent}%'
+
+        machine_config.text = f'Cpu freq: {ps.cpu_freq().current / 1000}Ghz Max({ps.cpu_freq().max / 1000}Ghz) Min({ps.cpu_freq().min / 1000}Ghz)\n' \
+                              f'Cpu nucleus: {ps.cpu_count(logical=False)} Cpu threads: {ps.cpu_count(logical=True)}\n' \
+                              f'Cpu times: User({ps.cpu_times().user / 60 / 60:.2f}h) Sys({ps.cpu_times().system / 60 / 60:.2f}h) Idle({ps.cpu_times().idle / 60 / 60:.2f}h)\n' \
+                              f'Booted since {datetime.datetime.fromtimestamp(ps.boot_time()).strftime("%Y-%m-%d %H:%M:%S")}\n' \
+                              f'Ram Memory: {vmomory.total /1024/1024/1024:.2f}Gb | Using {vmomory.used /1024/1024/1024:.2f}Gb\n' \
+                              f'Disk Memory {disk.total/1024/1024/1024:.2f}Gb | Using {disk.used/1024/1024/1024:.2f}Gb\n'
 
 
+        listOfProcessNames = list()
+        for proc in psutil.process_iter():
+            pInfoDict = proc.as_dict(attrs=['pid', 'name', 'cpu_percent'])
+            listOfProcessNames.append(pInfoDict)
+        listOfRunningProcess = getListOfProcessSortedByMemory()
+        for elem in listOfRunningProcess[:11]:
+            processes.append(f'{elem["name"]}|{elem["pid"]}|{elem["vms"]:.2f}mb')
+
+        tui.display()
+        sleep(.1)

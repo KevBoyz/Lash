@@ -25,7 +25,7 @@ Global.add_command(autoclick)
 Global.add_command(keyhold)
 Global.add_command(taskkiller)
 Global.add_command(monitor)
-Global.add_command(manege)
+Global.add_command(manage)
 
 # Groups declaration
 Global.add_command(sched)

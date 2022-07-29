@@ -57,4 +57,5 @@ def download(l, s, a, f, low):
     elif s and not l:
         video = get_video_by_search(s, low)
         video.download(f)
+        print('Download complete')
 

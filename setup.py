@@ -4,7 +4,7 @@ import os.path
 
 setuptools.setup(
     name='lash',
-    version='1.2.3',
+    version='1.2.4',
     license='GNU GPLv3',
     author='Kevin Emmanuel',
     author_email='kevboyz@pm.me',
@@ -48,6 +48,7 @@ DocumentationV2 (pt-br) `7562Hall <https://pypi.org/project/lash/1.2.1/>`_.
         'python-opencv~=4.5.5.62',
         'mss~=6.1.0',
         'py-dashing~=0.3.dev0',
+        'moviepy~=1.0.3'
     ],
     packages=setuptools.find_packages(
         os.path.join(os.path.dirname(__file__))),

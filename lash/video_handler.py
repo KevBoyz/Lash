@@ -2,15 +2,17 @@ import os
 import cv2
 import click
 import numpy as np
-from PIL import Image, ImageDraw
-from tqdm import tqdm
 from mss import mss
-from keyboard import is_pressed
+from tqdm import tqdm
+from math import ceil, trunc
 from time import sleep, time
-from time import sleep, time
-from lash.Exportables.videoTools import *
-from math import ceil
 from pyautogui import position
+from keyboard import is_pressed
+from PIL import Image, ImageDraw
+from moviepy.editor import VideoFileClip, concatenate_videoclips
+from lash.Exportables.videoTools import *
+from lash.Exportables.fileTools import get_last, get_ext
+import re
 
 
 @click.group('video', help='Video tolls')
@@ -109,3 +111,22 @@ def rec(path, w, n, c, b, f):
         alt_build(n=n, c=c, fps=fps, path=path, f=f, image_folder=image_folder, pbar=pbar, images=images)
     else:
         print(f'Process complete. Build with $ lash video build {path}')
+
+
+@video.command(help='Resume a video')
+@click.argument('path', metavar='<path>', type=click.Path(exists=True))
+def resume(path):
+    file_name = get_last(path)
+    ext = get_ext(file_name)
+    new_name = file_name.replace(' ', '_').replace(ext, '') + '-resume' + ext
+    new_path = path.replace(file_name, new_name)
+    video = VideoFileClip(path).without_audio()
+    interval = trunc(video.duration / 13)
+    resume_time = 0
+    concat_list = list()
+    for c in range(0, 12):
+        sub = video.subclip(resume_time, resume_time+1.3)
+        concat_list.append(sub)
+        resume_time += interval
+    resume_video = concatenate_videoclips(concat_list, method='compose')
+    resume_video.write_videofile(new_path)

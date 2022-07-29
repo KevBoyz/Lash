@@ -18,8 +18,19 @@ def get_ext(file='', path=''):
         index = path.rfind('\\')
         return path[index+1:]
     else:
-        index = file.rfind('.')  # Getting the type of file
+        index = file.rfind('.')
         return file[index:].lower()
+
+
+def get_last(path):
+    if path.rfind('\\') != -1:
+        last = path[1+path.rfind('\\'):]
+    else:
+        last = path[1+path.rfind('/'):]
+    if last.rfind('"'):
+        last = last.replace('"', '')
+    return last
+
 
 
 def get_file(path):

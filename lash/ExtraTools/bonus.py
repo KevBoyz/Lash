@@ -137,17 +137,18 @@ def manage():
                               f'Cpu nucleus: {ps.cpu_count(logical=False)} Cpu threads: {ps.cpu_count(logical=True)}\n' \
                               f'Cpu times: User({ps.cpu_times().user / 60 / 60:.2f}h) Sys({ps.cpu_times().system / 60 / 60:.2f}h)\n' \
                               f'Booted since {datetime.datetime.fromtimestamp(ps.boot_time()).strftime("%Y-%m-%d %H:%M:%S")}\n' \
-                              f'Ram Memory: {vmomory.total /1024/1024/1024:.2f}Gb | Using {vmomory.used /1024/1024/1024:.2f}Gb\n' \
-                              f'Disk Memory {disk.total/1024/1024/1024:.2f}Gb | Using {disk.used/1024/1024/1024:.2f}Gb\n'
-
-
-        listOfProcessNames = list()
-        for proc in psutil.process_iter():
-            pInfoDict = proc.as_dict(attrs=['pid', 'name', 'cpu_percent'])
-            listOfProcessNames.append(pInfoDict)
-        listOfRunningProcess = getListOfProcessSortedByMemory()
-        for elem in listOfRunningProcess[:11]:
-            processes.append(f'{elem["name"]}|{elem["pid"]}|{elem["vms"]:.2f}mb')
+                              f'Ram: {vmomory.total /1024/1024/1024:.2f}Gb | Using {vmomory.used /1024/1024/1024:.2f}Gb\n' \
+                              f'Disk: {disk.total/1024/1024/1024:.2f}Gb | Using {disk.used/1024/1024/1024:.2f}Gb\n'
+        try:
+            listOfProcessNames = list()
+            for proc in psutil.process_iter():
+                pInfoDict = proc.as_dict(attrs=['pid', 'name', 'cpu_percent'])
+                listOfProcessNames.append(pInfoDict)
+            listOfRunningProcess = getListOfProcessSortedByMemory()
+            for elem in listOfRunningProcess[:11]:
+                processes.append(f'{elem["name"]}|{elem["pid"]}|{elem["vms"]:.2f}mb')
+        except:
+            pass
 
         tui.display()
         sleep(.1)

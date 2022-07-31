@@ -38,9 +38,11 @@ def new(path):
 
 @web.command(help='Scrape a Github profile')
 @click.argument('user_name', metavar='<nick>', type=click.STRING)
-def ghscrape(user_name):
+@click.option('-op', is_flag=True, help='Open the user page on browser')
+def ghscrape(user_name, op):
     try:
-        github = bs4.BeautifulSoup(r.get(f'https://github.com/{user_name}').text, 'html.parser')
+        url = f'https://github.com/{user_name}'
+        github = bs4.BeautifulSoup(r.get(url).text, 'html.parser')
         all = github.find_all('rect', 'ContributionCalendar-day')
         if len(all) == 0:
             print('Error, profile not found')
@@ -66,6 +68,15 @@ def ghscrape(user_name):
     UsrInf :: {gh['nick']} -> {gh['contributions']} contributions, {gh['followers']} followers, {gh['repos']} repos
     UsrBio :: {gh['bio']}
     UsrAct :: Last 7 days commits, (7-1): {gh['7days']}""")
+        if op:
+            click.launch(url)
     except Exception as e:
         print(e)
+
+
+@web.command(help='Send a email easy')
+@click.option('-email', prompt=True)
+@click.option('-passw', prompt=True, hide_input=True)
+def mail(email, passw):
+    print(email, passw)
 

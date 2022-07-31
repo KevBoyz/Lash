@@ -1,8 +1,8 @@
 from lash.Exportables.exportable_math import *
 import click
-import cmath
+from cmath import sqrt
 import math
-import numpy as np
+from numpy import linspace
 from matplotlib import pyplot as plt
 
 
@@ -53,8 +53,8 @@ def trinomial(coefs, d, r, v, xm, t):
 
     delta = (b ** 2) - (4 * a * c)
     if delta < 0:
-        x1 = (-b + cmath.sqrt(delta)) / (2 * a)
-        x2 = (-b - cmath.sqrt(delta)) / (2 * a)
+        x1 = (-b + sqrt(delta)) / (2 * a)
+        x2 = (-b - sqrt(delta)) / (2 * a)
     else:
         x1 = (-b + math.sqrt(delta)) / (2 * a)
         x2 = (-b - math.sqrt(delta)) / (2 * a)
@@ -63,7 +63,7 @@ def trinomial(coefs, d, r, v, xm, t):
 
     if d:
         cartesian_plan()
-        x = np.linspace(xm * (-1), xm, t)
+        x = linspace(xm * (-1), xm, t)
         y = a * x ** 2 + b * x + c
         plt.plot(x, y, 'r')
         if delta > 0:
@@ -91,7 +91,7 @@ def binomial(coefs, xm, t):
     letters = get_signal(coefs)
     a = letters[0]
     b = letters[1]
-    x = np.linspace(xm * (-1), xm, t)
+    x = linspace(xm * (-1), xm, t)
     y = a*x + b
     cartesian_plan()
     plt.plot(x, y, 'r')

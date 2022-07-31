@@ -1,18 +1,16 @@
 import os
-import cv2
+from cv2 import imread, VideoWriter
 import click
-import numpy as np
+from numpy import mean
 from mss import mss
 from tqdm import tqdm
 from math import ceil, trunc
 from time import sleep, time
 from pyautogui import position
 from keyboard import is_pressed
-from PIL import Image, ImageDraw
 from moviepy.editor import VideoFileClip, concatenate_videoclips
 from lash.Exportables.videoTools import *
 from lash.Exportables.fileTools import get_last, get_ext
-import re
 
 
 @click.group('video', help='Video tolls')
@@ -97,10 +95,10 @@ def rec(path, w, n, c, b, f):
                 posx = str(position().x)
                 posy = str(position().y)
                 conf.write(f'{posx} {posy}\n')
-            print(f'f3 to stop | Recording... {ceil(time()-start)}s | fps {ceil(np.mean(fps))}', end="\r")
+            print(f'f3 to stop | Recording... {ceil(time()-start)}s | fps {ceil(mean(fps))}', end="\r")
             if is_pressed('f3'):
                 break
-        fps = ceil(np.mean(fps))
+        fps = ceil(mean(fps))
         if c:
             conf.close()
     pbar = tqdm(total=len(os.listdir('.')), colour='green')

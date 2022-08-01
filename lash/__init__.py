@@ -1,4 +1,4 @@
-from click import group
+import click
 from lash.file_handler import *
 from lash.image_handler import *
 from lash.audio_handler import *
@@ -9,12 +9,11 @@ from lash.ExtraTools import *
 
 
 
-@group('global')
+@click.group('global')
 def Global():
     """\b
         - Lash 1.2.4 by KevBoyz ~ https://github.com/KevBoyz/Lash
     """
-    ...
 
 
 # Global Commands
@@ -25,7 +24,6 @@ Global.add_command(autoclick)
 Global.add_command(keyhold)
 Global.add_command(taskkiller)
 Global.add_command(monitor)
-Global.add_command(manage)
 
 # Groups declaration
 Global.add_command(sched)

@@ -14,6 +14,9 @@ def config():
     return \
         {
             'black_list': [],
+            'active_groups': {'image': True, 'video': True, 'calc': True, 'yt': True,
+                              'zip': True, 'sched': True, 'web': True, 'spy': True},
+            'active_commands': {'autoclick', 'keyhold', 'manage', 'taskkiller', 'organize', 'random', 'get_config'},
             'html_code': """
 <!DOCTYPE html>
 <html lang="en">

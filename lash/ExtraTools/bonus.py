@@ -93,7 +93,7 @@ from dashing import *
 
 
 @click.command(help='System panel')
-def manage():
+def monitor():
     tui = HSplit(
         VSplit(
             VGauge(val=100, title='Ram Usage', border_color=2),

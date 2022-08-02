@@ -92,6 +92,11 @@ UsrBio :: {gh['bio']}\n""")
 @web.command(help='Send a email easy')
 @click.option('-email', prompt=True)
 @click.option('-passw', prompt=True, hide_input=True)
-def mail(email, passw):
-    print(email, passw)
-
+@click.option('-to', prompt=True)
+@click.option('-subject', prompt=True)
+@click.option('-message', prompt=True)
+def mail(email, passw, to, subject, message):
+    from mailer import Mailer
+    mail = Mailer(email=email, password=passw)
+    mail.send(receiver=to, subject=subject, message=message)
+    print('Your email has been sent')

@@ -49,6 +49,7 @@ DocumentationV2 (pt-br) `7562Hall <https://pypi.org/project/lash/1.2.1/>`_.
         'rich~=12.2.0',
         'py-dashing~=0.3.dev0',
         'pyaes~=1.6.1',
+        'quick-mailer~=2022.2.22',
     ],
     packages=setuptools.find_packages(
         os.path.join(os.path.dirname(__file__))),

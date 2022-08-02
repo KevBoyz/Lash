@@ -68,12 +68,13 @@ def trinomial(coefs, d, r, v, xm, t):
         plt.plot(x, y, 'r')
         if delta > 0:
             if r:
-                plt.plot(x1, 0, 'ro')
-                plt.plot(x2, 0, 'ro')
+                plt.plot(x1, 0, 'ro', label=f'{x1:.2f}')
+                plt.plot(x2, 0, 'go', label=f'{x2:.2f}')
             if v:
-                plt.plot(xv, yv, 'ro', color='b')
+                plt.plot(xv, yv, 'ro', color='b', label=f'x{xv:.2f} y{yv:.2f}')
+        plt.legend()
         plt.show()
-    print(f'\nx1: {x1}\nx2: {x2}\nxv: {xv}\nyv: {yv}\ndelta: {delta}')
+    print(f'\nx1: {x1}\nx2: {x2}\nxv: {xv}\nyv: {yv}\ndelta: {delta}\n')
 
 
 @calc.command()
@@ -95,5 +96,6 @@ def binomial(coefs, xm, t):
     y = a*x + b
     cartesian_plan()
     plt.plot(x, y, 'r')
-    plt.plot(0, b, 'ro')
+    plt.plot(0, b, 'ro', label=f'{b:.2f}')
+    plt.legend()
     plt.show()

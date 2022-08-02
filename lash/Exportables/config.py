@@ -1,7 +1,6 @@
 # Configure file, edit only the values of keys.
 # Read the docstring
 import json, os
-from lash.executor import abs_path_exportables
 
 
 def config():

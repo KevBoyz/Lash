@@ -3,6 +3,8 @@ import os
 from lash.Exportables.config import config
 import requests as r
 import bs4
+from rich.console import Console
+from rich.table import Table
 
 
 config = config()
@@ -51,23 +53,36 @@ def ghscrape(user_name, op):
         del all[-5:-1]
         del all[:-8]
         all.pop()
+
+        data_level = list()
+        data_date = list()
         for e in all:
-            week += e['data-level'] + ' '
+            data_level.append(e['data-level'])
+            data_date.append(e['data-date'])
         gh = {
             'nick': github.find('span', 'p-nickname vcard-username d-block').text.strip(),
             'contributions': github.find('h2', 'f4 text-normal mb-2').text.strip()[0:4].replace('\n', ''),
             'followers': github.find('span', 'text-bold color-fg-default').text.strip(),
             'repos': github.find('span', 'Counter').text.strip(),
-            'bio': github.find('div', 'p-note user-profile-bio mb-3 js-user-profile-bio f4').text.strip(),
-            '7days': week
+            'bio': github.find('div', 'p-note user-profile-bio mb-3 js-user-profile-bio f4').text.strip()
         }
         if len(gh['bio']) > 60:
             gh['bio'] = gh['bio'][:60]
             gh['bio'] += '...'
         print(f"""
-    UsrInf :: {gh['nick']} -> {gh['contributions']} contributions, {gh['followers']} followers, {gh['repos']} repos
-    UsrBio :: {gh['bio']}
-    UsrAct :: Last 7 days commits, (7-1): {gh['7days']}""")
+UsrInf :: {gh['nick']} -> {gh['contributions']} contributions, {gh['followers']} followers, {gh['repos']} repos
+UsrBio :: {gh['bio']}\n""")
+
+        table = Table(title="User activity")
+
+        table.add_column(f"Date", style="cyan")
+        table.add_column(f"Activity", style="green")
+
+        for (date, val) in zip(data_date, data_level):
+            table.add_row(date, val)
+
+        Console().print(table)
+
         if op:
             click.launch(url)
     except Exception as e:

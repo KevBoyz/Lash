@@ -1,5 +1,7 @@
 # Configure file, edit only the values of keys.
 # Read the docstring
+import json, os
+from lash.executor import abs_path_exportables
 
 
 def config():
@@ -14,29 +16,7 @@ def config():
     return \
         {
             'black_list': [],
-            'active_groups': {'image': True, 'video': True, 'calc': True, 'yt': True,
-                              'zip': True, 'sched': True, 'web': True, 'spy': True},
-            'active_commands': {'autoclick', 'keyhold', 'manage', 'taskkiller', 'organize', 'random', 'get_config'},
-            'html_code': """
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="style.css">
-    <title></title>
-</head>
-<body>
-    <header></header>
-    <main>
-        
-    </main>
-    <footer></footer>
-
-    <script src="script.js"></script>
-</body>
-</html>""".strip(),
+            'html_code': """""",
             'css_code': """""",
             'js_code': """""",
         }

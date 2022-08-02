@@ -12,4 +12,5 @@ def path_type():
 
 
 def abs_path_config():
-    return os.path.abspath(os.path.dirname(__file__)) + path_type() + os.path.join('Exportables', 'config.py')
+    return os.path.join(os.path.abspath(os.path.dirname(__file__)), 'Exportables', 'config.py')
+

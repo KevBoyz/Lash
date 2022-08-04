@@ -4,6 +4,7 @@ from cmath import sqrt
 import math
 from numpy import linspace
 from matplotlib import pyplot as plt
+from rich import print
 
 
 @click.group('calc', help='Math utilities')
@@ -74,7 +75,8 @@ def trinomial(coefs, d, r, v, xm, t):
                 plt.plot(xv, yv, 'ro', color='b', label=f'x{xv:.2f} y{yv:.2f}')
         plt.legend()
         plt.show()
-    print(f'\nx1: {x1}\nx2: {x2}\nxv: {xv}\nyv: {yv}\ndelta: {delta}\n')
+    print(f'\n[red]x1[/red]: {x1:.3f}\n[green]x2[/green]: {x2:.3f}\n[blue]xv[/blue]: {xv:.3f}'
+          f'\n[blue]yv[/blue]: {yv:.3f}\n[yellow]dΔ[/yellow]: {delta}\n')
 
 
 @calc.command()

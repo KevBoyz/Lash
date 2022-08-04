@@ -5,6 +5,7 @@ import requests as r
 import bs4
 from rich.console import Console
 from rich.table import Table
+from rich import print
 
 
 config = config()
@@ -70,16 +71,19 @@ def ghscrape(user_name, op):
             gh['bio'] = gh['bio'][:60]
             gh['bio'] += '...'
         print(f"""
-UsrInf :: {gh['nick']} -> {gh['contributions']} contributions, {gh['followers']} followers, {gh['repos']} repos
-UsrBio :: {gh['bio']}\n""")
+UsrInf :: [bold green]{gh['nick']}[/bold green] -> {gh['contributions']} contributions, {gh['followers']} followers, {gh['repos']} repos
+UsrBio :: [italic]{gh['bio']}[/italic]\n""")
 
         table = Table(title="User activity")
 
-        table.add_column(f"Date", style="cyan")
-        table.add_column(f"Activity", style="green")
+        table.add_column(f"Date", style="cyan", justify='center')
+        table.add_column(f"Level", style="green", justify='left')
 
         for (date, val) in zip(data_date, data_level):
-            table.add_row(date, val)
+            val_bar = ''
+            for _ in range(0, int(val)):
+                val_bar += '■ '
+            table.add_row(date, val_bar.strip())
 
         Console().print(table)
 
@@ -99,4 +103,4 @@ def mail(email, passw, to, subject, message):
     from mailer import Mailer
     mail = Mailer(email=email, password=passw)
     mail.send(receiver=to, subject=subject, message=message)
-    print('Your email has been sent')
+    print('[green]Your email has been sent[/green]')

@@ -1,6 +1,8 @@
 import click, zipfile, os, shutil as sh
 from lash.Exportables.fileTools import *
 from lash.Exportables.config import config
+from random import shuffle
+from rich import print
 
 config = config()
 
@@ -106,16 +108,19 @@ def view(path):
 
 @Zip.command(help='Compress a folder in zip archive')
 @click.argument('path', metavar='<path>', type=click.Path(exists=True))
+@click.option('-fn', type=click.STRING, help='Output file name')
 @click.option('-v', is_flag=True, default=True, show_default=True, help='Verbose mode ')
 @click.option('-fo', is_flag=True, default=False, show_default=True, help='Files only mode')
-def compress(path, v, fo):
-    fn = get_ext(path=path) + '.zip'
+def compress(path, fn, v, fo):
+    if not fn:
+        fn = get_last(path=path) + '.zip'
+    else:
+        if not fn.endswith('.zip'):
+            fn += '.zip'
     os.chdir(path)
     arch = 0
     zip = zipfile.ZipFile(fn, 'w')
-    print(f'Compacting archives, please wait...')
     print() if v else None
-    print('  - - Process list - -') if v else None
     if fo:
         way = os.getcwd()
         for folder, sub_folders, files in os.walk('.'):
@@ -123,7 +128,7 @@ def compress(path, v, fo):
                 if file != fn:
                     try:
                         os.chdir(folder)
-                        print(f'Compacting: {file}') if v else None
+                        print(f'[yellow]Compacting:[/yellow] [dark_orange]{file}[/dark_orange]', end='\r') if v else None
                         zip.write(file, compress_type=zipfile.ZIP_DEFLATED)
                         arch += 1
                         os.chdir(way)
@@ -133,26 +138,34 @@ def compress(path, v, fo):
         for folder, sub_folders, files in os.walk('.'):
             for file in files:
                 if file != fn:
-                    print(f'Compacting: {file}') if v else None
+                    print(f'[yellow]Compacting:[/yellow] [dark_orange]{file}[/dark_orange]', end='\r') if v else None
                     zip.write(os.path.join(folder, file),
                               os.path.relpath(os.path.join(folder, file), '.'),
                               compress_type=zipfile.ZIP_DEFLATED)
                     arch += 1
     print() if v else None
-    print(f'Process completed, {arch} files compacted')
+    print(f'[bright_green]Process completed[/bright_green], {arch} files compacted')
     zip.close()
-    print('Moving zipfile to parent folder...')
+    print('[cyan]Moving zipfile to parent folder...[/cyan]')
     if fn == '..zip':  # If the path = '.'
-        dir_name = os.getcwd()[os.getcwd().rfind('\\')+1:] + '.zip'
-        os.rename(fn, dir_name)
+        try:
+            dir_name = os.getcwd()[os.getcwd().rfind('\\') + 1:] + '.zip'
+            os.rename(fn, dir_name)
+        except FileExistsError:
+            rlist = [7, 5, 6, 2]
+            shuffle(rlist)
+            rand = ''.join(str(e) for e in rlist)
+            dir_name = os.getcwd()[os.getcwd().rfind('\\') + 1:] + f'_{rand}' + '.zip'
+            os.rename(fn, dir_name)
         fn = dir_name
+        original_path = os.path.join(os.getcwd(), fn)
     else:
         os.chdir('..')
         try:
             sh.move(fn, '.')
         except:
-            print('Error: File not moved, still in root')
-    print(f'Concluded successfully -> {os.path.join(os.getcwd(), fn)}')
+            os.chdir(path)
+    print(f'[bright_green]Saved in[/bright_green] [bright_blue]{os.path.join(os.getcwd(), fn)}[/bright_blue]\n')
 
 
 @Zip.command(help='Extract zipfile')

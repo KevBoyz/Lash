@@ -1,9 +1,8 @@
 import os
-import io
-import sspicon
 import subprocess
-from PIL import Image
 from lash.Exportables.fileTools import *
+from rich import print
+from rich.table import Table
 
 
 def port_verify(port):
@@ -11,23 +10,22 @@ def port_verify(port):
         port = int(port)
         return port
     except ValueError:
-        print(f'Invalid port [{port}], the value needs be a integer number like 4254 or 8234')
+        print(f'[red]Invalid port[/red] [{port}], the value needs be a integer number like 4254 or 8234')
         quit(1)
 
 
 def injection_client_msg():
-    return \
-        f'''
-Connected successfully, remote injection is now active
-You need to use the custom commands instead the system defaults
-    
-{"-" * 24}   Custom commands   {"-" * 24}
-[-chdir path]          Change the the remote directory
-[-kill]                Kill server all, connections lost
-[-copy path_host]      Copy a file from host to your machine
-[-move path_local]     Move a file from your machine to host
-Move/Copy, gonna affect the local directory (host or client) 
-        '''
+    table = Table(box=None)
+    table.add_column('Command', justify='left', style='bright_green')
+    table.add_column('Description', justify='left', style='green')
+
+    table.add_row('-chdir <path>', 'Change the the remote directory')
+    table.add_row('-copy <path_host>', 'Copy a file from host to your machine')
+    table.add_row('-move <path_local>', 'Move a file from your machine to host')
+    table.add_row('-kill', 'Kill server all, connections lost')
+
+    table.caption = 'Use this commands instead the originals to avoid problems'
+    return table
 
 
 def custom_server_manager(conn, buffer, path, command, command_arg1):
@@ -82,12 +80,17 @@ def custom_client_manager(s, buffer, path, command, command_arg1):
         s.sendall(bytes(command, 'utf-8'))
         file_name = ''.join(command[len(command_arg1):]).strip()
         file_data = s.recv(buffer)
-        if file_data.decode('utf-8') == '404File not found':
-            print(f' ~ File \'{file_name}\' not found')
-            return True
+        try:
+            if file_data.decode('utf-8')[:17] == '404File not found':
+                print(f'[red]File[/red] \'{file_name}\' [red]not found[/red]')
+                s.sendall(bytes(command, 'utf-8'))
+                return True
+        except UnicodeDecodeError:
+            pass
         with open(file_name, 'wb') as file:
             file.write(file_data)
         print(f'{file_name} has been copied to {os.getcwd()}')
+        s.sendall(bytes(command, 'utf-8'))
         return True
     elif command_arg1 == '-move':
         s.sendall(bytes(command, 'utf-8'))
@@ -117,6 +120,8 @@ def handle_connection(conn, buffer):
             command = conn.recv(buffer).decode('utf-8').strip()
         except ConnectionResetError:
             continue
+        except ConnectionAbortedError:
+            continue
         try:
             command_arg1 = command.strip().split()[0]
         except IndexError:
@@ -124,6 +129,6 @@ def handle_connection(conn, buffer):
         if not custom_server_manager(conn, buffer, os.getcwd(), command, command_arg1):
             output = subprocess.run(command, shell=True, capture_output=True, text=True).__dict__
             if len(output['stdout']) == 0:
-                conn.send(bytes('command not found', 'utf-8'))
+                conn.send(bytes('[red]Command not found[/red] [green]Or blank response[/green]', 'utf-8'))
             else:
                 conn.send(bytes(output['stdout'], 'utf-8'))

@@ -50,7 +50,6 @@ def ghscrape(user_name, op):
         if len(all) == 0:
             print('Error, profile not found')
             return
-        week = ''
         del all[-5:-1]
         del all[:-8]
         all.pop()
@@ -101,6 +100,9 @@ UsrBio :: [italic]{gh['bio']}[/italic]\n""")
 @click.option('-message', prompt=True)
 def mail(email, passw, to, subject, message):
     from mailer import Mailer
-    mail = Mailer(email=email, password=passw)
-    mail.send(receiver=to, subject=subject, message=message)
-    print('[green]Your email has been sent[/green]')
+    try:
+        mail = Mailer(email=email, password=passw)
+        mail.send(receiver=to, subject=subject, message=message)
+        print('[green]Your email has been sent[/green]')
+    except Exception as e:
+        print(f'{e}')

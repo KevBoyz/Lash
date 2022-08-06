@@ -189,11 +189,11 @@ def extract(path, to, v, ex=0):
             print(e)
     with click.progressbar(range(len(zip.namelist())), empty_char='─', fill_char='█', bar_template=bar_template()) as p:
         for f in p:
-            click.secho(f' - Extracting {list[f]}') if v else None  # Verbose
+            print(f'[yellow]Extracting[/yellow] [green]{list[f]}[/green]', end='\r') if v else None  # Verbose
             try:
                 zip.extract(list[f])
                 ex += 1
             except Exception as e:
                 print(e) if v else None
     zip.close()
-    click.secho(f' Process completed: {ex} files extracted')
+    print(f'[green]Process completed: {ex} files extracted[/green]')

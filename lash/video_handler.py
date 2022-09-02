@@ -128,3 +128,20 @@ def resume(path):
         resume_time += interval
     resume_video = concatenate_videoclips(concat_list, method='compose')
     resume_video.write_videofile(new_path)
+
+
+@video.command(help='Add a intro to one video')
+@click.argument('video_path', metavar='<video_path>', type=click.Path(exists=True))
+@click.argument('video_intro', metavar='<video_into>', type=click.Path(exists=True))
+@click.option('-o', type=click.STRING, help='output video name, default=original_name')
+def intro(video_path, video_intro, o):
+    video = VideoFileClip(video_path)
+    file_name = get_last(video_path)
+    intro = VideoFileClip(video_intro)
+    os.chdir(video_path.replace(file_name, ''))
+    composed = concatenate_videoclips([intro, video])
+    if o:
+        composed.write_videofile(f"{o}.mp4")
+    else:
+        composed.write_videofile(f"{file_name}.mp4")
+

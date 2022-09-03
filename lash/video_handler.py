@@ -158,3 +158,24 @@ def end(video_path, video_end, o):
         composed.write_videofile(f'{video_path.replace(filename, o)}.mp4')
     else:
         composed.write_videofile(video_path)
+
+
+@video.command(help='cut a video')
+@click.argument('path', metavar='<path>', type=click.Path(exists=True))
+@click.option('-o', type=click.STRING, help='output video name, default=original_name')
+@click.option('-i', type=(int, int, int), help='initial time for cut. Put in format (hh mm ss)')
+@click.option('-f', type=(int, int, int), help='final time for cut. Put in format (hh mm ss)')
+def cut(path, o, i, f):
+    video = VideoFileClip(path)
+    filename = get_last(path)
+    initial_time = tuple_to_seconds(i)
+    final_time = tuple_to_seconds(f)
+    clip = video.subclip(initial_time, final_time)
+    try:
+        if o:
+            clip.write_videofile(f'{path.replace(filename, o)}.mp4')
+        else:
+            clip.write_videofile(path)
+    except OSError:
+        pass
+

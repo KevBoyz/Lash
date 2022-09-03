@@ -32,6 +32,11 @@ def get_last(path):
     return last
 
 
+def path_no_file(path):
+    filename = get_last(path)
+    return path.replace(filename, '')
+
+
 
 def get_file(path):
     if '\\' not in path:

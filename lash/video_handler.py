@@ -10,7 +10,7 @@ from pyautogui import position
 from keyboard import is_pressed
 from moviepy.editor import VideoFileClip, concatenate_videoclips
 from lash.Exportables.videoTools import *
-from lash.Exportables.fileTools import get_last, get_ext
+from lash.Exportables.fileTools import get_last, get_ext, path_no_file
 
 
 @click.group('video', help='Video tolls')
@@ -136,12 +136,25 @@ def resume(path):
 @click.option('-o', type=click.STRING, help='output video name, default=original_name')
 def intro(video_path, video_intro, o):
     video = VideoFileClip(video_path)
-    file_name = get_last(video_path)
     intro = VideoFileClip(video_intro)
-    os.chdir(video_path.replace(file_name, ''))
     composed = concatenate_videoclips([intro, video])
+    filename = get_last(video_path)
     if o:
-        composed.write_videofile(f"{o}.mp4")
+        composed.write_videofile(f'{video_path.replace(filename, o)}.mp4')
     else:
-        composed.write_videofile(f"{file_name}.mp4")
+        composed.write_videofile(video_path)
 
+
+@video.command(help='Add a end to one video')
+@click.argument('video_path', metavar='<video_path>', type=click.Path(exists=True))
+@click.argument('video_end', metavar='<video_end>', type=click.Path(exists=True))
+@click.option('-o', type=click.STRING, help='output video name, default=original_name')
+def end(video_path, video_end, o):
+    video = VideoFileClip(video_path)
+    end = VideoFileClip(video_end)
+    composed = concatenate_videoclips([video, end])
+    filename = get_last(video_path)
+    if o:
+        composed.write_videofile(f'{video_path.replace(filename, o)}.mp4')
+    else:
+        composed.write_videofile(video_path)

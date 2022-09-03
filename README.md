@@ -55,6 +55,17 @@ You can get the config.py path with `lash getconfig` command
 
 # Release notes
 
+## v1.2.4 - Media support
+
+* Download musics/videos with `yt` command
+* Edit audio files with `audio` functions; cut, get
+* Edit/make video files with `video` functions; rec, make, resume, intro, end, cut
+* Monitore your system with `monitor` command (TUI dashboard)
+* New command to image: `make_video`
+* New command to web: `mail`
+* Commands stylezed with Rich lib
+* Web `ghscrape` bug fix
+
 ## v1.2.3 - Bug fix and math
 
 * Handling errors in `spy injection`

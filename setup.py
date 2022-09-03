@@ -42,7 +42,7 @@ DocumentationV2 (pt-br) `7562Hall <https://pypi.org/project/lash/1.2.1/>`_.
         'mss~=6.1.0',
         'python-opencv~=4.5.5.62',
         'pytube~=12.1.0',
-        'moviepy~=1.0.3'
+        'moviepy~=1.0.3',
         'matplotlib~=3.5.1',
         'numpy~=1.22.0',
         'tqdm~=4.62.3',

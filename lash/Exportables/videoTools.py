@@ -106,3 +106,11 @@ def get_images(image_folder, pbar):
         pbar.update(1)
     pbar.update(pbar.total - pbar.n)
     return images
+
+
+def tuple_to_seconds(times):
+    seconds = 0
+    seconds += times[0] * 3600
+    seconds += times[1] * 60
+    seconds += times[2]
+    return seconds

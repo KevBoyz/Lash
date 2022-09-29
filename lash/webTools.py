@@ -6,12 +6,12 @@ import bs4
 from rich.console import Console
 from rich.table import Table
 from rich import print
-
+import wikipedia as wk
 
 config = config()
 
 
-@click.group('web', help='Web-Tools')
+@click.group('web', help='scraping tools')
 def web():
     ...
 
@@ -106,3 +106,17 @@ def mail(email, passw, to, subject, message):
         print('[green]Your email has been sent[/green]')
     except Exception as e:
         print(f'{e}')
+
+
+@web.command(help='Read articles of wikipedia')
+@click.option('-p', type=click.STRING, help='Get a page by name')
+@click.option('-lang', type=click.STRING, default='pt', show_default=True, help='Article language')
+@click.option('-f', is_flag=True, default=False, show_default=True, help='View full article')
+def wiki(p, lang, f):
+    if not f:
+        wk.set_lang(lang)
+        print()
+        print(wk.summary(p))
+        print()
+    elif f:
+        ...

@@ -6,6 +6,8 @@ import bs4
 from rich.console import Console
 from rich.table import Table
 from rich import print
+from rich.text import Text
+from rich.panel import Panel
 import wikipedia as wk
 
 config = config()
@@ -109,14 +111,14 @@ def mail(email, passw, to, subject, message):
 
 
 @web.command(help='Read articles of wikipedia')
-@click.option('-p', type=click.STRING, help='Get a page by name')
+@click.option('-p', type=click.STRING, help='Get a page by title')
 @click.option('-lang', type=click.STRING, default='pt', show_default=True, help='Article language')
 @click.option('-f', is_flag=True, default=False, show_default=True, help='View full article')
 def wiki(p, lang, f):
+    wk.set_lang(lang)
     if not f:
-        wk.set_lang(lang)
-        print()
-        print(wk.summary(p))
-        print()
+        summary = Text(wk.summary(p), justify='left')
+        print(Panel(summary, title=f'{p} - Summary'))
     elif f:
-        ...
+        page = Text(wk.page(p), justify='left')
+        print(Panel(page, title=p))

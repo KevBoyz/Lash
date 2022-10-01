@@ -90,35 +90,61 @@ def mail(email, passw, to, subject, message):
 @click.option('-a', is_flag=True, help='audio only')
 @click.option('-f', type=click.Path(), default=downloads_folder, show_default=True, help='output folder')
 @click.option('-low', is_flag=True, help='low resolution')
-def yt(l, s, a, f, low):
-    def on_progress(vid, chunk, bytes_remaining):
-        totalsz = round((vid.filesize / 1024) / 1024, 1)
-        remain = round((bytes_remaining / 1024) / 1024, 1)
-        p_bar.reset()
-        p_bar.update(int(totalsz - remain))
-        p_bar.refresh()
-    global p_bar
-    print('Getting video', end='')
-    if l and not a:
-        yt = YouTube(l, on_progress_callback=on_progress)
-        video, totalsz = get_video_by_link(yt, low)
-        p_bar = tqdm(range(int(totalsz)), colour='green')
-        video.download(f)
-    elif a:
-        if l:
+@click.option('-list', type=click.Path(exists=True), help='Search multiple videos')
+def yt(l, s, a, f, low, list):
+    if not list:
+        def on_progress(vid, chunk, bytes_remaining):
+            totalsz = round((vid.filesize / 1024) / 1024, 1)
+            remain = round((bytes_remaining / 1024) / 1024, 1)
+            p_bar.reset()
+            p_bar.update(int(totalsz - remain))
+            p_bar.refresh()
+        global p_bar
+        print('Getting video', end='')
+        if l and not a:
             yt = YouTube(l, on_progress_callback=on_progress)
-            video, totalsz = get_audio_by_link(yt)
+            video, totalsz = get_video_by_link(yt, low)
             p_bar = tqdm(range(int(totalsz)), colour='green')
-        elif s:
-            video = get_audio_by_search(s)
-        out_file = video.download(output_path=f)
-        base, ext = os.path.splitext(out_file)
-        new_file = base + '.mp3'
-        os.rename(out_file, new_file)
-    elif s and not l:
-        video = get_video_by_search(s, low)
-        video.download(f)
-        print('Download complete')
+            video.download(f)
+        elif a:
+            if l:
+                yt = YouTube(l, on_progress_callback=on_progress)
+                video, totalsz = get_audio_by_link(yt)
+                p_bar = tqdm(range(int(totalsz)), colour='green')
+            elif s:
+                video = get_audio_by_search(s)
+            out_file = video.download(output_path=f)
+            base, ext = os.path.splitext(out_file)
+            new_file = base + '.mp3'
+            os.rename(out_file, new_file)
+        elif s and not l:
+            if low:
+                video = get_video_by_search(s, low)
+            else:
+                video = get_video_by_search(s)
+            video.download(f)
+            print('Download complete')
+    elif list:
+        c = 0
+        with open(list, 'r') as file:
+            for line in file.readlines():
+                c += 1
+                print(f'{c} Getting video', end='')
+                if a:
+                    video = get_audio_by_search(line)
+                    out_file = video.download(output_path=f)
+                    base, ext = os.path.splitext(out_file)
+                    new_file = base + '.mp3'
+                    os.rename(out_file, new_file)
+                else:
+                    if low:
+                        video = get_video_by_search(line, low)
+                    else:
+                        video = get_video_by_search(line)
+                    video.download(f)
+                print('[Download complete]')
+        print('All downloads complete')
+
 
 
 @web.command(help='Read articles of wikipedia')

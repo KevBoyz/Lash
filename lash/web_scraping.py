@@ -157,5 +157,6 @@ def wiki(p, lang, f):
         summary = Text(wk.summary(p), justify='left')
         print(Panel(summary, title=f'{p} - Summary'))
     elif f:
-        page = Text(wk.page(p), justify='left')
-        print(Panel(page, title=p))
+        page = wk.page(p)
+        article = Text(page.content, justify='left')
+        print(Panel(article, title=page.title))

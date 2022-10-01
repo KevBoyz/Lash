@@ -1,4 +1,5 @@
 import click
+from rich import print
 from lash.file_handler import *
 from lash.image_handler import *
 from lash.audio_handler import *
@@ -12,7 +13,7 @@ from lash.ExtraTools import *
 @click.group('global')
 def Global():
     """\b
-        - Lash 1.2.4 by KevBoyz ~ https://github.com/KevBoyz/Lash
+        - Lash 1.2.5 by KevBoyz ~ https://github.com/KevBoyz/Lash
     """
 
 

@@ -1,16 +1,19 @@
 import click
 import os
-from lash.Exportables.config import config
-import requests as r
 import bs4
+import requests as r
+import pathlib
+import wikipedia as wk
+from tqdm import tqdm
+from rich import print
 from rich.console import Console
 from rich.table import Table
-from rich import print
 from rich.text import Text
 from rich.panel import Panel
-import wikipedia as wk
+from lash.Exportables.webTools import *
 
-config = config()
+
+downloads_folder = os.path.join(pathlib.Path.home(), 'Downloads')
 
 
 @click.group('web', help='scraping tools')
@@ -18,33 +21,10 @@ def web():
     ...
 
 
-@web.command()
-@click.argument('path', metavar='<destiny>', type=click.Path(exists=True), default='.', required=False)
-def new(path):
-    """Start a new web project
-
-    \b
-    This command will create html5, css and javascript files in the destination folder
-    You can also edit the files code in the config.py file, to find the location of this
-    archive use the lash getconfig command, in the file, you will receive more instructions
-    """
-    os.chdir(path)
-    with open('index.html', 'w') as index:
-        index.write(config['html_code'])
-        index.close()
-    with open('style.css', 'w') as style:
-        style.write(config['css_code'])
-        style.close()
-    with open('script.js', 'w') as script:
-        script.write(config['js_code'])
-        script.close()
-    print('Files Created')
-
-
 @web.command(help='Scrape a Github profile')
 @click.argument('user_name', metavar='<nick>', type=click.STRING)
 @click.option('-op', is_flag=True, help='Open the user page on browser')
-def ghscrape(user_name, op):
+def gith(user_name, op):
     try:
         url = f'https://github.com/{user_name}'
         github = bs4.BeautifulSoup(r.get(url).text, 'html.parser')
@@ -55,7 +35,6 @@ def ghscrape(user_name, op):
         del all[-5:-1]
         del all[:-8]
         all.pop()
-
         data_level = list()
         data_date = list()
         for e in all:
@@ -74,20 +53,15 @@ def ghscrape(user_name, op):
         print(f"""
 UsrInf :: [bold green]{gh['nick']}[/bold green] -> {gh['contributions']} contributions, {gh['followers']} followers, {gh['repos']} repos
 UsrBio :: [italic]{gh['bio']}[/italic]\n""")
-
         table = Table(title="User activity")
-
         table.add_column(f"Date", style="cyan", justify='center')
         table.add_column(f"Level", style="green", justify='left')
-
         for (date, val) in zip(data_date, data_level):
             val_bar = ''
             for _ in range(0, int(val)):
                 val_bar += '■ '
             table.add_row(date, val_bar.strip())
-
         Console().print(table)
-
         if op:
             click.launch(url)
     except Exception as e:
@@ -108,6 +82,43 @@ def mail(email, passw, to, subject, message):
         print('[green]Your email has been sent[/green]')
     except Exception as e:
         print(f'{e}')
+
+
+@web.command(help='download Youtube video/audio')
+@click.option('-l', type=click.STRING, help='video link')
+@click.option('-s', type=click.STRING, help='catch video searching')
+@click.option('-a', is_flag=True, help='audio only')
+@click.option('-f', type=click.Path(), default=downloads_folder, show_default=True, help='output folder')
+@click.option('-low', is_flag=True, help='low resolution')
+def yt(l, s, a, f, low):
+    def on_progress(vid, chunk, bytes_remaining):
+        totalsz = round((vid.filesize / 1024) / 1024, 1)
+        remain = round((bytes_remaining / 1024) / 1024, 1)
+        p_bar.reset()
+        p_bar.update(int(totalsz - remain))
+        p_bar.refresh()
+    global p_bar
+    print('Getting video', end='')
+    if l and not a:
+        yt = YouTube(l, on_progress_callback=on_progress)
+        video, totalsz = get_video_by_link(yt, low)
+        p_bar = tqdm(range(int(totalsz)), colour='green')
+        video.download(f)
+    elif a:
+        if l:
+            yt = YouTube(l, on_progress_callback=on_progress)
+            video, totalsz = get_audio_by_link(yt)
+            p_bar = tqdm(range(int(totalsz)), colour='green')
+        elif s:
+            video = get_audio_by_search(s)
+        out_file = video.download(output_path=f)
+        base, ext = os.path.splitext(out_file)
+        new_file = base + '.mp3'
+        os.rename(out_file, new_file)
+    elif s and not l:
+        video = get_video_by_search(s, low)
+        video.download(f)
+        print('Download complete')
 
 
 @web.command(help='Read articles of wikipedia')

@@ -51,6 +51,7 @@ DocumentationV2 (pt-br) `7562Hall <https://pypi.org/project/lash/1.2.1/>`_.
         'pyaes~=1.6.1',
         'quick-mailer~=2022.2.22',
         'wikipedia~=1.4.0',
+        'gnews~=0.2.7'
     ],
     packages=setuptools.find_packages(
         os.path.join(os.path.dirname(__file__))),

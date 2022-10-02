@@ -4,6 +4,7 @@ import bs4
 import requests as r
 import pathlib
 import wikipedia as wk
+from gnews import GNews
 from tqdm import tqdm
 from rich import print
 from rich.console import Console
@@ -11,7 +12,6 @@ from rich.table import Table
 from rich.text import Text
 from rich.panel import Panel
 from lash.Exportables.webTools import *
-
 
 downloads_folder = os.path.join(pathlib.Path.home(), 'Downloads')
 
@@ -160,3 +160,16 @@ def wiki(p, lang, f):
         page = wk.page(p)
         article = Text(page.content, justify='left')
         print(Panel(article, title=page.title))
+
+
+@web.command(help='See the last news (Google news)')
+@click.option('-t', is_flag=True, help='Top news')
+@click.option('-lang', type=click.STRING, default='pt', show_default=True, help='News language')
+@click.option('-cont', type=click.STRING, default='BR', show_default=True, help='News country')
+def news(t, lang, cont):
+    gn = GNews(language=lang, country=cont)
+    if t:
+        top_news = gn.get_top_news()
+        for news in top_news:
+            print(f'\n[link={news["url"]}]:magnet:[/link] {news["title"]}')
+        print('\n')

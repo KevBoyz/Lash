@@ -1,8 +1,3 @@
-# Configure file, edit only the values of keys.
-# Read the docstring
-import json, os
-
-
 def config():
     """
     Configuration guide; Description of keys.
@@ -14,8 +9,5 @@ def config():
     """
     return \
         {
-            'black_list': [],
-            'html_code': """""",
-            'css_code': """""",
-            'js_code': """""",
+            'black_list': []
         }

@@ -164,12 +164,22 @@ def wiki(p, lang, f):
 
 @web.command(help='See the last news (Google news)')
 @click.option('-t', is_flag=True, help='Top news')
+@click.option('-c', type=click.STRING, help='Top news of a country')
+@click.option('-s', type=click.STRING, help='Search news')
+@click.option('-tp', type=click.STRING, help='News per topic: [WORLD TECHNOLOGY SCIENCE BUSINESS NATION SPORTS HEALTH ENTERTAINMENT')
 @click.option('-lang', type=click.STRING, default='pt', show_default=True, help='News language')
 @click.option('-cont', type=click.STRING, default='BR', show_default=True, help='News country')
-def news(t, lang, cont):
+def news(t, c, s, tp, lang, cont):
     gn = GNews(language=lang, country=cont)
     if t:
         top_news = gn.get_top_news()
-        for news in top_news:
-            print(f'\n[link={news["url"]}]:magnet:[/link] {news["title"]}')
-        print('\n')
+        impress_news(top_news)
+    elif c:
+        county_news = gn.get_news_by_location(c)
+        impress_news(county_news)
+    elif s:
+        kw_news = gn.get_news(s)
+        impress_news(kw_news)
+    elif tp:
+        topic_news = gn.get_news_by_topic(tp)
+        impress_news(topic_news)

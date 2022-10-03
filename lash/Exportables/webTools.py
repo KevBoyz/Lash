@@ -1,6 +1,7 @@
 from math import ceil
 from pytube import YouTube, Search
 from timeit import default_timer
+from rich import print
 
 
 def get_video_by_link(yt, low=False):
@@ -43,6 +44,12 @@ def get_audio_by_search(s):
     toc = default_timer()
     print(f' - Time Elapsed: {ceil((toc - tic) / 60)}min | (Audio only) Downloading: {video.title}', end=' ')
     return video
+
+
+def impress_news(all_news):
+    for news in all_news:
+        print(f'\n[link={news["url"]}]:magnet:[/link] {news["title"]}')
+    print('\n')
 
 
 

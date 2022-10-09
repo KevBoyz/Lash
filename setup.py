@@ -4,7 +4,7 @@ import os.path
 
 setuptools.setup(
     name='lash',
-    version='1.2.4',
+    version='1.2.5',
     license='GNU GPLv3',
     author='Kevin Emmanuel',
     author_email='kevboyz@pm.me',
@@ -70,5 +70,3 @@ DocumentationV2 (pt-br) `7562Hall <https://pypi.org/project/lash/1.2.1/>`_.
         'License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)'
     ]
 )
-
-

@@ -45,15 +45,17 @@ line interface, having syntax similar to cli's linux, with options args and help
 
     Aborted!
 
-### Lash Configurations
-
-From version 1.1.0, **configurations** were implemented in the
-package, which can be edited manually in */lash/Exportables/config.py*  
-You can get the config.py path with `lash getconfig` command
-
-
 
 # Release notes
+
+## v1.2.5 - Web scraping
+
+* Read Wikipedia articles/summaries with `wiki`
+* Read top news using `news` (Google News)
+* Yt moved to web group, new feature: -list
+* Command new removed
+* Command taskkiler removed
+* Command Getconfig removed
 
 ## v1.2.4 - Media support
 
@@ -135,8 +137,4 @@ You can get the config.py path with `lash getconfig` command
 * * Sub-command: `exec` -> Execute a task from determined moment of day
 * * Sub-command: `wait` -> Wait x time, run a task once and exit
 
-
   [image]: Images/lash_print.png
-
-
-

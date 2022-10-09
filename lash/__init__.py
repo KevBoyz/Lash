@@ -18,12 +18,10 @@ def Global():
 
 
 # Global Commands
-Global.add_command(getConfig)
 Global.add_command(random)
 Global.add_command(organize)
 Global.add_command(autoclick)
 Global.add_command(keyhold)
-Global.add_command(taskkiller)
 Global.add_command(monitor)
 
 # Groups declaration

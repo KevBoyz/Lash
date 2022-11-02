@@ -116,12 +116,48 @@ def monitor():
 
 
 from lash.executor import abs_path_data
+from datetime import datetime
 import pandas as pd
 import os
+import json
 
 
 @click.command(help='manage your work time')
-def work():
-    cache = os.path.join(abs_path_data(), 'cache.txt')
+@click.option('-s', is_flag=True, help='Start working')
+@click.option('-e', is_flag=True, help='End work')
+@click.option('-m', type=click.STRING, help='Add message')
+@click.option('-sv', is_flag=True, default=True, show_default=True, help='Save data')
+@click.option('-ex', type=click.Path(exists=True), help='Export data')
+def work(s, e, m, sv, ex):
+    cache = os.path.join(abs_path_data(), 'cache.json')
     workcsv = os.path.join(abs_path_data(), 'work.csv')
-
+    if not m:
+        m = 'unknown'
+    if s:
+        now = datetime.now()
+        s_time = {'year': now.year, 'month': now.month,
+                  'day': now.day, 'hour': now.hour, 'minute': now.minute}
+        with open(cache, 'w') as file:
+            file.write(json.dumps(s_time))
+        print('Good luck')
+    elif e:
+        now = datetime.now()
+        with open(cache, 'r') as file:
+            time = json.loads(file.read())
+        s_time = datetime(time['year'], time['month'],
+                time['day'], time['hour'], time['minute'])
+        delta = now - s_time
+        date = s_time.date()
+        time = f'{delta.total_seconds() / 3600:.2f}'
+        csv = pd.read_csv(workcsv)
+        csv.loc[len(csv.index)] = [date, time, m]
+        print(f'Time worked: {time}h')
+        if sv:
+            with open(workcsv, 'w') as file:
+               file.write(csv.to_csv(index=False))
+            print('Data saved ~ Export as csv with -ex option')
+    elif ex:
+        with open(workcsv, 'r') as file:
+            txt = file.read()
+        with open(os.path.join(ex, 'work.csv'), 'w') as file:
+            file.write(txt)

@@ -13,7 +13,7 @@ from lash.ExtraTools import *
 @click.group('global')
 def Global():
     """\b
-        - Lash 1.2.5 by KevBoyz ~ https://github.com/KevBoyz/Lash
+        - Lash 1.2.6 by KevBoyz ~ https://github.com/KevBoyz/Lash
     """
 
 
@@ -23,8 +23,8 @@ Global.add_command(organize)
 Global.add_command(autoclick)
 Global.add_command(keyhold)
 Global.add_command(monitor)
+Global.add_command(work)
 
-# Groups declaration
 Global.add_command(sched)
 Global.add_command(spy)
 Global.add_command(web)

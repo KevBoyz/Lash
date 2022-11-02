@@ -113,3 +113,15 @@ def monitor():
 
         tui.display()
         sleep(.1)
+
+
+from lash.executor import abs_path_data
+import pandas as pd
+import os
+
+
+@click.command(help='manage your work time')
+def work():
+    cache = os.path.join(abs_path_data(), 'cache.txt')
+    workcsv = os.path.join(abs_path_data(), 'work.csv')
+

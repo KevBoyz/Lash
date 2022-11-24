@@ -10,6 +10,33 @@ def sched():
     pass
 
 
+def reg_crono(h, m, s):
+    if s > 0:
+        s -= 1
+    if s == 0:
+        if m > 0:
+            m -= 1
+            s = 60
+        else:
+            if h > 0:
+                h -= 1
+                m = 60
+    return h, m, s
+
+
+def time_format(h, m, s):
+    s = str(s)
+    m = str(m)
+    h = str(h)
+    if len(s) == 1:
+        s = '0'+s
+    if len(m) == 1:
+        m = '0'+m
+    if len(h) == 1:
+        h = '0'+h
+    return h, m, s
+
+
 @sched.command()
 @click.argument('command', metavar='command', type=click.STRING)
 @click.argument('h', metavar='<hours>', type=click.INT, required=False, default=0)
@@ -28,10 +55,13 @@ def run(command, s, m, h):
         print(e)
     t = h * 3600 + m * 60 + s  # Converting to seconds
     while True:
+        h2, m2, s2 = h, m, s
         for i in range(0, t):
-            print(f'Time remaining: {(t - i) // 60 // 60}h {(t - i) // 60}m {t - i}s ', end="\r")
+            h2, m2, s2 = reg_crono(h2, m2, s2)
+            fh, fm, fs = time_format(h2, m2, s2)
+            print(f'Time remaining: {fh}:{fm}:{fs}', end="\r")
             sleep(1)
-        print(f'Time remaining: 0h 0m 0s ', end="\r")
+        print(f'Time remaining: 00:00:00 ', end="\r")
         system(command=command)
         print()
 
@@ -50,10 +80,11 @@ def wait(command, h, m, s):
     # assert h <= 0 and m <= 0 and s <= 0, 'Error: Time delay is not defined'
     t = h * 3600 + m * 60 + s  # Converting to seconds
     for i in range(0, t):
+        h, m, s = reg_crono(h, m, s)
+        fh, fm, fs = time_format(h, m, s)
+        print(f'Time remaining: {fh}:{fm}:{fs}', end="\r")
         sleep(1)
-        print(f'Time remaining: {(t - i) // 60 // 60}h {(t - i) // 60}m {t - i}s ', end="\r")
-    sleep(1)
-    print(f'Time remaining: 0h 0m 0s ', end="\r")
+    print(f'Time remaining: 00:00:00 ', end="\r")
     system(command=command)
 
 
@@ -67,14 +98,11 @@ def exec(time, command):
         The time need to have this syntax: 10:30:0
         Command example exec 10:30:0 "help"
     """
-    if not search('\d\d:\d\d:\d', time):
-        return print('ERROR sytax incorrect, try use 10:30:0 with time')
-    if time[-1] and time[-2] == 0:
+    if not search('\d:\d:\d', time):
+        return print('ERROR sytax incorrect, try use 10:30:0, 1:4:5 with time')
+    if time[-1] and time[-2] == '0':
         time = time[:-1]
-    while True:
-        if f'{datetime.now().hour}:{datetime.now().minute}:{datetime.now().second}' == time:
-            system(command=command)
-            return
-        else:
-            print(f' Waiting {time} -> {datetime.now().hour}:{datetime.now().minute}:{datetime.now().second}', end='\r')
-
+        print(time)
+    while f'{datetime.now().hour}:{datetime.now().minute}:{datetime.now().second}' != time:
+        print(f' Waiting {datetime.now().hour}:{datetime.now().minute}:{datetime.now().second} -> {time}', end='\r')
+    system(command=command)

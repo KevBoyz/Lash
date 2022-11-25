@@ -1,7 +1,7 @@
 import click
 from random import sample, randint
 from time import sleep
-import datetime
+from datetime import datetime
 
 @click.command(help='Generate random sequences')
 @click.option('-c', type=click.INT, default=5, show_default=True, help='Number of characters in random output')
@@ -97,7 +97,7 @@ def monitor():
         machine_config.text = f'Cpu freq: {ps.cpu_freq().current / 1000}Ghz Max({ps.cpu_freq().max / 1000}Ghz)\n' \
                               f'Cpu nucleus: {ps.cpu_count(logical=False)} Cpu threads: {ps.cpu_count(logical=True)}\n' \
                               f'Cpu times: User({ps.cpu_times().user / 60 / 60:.2f}h) Sys({ps.cpu_times().system / 60 / 60:.2f}h)\n' \
-                              f'Booted since {datetime.datetime.fromtimestamp(ps.boot_time()).strftime("%Y-%m-%d %H:%M:%S")}\n' \
+                              f'Booted since {datetime.fromtimestamp(ps.boot_time()).strftime("%Y-%m-%d %H:%M:%S")}\n' \
                               f'Ram: {vmomory.total /1024/1024/1024:.2f}Gb | Using {vmomory.used /1024/1024/1024:.2f}Gb\n' \
                               f'Disk: {disk.total/1024/1024/1024:.2f}Gb | Using {disk.used/1024/1024/1024:.2f}Gb\n'
         try:
@@ -116,7 +116,6 @@ def monitor():
 
 
 from lash.executor import abs_path_data
-from datetime import datetime
 import pandas as pd
 import os
 import json

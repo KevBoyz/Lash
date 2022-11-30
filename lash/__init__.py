@@ -1,13 +1,11 @@
 import click
-from rich import print
 from lash.file_handler import *
 from lash.image_handler import *
 from lash.audio_handler import *
 from lash.video_handler import *
-from lash.app_math import *
 from lash.web_scraping import *
 from lash.ExtraTools import *
-
+from lash.spy import *
 
 
 @click.group('global')

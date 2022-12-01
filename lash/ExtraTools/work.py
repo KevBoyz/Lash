@@ -8,6 +8,29 @@ from matplotlib import set_loglevel
 from datetime import datetime
 
 
+def time_format(h, m, s):
+    s = str(s)
+    m = str(m)
+    h = str(h)
+    if len(s) == 1:
+        s = '0'+s
+    if len(m) == 1:
+        m = '0'+m
+    if len(h) == 1:
+        h = '0'+h
+    return h, m, s
+
+
+def time_conversor(s):
+    h = int(s / 3600)
+    tm = int(s / 60)  # Total minutes
+    m = int(s / 60) - h * 60  # Rest
+    s = int(s - tm * 60)
+    ntime = float(f'{h}.{m}')
+    h, m, s = time_format(h, m, s)
+    return f'{h}:{m}:{s}', ntime
+
+
 @click.command(help='manage your work time')
 @click.option('-s', is_flag=True, help='Start working')
 @click.option('-e', is_flag=True, help='End work')
@@ -19,37 +42,37 @@ from datetime import datetime
 def work(s, e, m, sv, ex, cust, a):
     cache = os.path.join(abs_path_data(), 'cache.json')
     workcsv = os.path.join(abs_path_data(), 'work.csv')
+    now = datetime.now()
     if not m:
         m = 'unknown'
     if s:
-        now = datetime.now()
-        s_time = {'year': now.year, 'month': now.month,
+        json_time = {'year': now.year, 'month': now.month,
                   'day': now.day, 'hour': now.hour, 'minute': now.minute}
         with open(cache, 'w') as file:
-            file.write(json.dumps(s_time))
-        print('Good luck')
+            file.write(json.dumps(json_time))
+        hr, _min, sec = time_format(json_time["hour"], json_time["minute"], now.second)
+        print(f'Starting at {hr}:{_min}:{sec}')
     elif e:
-        now = datetime.now()
         with open(cache, 'r') as file:
             try:
                 time = json.loads(file.read())
             except json.JSONDecodeError:
                 print('Error: Cache empty or can\' be readied. '
                       'Be sure that you use [command -s] before run this')
-        s_time = datetime(time['year'], time['month'],
+        date_time = datetime(time['year'], time['month'],
                 time['day'], time['hour'], time['minute'])
-        delta = now - s_time
-        date = s_time.date()
-        time = f'{delta.total_seconds() / 3600:.2f}'
-        csv = pd.read_csv(workcsv)
-        csv.loc[len(csv.index)] = [date, time, m]
-        print(f'Time worked: {time}h')
+        delta = now - date_time
+        date = date_time.date()
+        time, ntime = time_conversor(delta.total_seconds())
+        print(f'Time worked: {time}')
         if sv:
+            csv = pd.read_csv(workcsv)
+            csv.loc[len(csv.index)] = [date, ntime, m]
             if cust:
                 workcsv = cust
             with open(workcsv, 'w') as file:
                file.write(csv.to_csv(index=False))
-            print(f'Data saved ~ {workcsv}')
+            # print(f'Data saved ~ {workcsv}')
     elif ex:
         with open(workcsv, 'r') as file:
             txt = file.read()

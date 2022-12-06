@@ -47,8 +47,10 @@ def gen_random(size, n, s, l, ul, v):
 @click.option('-l', is_flag=True, help='Enable letters', default=False, show_default=True)
 @click.option('-s', is_flag=True, help='Enable special characters', default=False, show_default=True)
 @click.option('-ul', is_flag=True, help='Enable Uppers and lowers for letters', default=False, show_default=True)
+@click.option('-f', help='Write output on txt file', is_flag=True, default=False, show_default=True)
 @click.option('-v', is_flag=True, help='Enable verbose mode', default=False, show_default=True)
-def random(c, n, l, s, ul, v):
+
+def random(c, n, l, s, ul, f, v):
     size = get_size(c, n, l, s)
     random_seq = gen_random(size, n, s, l, ul, v)
     if len(random_seq) < c:
@@ -56,5 +58,11 @@ def random(c, n, l, s, ul, v):
             random_seq += gen_random(1, n, s, l, ul, v)
     if len(random_seq) > c:
         random_seq = random_seq[:c]
-
-    print(f'\n{"".join(random_seq)}\n')
+    if f:
+        r_name = "".join(sample(['7','5','6','2','4'], 5))
+        fname = f'output{r_name}.txt'
+        with open(fname, 'w') as file:
+            file.write("".join(random_seq))
+        print(f'Copied to {fname}')
+    else:
+        print(f'\n{"".join(random_seq)}\n')

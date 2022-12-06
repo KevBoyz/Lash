@@ -17,6 +17,7 @@ def gen_random(size, n, s, l, ul, v):
     rand_l = []
     letters = 'qwertyuiopasdfghjklzxcvbnm'
     symbols = '!?@#$%&*_+-'
+    pbar = None  # To close IDE warning
     if size > 1:
         pbar = tqdm(total=size)
     else:
@@ -40,6 +41,13 @@ def gen_random(size, n, s, l, ul, v):
             rand_l.append(symbol)
     return rand_l
 
+def file_save(random_seq):
+    r_name = "".join(sample(['7', '5', '6', '2', '4'], 5))
+    fname = f'output{r_name}.txt'
+    with open(fname, 'w') as file:
+        file.write("".join(random_seq))
+    print(f'Copied to {fname}')
+
 
 @click.command(help='Generate random sequences')
 @click.option('-c', type=click.INT, default=5, show_default=True, help='Number of characters')
@@ -49,7 +57,6 @@ def gen_random(size, n, s, l, ul, v):
 @click.option('-ul', is_flag=True, help='Enable Uppers and lowers for letters', default=False, show_default=True)
 @click.option('-f', help='Write output on txt file', is_flag=True, default=False, show_default=True)
 @click.option('-v', is_flag=True, help='Enable verbose mode', default=False, show_default=True)
-
 def random(c, n, l, s, ul, f, v):
     size = get_size(c, n, l, s)
     random_seq = gen_random(size, n, s, l, ul, v)
@@ -59,10 +66,6 @@ def random(c, n, l, s, ul, f, v):
     if len(random_seq) > c:
         random_seq = random_seq[:c]
     if f:
-        r_name = "".join(sample(['7','5','6','2','4'], 5))
-        fname = f'output{r_name}.txt'
-        with open(fname, 'w') as file:
-            file.write("".join(random_seq))
-        print(f'Copied to {fname}')
+        file_save(random_seq)
     else:
         print(f'\n{"".join(random_seq)}\n')

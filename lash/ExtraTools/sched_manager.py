@@ -5,11 +5,6 @@ from datetime import datetime
 from re import search
 
 
-@click.group('sched', help='Schedule tasks at the command line level')
-def sched():
-    pass
-
-
 def reg_crono(h, m, s):
     if s > 0:
         s -= 1
@@ -35,6 +30,11 @@ def time_format(h, m, s):
     if len(h) == 1:
         h = '0'+h
     return h, m, s
+
+
+@click.group('sched', help='Schedule tasks at the command line level')
+def sched():
+    pass
 
 
 @sched.command()

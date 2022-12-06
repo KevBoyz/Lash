@@ -34,6 +34,7 @@ def key_up(key):
         return False
 
 
+# Injection functions
 
 
 def port_verify(port):

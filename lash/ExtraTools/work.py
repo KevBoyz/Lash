@@ -31,6 +31,32 @@ def time_conversor(s):
     return f'{h}:{m}:{s}', ntime
 
 
+def analyze(cust, workcsv):
+    set_loglevel('error')  # Hide terminal warnings
+    if cust:
+        workcsv = cust
+    df = pd.read_csv(workcsv)
+    df = df.drop(columns=['message'], axis=1)
+    fdf = df.groupby(['date']).sum()
+    plt.style.use('seaborn-dark')
+
+    for param in ['figure.facecolor', 'axes.facecolor', 'savefig.facecolor']:
+        plt.rcParams[param] = '#212946'
+
+    for param in ['text.color', 'axes.labelcolor', 'xtick.color', 'ytick.color']:
+        plt.rcParams[param] = '0.9'
+
+    fig, ax = plt.subplots()
+    ax.grid(color='#2B4969')
+
+    plt.title('Work time')
+    plt.xlabel('Date')
+    plt.ylabel('Hours')
+
+    plt.plot(fdf, color='#00ff41', marker='o')
+    plt.show()
+
+
 @click.command(help='manage your work time')
 @click.option('-s', is_flag=True, help='Start working')
 @click.option('-e', is_flag=True, help='End work')
@@ -72,33 +98,11 @@ def work(s, e, m, sv, ex, cust, a):
                 workcsv = cust
             with open(workcsv, 'w') as file:
                file.write(csv.to_csv(index=False))
-            # print(f'Data saved ~ {workcsv}')
+            # print(f'Data saved ~ {workcsv}')  # Pollutes the terminal
     elif ex:
         with open(workcsv, 'r') as file:
             txt = file.read()
         with open(os.path.join(ex, 'work.csv'), 'w') as file:
             file.write(txt)
     elif a:
-        set_loglevel('error')
-        if cust:
-            workcsv = cust
-        df = pd.read_csv(workcsv)
-        df = df.drop(columns=['message'], axis=1)
-        fdf = df.groupby(['date']).sum()
-        plt.style.use('seaborn-dark')
-
-        for param in ['figure.facecolor', 'axes.facecolor', 'savefig.facecolor']:
-            plt.rcParams[param] = '#212946'
-
-        for param in ['text.color', 'axes.labelcolor', 'xtick.color', 'ytick.color']:
-            plt.rcParams[param] = '0.9'
-
-        fig, ax = plt.subplots()
-        ax.grid(color='#2B4969')
-
-        plt.title('Work time')
-        plt.xlabel('Date')
-        plt.ylabel('Hours')
-
-        plt.plot(fdf, color='#00ff41', marker='o')
-        plt.show()
+        analyze(cust, workcsv)

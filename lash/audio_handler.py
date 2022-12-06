@@ -1,16 +1,15 @@
-import os
 import click
-from moviepy.editor import VideoFileClip, AudioClip, AudioFileClip
-from lash.Exportables.fileTools import path_no_file, get_last
+from moviepy.editor import VideoFileClip, AudioFileClip
+from lash.Exportables.fileTools import get_last
 from lash.Exportables.videoTools import tuple_to_seconds
 
 
 @click.group('audio', help='Audio tools')
-def audio():
+def audio_group():
     ...
 
 
-@audio.command(help='convert a mp4 video on an mp3 file')
+@audio_group.command(help='convert a mp4 video on an mp3 file')
 @click.argument('path', metavar='<path>', type=click.Path(exists=True))
 @click.option('-o', type=click.STRING, help='output video name, default=original_name')
 def get(path, o):
@@ -22,7 +21,7 @@ def get(path, o):
         video.audio.write_audiofile(path.replace(".mp4", ".mp3"))
 
 
-@audio.command(help='cut a audio')
+@audio_group.command(help='cut a audio')
 @click.argument('path', metavar='<path>', type=click.Path(exists=True))
 @click.option('-o', type=click.STRING, help='output video name, default=original_name')
 @click.option('-i', type=(int, int, int), help='initial time for cut. Put in format (hh mm ss)')

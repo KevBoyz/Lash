@@ -1,10 +1,7 @@
 import click, zipfile, os, shutil as sh
 from lash.Exportables.fileTools import *
-from lash.Exportables.config import config
 from random import shuffle
 from rich import print
-
-config = config()
 
 
 @click.command()
@@ -86,27 +83,27 @@ def organize(path, t, m, d, o, s, v):
 
 
 @click.group('zip', help='Zip tools')
-def Zip():
+def zip_group():
     ...
 
 
-@Zip.command(help='See the files on a zip')
+@zip_group.command(help='See the files on a zip')
 @click.argument('path', metavar='<path>', type=click.Path(exists=True))
 def view(path):
     fn = get_file(path)
     if not fn.endswith('.zip'):
         fn += '.zip'
-    zip = zipfile.ZipFile(fn, 'r')
-    list = zip.namelist()
-    if len(list) <= 0:
+    _zip = zipfile.ZipFile(fn, 'r')
+    ziplist = _zip.namelist()
+    if len(ziplist) <= 0:
         print('Error, no the zip are empty or can\'t be readied')
     else:
         print()
-        for file in list:
+        for file in ziplist:
             print(file)
 
 
-@Zip.command(help='Compress a folder in zip archive')
+@zip_group.command(help='Compress a folder in zip archive')
 @click.argument('path', metavar='<path>', type=click.Path(exists=True))
 @click.option('-fn', type=click.STRING, help='Output file name')
 @click.option('-v', is_flag=True, default=True, show_default=True, help='Verbose mode ')
@@ -119,7 +116,7 @@ def compress(path, fn, v, fo):
             fn += '.zip'
     os.chdir(path)
     arch = 0
-    zip = zipfile.ZipFile(fn, 'w')
+    _zip = zipfile.ZipFile(fn, 'w')
     print() if v else None
     if fo:
         way = os.getcwd()
@@ -129,7 +126,7 @@ def compress(path, fn, v, fo):
                     try:
                         os.chdir(folder)
                         print(f'[yellow]Compacting:[/yellow] [dark_orange]{file}[/dark_orange]', end='\r') if v else None
-                        zip.write(file, compress_type=zipfile.ZIP_DEFLATED)
+                        _zip.write(file, compress_type=zipfile.ZIP_DEFLATED)
                         arch += 1
                         os.chdir(way)
                     except:
@@ -139,13 +136,13 @@ def compress(path, fn, v, fo):
             for file in files:
                 if file != fn:
                     print(f'[yellow]Compacting:[/yellow] [dark_orange]{file}[/dark_orange]', end='\r') if v else None
-                    zip.write(os.path.join(folder, file),
+                    _zip.write(os.path.join(folder, file),
                               os.path.relpath(os.path.join(folder, file), '.'),
                               compress_type=zipfile.ZIP_DEFLATED)
                     arch += 1
     print() if v else None
     print(f'[bright_green]Process completed[/bright_green], {arch} files compacted')
-    zip.close()
+    _zip.close()
     print('[cyan]Moving zipfile to parent folder...[/cyan]')
     if fn == '..zip':  # If the path = '.'
         try:
@@ -158,7 +155,6 @@ def compress(path, fn, v, fo):
             dir_name = os.getcwd()[os.getcwd().rfind('\\') + 1:] + f'_{rand}' + '.zip'
             os.rename(fn, dir_name)
         fn = dir_name
-        original_path = os.path.join(os.getcwd(), fn)
     else:
         os.chdir('..')
         try:
@@ -168,7 +164,7 @@ def compress(path, fn, v, fo):
     print(f'[bright_green]Saved in[/bright_green] [bright_blue]{os.path.join(os.getcwd(), fn)}[/bright_blue]\n')
 
 
-@Zip.command(help='Extract zipfile')
+@zip_group.command(help='Extract zipfile')
 @click.argument('path', metavar='<file_path>', type=click.Path(exists=True))
 @click.option('-to', type=click.Path(exists=True), help='Extract to')
 @click.option('-v', is_flag=True, default=False, show_default=True, help='Verbose mode ')
@@ -176,10 +172,10 @@ def extract(path, to, v, ex=0):
     fn = get_file(path)
     if not fn.endswith('.zip'):
         fn += '.zip'
-    zip = zipfile.ZipFile(fn, 'r')
-    list = zip.namelist()
-    click.secho(f'{len(list)} Files founded in {fn}') if v else None  # Verbose
-    if len(list) <= 0:
+    _zip = zipfile.ZipFile(fn, 'r')
+    ziplist = _zip.namelist()
+    click.secho(f'{len(ziplist)} Files founded in {fn}') if v else None  # Verbose
+    if len(ziplist) <= 0:
         print(f'Error, {fn} is empty or can\'t be readied>')
         return
     if to:
@@ -187,13 +183,13 @@ def extract(path, to, v, ex=0):
             os.chdir(to)
         except Exception as e:
             print(e)
-    with click.progressbar(range(len(zip.namelist())), empty_char='─', fill_char='█', bar_template=bar_template()) as p:
+    with click.progressbar(range(len(_zip.namelist())), empty_char='─', fill_char='█', bar_template=bar_template()) as p:
         for f in p:
-            print(f'[yellow]Extracting[/yellow] [green]{list[f]}[/green]', end='\r') if v else None  # Verbose
+            print(f'[yellow]Extracting[/yellow] [green]{ziplist[f]}[/green]', end='\r') if v else None  # Verbose
             try:
-                zip.extract(list[f])
+                _zip.extract(ziplist[f])
                 ex += 1
             except Exception as e:
                 print(e) if v else None
-    zip.close()
+    _zip.close()
     print(f'[green]Process completed: {ex} files extracted[/green]')

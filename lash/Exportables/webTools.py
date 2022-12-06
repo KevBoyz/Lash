@@ -1,5 +1,5 @@
 from math import ceil
-from pytube import YouTube, Search
+from pytube import Search
 from timeit import default_timer
 from rich import print
 

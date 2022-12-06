@@ -2,7 +2,6 @@ import os
 import click
 import socket
 import pyaes as pya
-from datetime import datetime
 from threading import Thread
 from pynput.keyboard import Listener
 from lash.Exportables.spyTools import *

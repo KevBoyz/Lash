@@ -1,18 +1,6 @@
-from lash.Exportables.config import config
+# This file is here only to return the path of this directory to
+# functions that access intern files of the package
 import os
-
-config = config()
-
-
-def path_type():
-    if os.name == 'nt':
-        return '\\'
-    else:
-        return '//'
-
-
-def abs_path_config():
-    return os.path.join(os.path.abspath(os.path.dirname(__file__)), 'Exportables', 'config.py')
 
 
 def abs_path_data():

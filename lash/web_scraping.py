@@ -4,6 +4,7 @@ import bs4
 import requests as r
 import pathlib
 import wikipedia as wk
+from pytube import YouTube
 from gnews import GNews
 from tqdm import tqdm
 from rich import print

@@ -1,5 +1,5 @@
 import os
-from cv2 import imread, VideoWriter
+from cv2 import imread, VideoWriter  # The IDE can show an error, but all is working
 import click
 from numpy import mean
 from mss import mss

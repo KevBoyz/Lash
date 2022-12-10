@@ -85,15 +85,15 @@ def mail(email, passw, to, subject, message):
         print(f'{e}')
 
 
-@web.command(help='download Youtube video/audio')
-@click.option('-l', type=click.STRING, help='video link')
-@click.option('-s', type=click.STRING, help='catch video searching')
-@click.option('-a', is_flag=True, help='audio only')
+@web.command(help='Download Youtube video/audio')
+@click.option('-l', type=click.STRING, help='Video link')
+@click.option('-s', type=click.STRING, help='Catch video searching')
+@click.option('-a', is_flag=True, help='Audio only')
 @click.option('-f', type=click.Path(), default=downloads_folder, show_default=True, help='output folder')
-@click.option('-low', is_flag=True, help='low resolution')
-@click.option('-list', type=click.Path(exists=True), help='Search multiple videos')
-def yt(l, s, a, f, low, list):
-    if not list:
+@click.option('-low', is_flag=True, help='Low resolution (video)')
+@click.option('-file', type=click.Path(exists=True), help='Download multiple videos listed on a text file')
+def yt(l, s, a, f, low, file):
+    if not file:
         def on_progress(vid, chunk, bytes_remaining):
             totalsz = round((vid.filesize / 1024) / 1024, 1)
             remain = round((bytes_remaining / 1024) / 1024, 1)
@@ -125,9 +125,9 @@ def yt(l, s, a, f, low, list):
                 video = get_video_by_search(s)
             video.download(f)
             print('Download complete')
-    elif list:
+    elif file:
         c = 0
-        with open(list, 'r') as file:
+        with open(file, 'r') as file:
             for line in file.readlines():
                 c += 1
                 print(f'{c} Getting video', end='')

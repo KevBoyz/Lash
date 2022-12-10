@@ -4,6 +4,9 @@ import math
 from numpy import linspace
 from matplotlib import pyplot as plt
 from rich import print
+from itertools import product
+from functools import reduce
+from operator import mul
 
 
 def cartesian_plan():
@@ -50,6 +53,21 @@ def prob(pc, fc, d):
             print('[0.0%] For better result, use -d (flag)')
         else:
             click.echo(f'{r:.1f}%')
+
+
+@calc.command(help='Cartesian product of multiple sets')
+@click.option('-b', help='Build points')
+@click.option('-t',help='Get total of sets')
+def cartesian(b, t):
+    if b:
+        b = eval(b)
+        try:
+            print(list(product(*b)))
+        except TypeError as e:
+            print(f'{e}. Correct use: -b \'[(1,2), (2,3)]\'')
+    if t:
+        t = eval(t)
+        print(reduce(mul, t))
 
 
 @calc.command()

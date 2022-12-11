@@ -58,8 +58,6 @@ DocumentationV2 (pt-br) `7562Hall <https://pypi.org/project/lash/1.2.1/>`_.
     packages=setuptools.find_packages(
         os.path.join(os.path.dirname(__file__))),
     zip_safe=True,
-    include_package_data=True,
-    package_data={'': ['data/*.csv', 'data/*.txt']},
     classifiers=[
         'Development Status :: 5 - Production/Stable',
         'Programming Language :: Python :: 3.11',

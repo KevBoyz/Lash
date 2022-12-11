@@ -1,4 +1,6 @@
 upload_commands.txt
+cache.json
+work.csv
 /dist/
 /lash.egg-info/
 /build/

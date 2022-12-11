@@ -17,17 +17,22 @@ from lash.Exportables.webTools import *
 downloads_folder = os.path.join(pathlib.Path.home(), 'Downloads')
 
 
-@click.group('web', help='scraping tools')
+@click.group('web', help='Scraping tools')
 def web():
     ...
 
 
-@web.command(help='Scrape a Github profile')
-@click.argument('user_name', metavar='<nick>', type=click.STRING)
+@web.command(short_help='Scrape a Github profile')
+@click.argument('nick', type=click.STRING)
 @click.option('-op', is_flag=True, help='Open the user page on browser')
-def gith(user_name, op):
+def gith(nick, op):
+    """
+    \b
+    This command going to scrape github.com/NICK and take:
+    Activity, followers, repositories and bio.
+    """
     try:
-        url = f'https://github.com/{user_name}'
+        url = f'https://github.com/{nick}'
         github = bs4.BeautifulSoup(r.get(url).text, 'html.parser')
         all = github.find_all('rect', 'ContributionCalendar-day')
         if len(all) == 0:
@@ -69,12 +74,33 @@ UsrBio :: [italic]{gh['bio']}[/italic]\n""")
         print(e)
 
 
-@web.command(help='Send a email easy')
-@click.option('-email', prompt=True)
-@click.option('-passw', prompt=True, hide_input=True)
-@click.option('-to', prompt=True)
-@click.option('-subject', prompt=True)
-@click.option('-message', prompt=True)
+@web.command(short_help='Read articles of wikipedia')
+@click.option('-t', type=click.STRING, help='The title of the article')
+@click.option('-lang', type=click.STRING, default='pt', show_default=True, help='Article language')
+@click.option('-f', is_flag=True, default=False, show_default=True, help='View full article')
+def wiki(t, lang, f):
+    """
+    Read articles of Wikipedia
+
+    - The default of this command is returns only the summary. Use -f for full.
+    - To change the language use -lang and pass a language code.
+    """
+    wk.set_lang(lang)
+    if not f:
+        summary = Text(wk.summary(t), justify='left')
+        print(Panel(summary, title=f'{t} - Summary'))
+    elif f:
+        page = wk.page(t)
+        article = Text(page.content, justify='left')
+        print(Panel(article, title=page.title))
+
+
+@web.command(short_help='Send a simple email')
+@click.option('-email', prompt=True, help='Your email')
+@click.option('-passw', prompt=True, hide_input=True, help='Your email password')
+@click.option('-to', prompt=True, help='Destination')
+@click.option('-subject', prompt=True, help='Tell who you are')
+@click.option('-message', prompt=True, help='Your message')
 def mail(email, passw, to, subject, message):
     from mailer import Mailer
     try:
@@ -85,14 +111,42 @@ def mail(email, passw, to, subject, message):
         print(f'{e}')
 
 
-@web.command(help='Download Youtube video/audio')
+@web.command(short_help='Download Youtube video/audio')
 @click.option('-l', type=click.STRING, help='Video link')
-@click.option('-s', type=click.STRING, help='Catch video searching')
+@click.option('-s', type=click.STRING, help='Video name (for search)')
 @click.option('-a', is_flag=True, help='Audio only')
 @click.option('-f', type=click.Path(), default=downloads_folder, show_default=True, help='output folder')
-@click.option('-low', is_flag=True, help='Low resolution (video)')
+@click.option('-low', is_flag=True, help='Low resolution (video only)')
 @click.option('-file', type=click.Path(exists=True), help='Download multiple videos listed on a text file')
 def yt(l, s, a, f, low, file):
+    """
+    This command allows you download videos/audios from Youtube.
+
+    \b
+    There are two SIMPLE MANNERS to find your video:
+        -l: Paste the video link. This method is more confident.
+        -s: Type the video name. The name will be used to search
+            for the video. It will use the first result.
+
+    \b
+    If you want to AUTOMATE the download process of multiple videos,
+    you can create a text file and write the video(s) name(s)/link(s)
+    (one for each line). Pass the path of the file using the -file option.
+
+    \b
+    For a FAST download you can use -l (low) flag. This will return
+    the lowest resolution of the video. The default of this command
+    is return the highest resolution.
+
+    \b
+    To download only the AUDIO of the video, use the flag -a.
+    The download will be return a .mp3 file. The load bar are
+    not implemented for this type of download.
+
+    \b
+    * In case of SLOWNESS to GET the video:
+        Reset your ip address: Your IP may have been moved to a blacklist.
+    """
     if not file:
         def on_progress(vid, chunk, bytes_remaining):
             totalsz = round((vid.filesize / 1024) / 1024, 1)
@@ -147,30 +201,34 @@ def yt(l, s, a, f, low, file):
         print('All downloads complete')
 
 
-
-@web.command(help='Read articles of wikipedia')
-@click.option('-p', type=click.STRING, help='Get a page by title')
-@click.option('-lang', type=click.STRING, default='pt', show_default=True, help='Article language')
-@click.option('-f', is_flag=True, default=False, show_default=True, help='View full article')
-def wiki(p, lang, f):
-    wk.set_lang(lang)
-    if not f:
-        summary = Text(wk.summary(p), justify='left')
-        print(Panel(summary, title=f'{p} - Summary'))
-    elif f:
-        page = wk.page(p)
-        article = Text(page.content, justify='left')
-        print(Panel(article, title=page.title))
-
-
-@web.command(help='See the last news (Google news)')
-@click.option('-t', is_flag=True, help='Top news')
-@click.option('-c', type=click.STRING, help='Top news of a country')
+@web.command(short_help='See the last news (Google News)')
+@click.option('-t', is_flag=True, help='Main news (Top)')
+@click.option('-c', type=click.STRING, help='Main news of a country')
 @click.option('-s', type=click.STRING, help='Search news')
-@click.option('-tp', type=click.STRING, help='News per topic: [WORLD TECHNOLOGY SCIENCE BUSINESS NATION SPORTS HEALTH ENTERTAINMENT')
+@click.option('-tp', type=click.STRING, help='News per topic')
 @click.option('-lang', type=click.STRING, default='pt', show_default=True, help='News language')
-@click.option('-cont', type=click.STRING, default='BR', show_default=True, help='News country')
+@click.option('-cont', type=click.STRING, default='BR', show_default=True, help='Your country')
 def news(t, c, s, tp, lang, cont):
+    """
+    This command scrape news from Google News.
+
+    \b
+    -c: Filter news for a country. Example: Brazil, Pakistan.
+    -s: Search for a something you want. Return the top news.
+
+    \b
+    To filter news by topic use -tp. Topics available:
+       - WORLD TECHNOLOGY SCIENCE BUSINESS NATION SPORTS HEALTH ENTERTAINMENT
+    It is necessary to pass your topic in high-case, like as shown above.
+
+    \b
+    - To change the LANGUAGE use -lang and pass a language code.
+    - To change your COUNTRY use -cont and pass a country code.
+
+    \b
+    * In case of SLOWNESS:
+        Reset your ip address: Your IP may have been moved to a blacklist.
+    """
     gn = GNews(language=lang, country=cont)
     if t:
         top_news = gn.get_top_news()

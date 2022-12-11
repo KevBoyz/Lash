@@ -6,22 +6,32 @@ import json
 from matplotlib import pyplot as plt
 from matplotlib import set_loglevel
 from datetime import datetime
+from typing import List, Tuple, NoReturn
 
 
-def time_format(h, m, s):
-    s = str(s)
-    m = str(m)
-    h = str(h)
-    if len(s) == 1:
-        s = '0'+s
-    if len(m) == 1:
-        m = '0'+m
-    if len(h) == 1:
-        h = '0'+h
-    return h, m, s
+def time_format(*args: int) -> List:
+    """
+    Take an int and format it to time display like:
+    1 -> 01, 7 -> 07, 12 -> 12
+    """
+    fmt = list(map(lambda x:
+                         '0' + str(x) if len(str(x)) == 1
+                         else str(x), args))
+    return fmt
 
+def time_conversor(s: float) -> Tuple[str, float]:
+    """
+    Take seconds, and return it in h:m:s format
 
-def time_conversor(s):
+    x seconds -> 00:05:12
+
+    ntime is hours.minutes like:
+    h = 2, m = 10 -> 2.1
+
+    ntime is used to make a groupby using
+    pandas when -a are inputted. This will be
+    saved on a csv database.
+    """
     h = int(s / 3600)
     tm = int(s / 60)  # Total minutes
     m = int(s / 60) - h * 60  # Rest
@@ -31,10 +41,12 @@ def time_conversor(s):
     return f'{h}:{m}:{s}', ntime
 
 
-def analyze(cust, workcsv):
+def analyze(workcsv) -> NoReturn:
+    """
+    This command reads a csv and plot the data
+    on a pyplot graph (cyberpunk style).
+    """
     set_loglevel('error')  # Hide terminal warnings
-    if cust:
-        workcsv = cust
     df = pd.read_csv(workcsv)
     df = df.drop(columns=['message'], axis=1)
     fdf = df.groupby(['date']).sum()
@@ -62,10 +74,8 @@ def analyze(cust, workcsv):
 @click.option('-e', is_flag=True, help='End work')
 @click.option('-m', type=click.STRING, help='Add message')
 @click.option('-sv', is_flag=True, default=True, show_default=True, help='Save data')
-@click.option('-ex', type=click.Path(exists=True), help='Export data')
-@click.option('-cust', type=click.Path(exists=True), help='Custom file for archiving')
 @click.option('-a', is_flag=True, help='Plot your worktime')
-def work(s, e, m, sv, ex, cust, a):
+def work(s, e, m, sv, a):
     """
     This command compute how much time you work and save it
 
@@ -112,15 +122,8 @@ def work(s, e, m, sv, ex, cust, a):
         if sv:
             csv = pd.read_csv(workcsv)
             csv.loc[len(csv.index)] = [date, ntime, m]
-            if cust:
-                workcsv = cust
             with open(workcsv, 'w') as file:
                file.write(csv.to_csv(index=False))
             # print(f'Data saved ~ {workcsv}')  # Pollutes the terminal
-    elif ex:
-        with open(workcsv, 'r') as file:
-            txt = file.read()
-        with open(os.path.join(ex, 'work.csv'), 'w') as file:
-            file.write(txt)
     elif a:
-        analyze(cust, workcsv)
+        analyze(workcsv)

@@ -57,7 +57,7 @@ def analyze(cust, workcsv):
     plt.show()
 
 
-@click.command(help='manage your work time')
+@click.command(short_help='Manage your work time')
 @click.option('-s', is_flag=True, help='Start working')
 @click.option('-e', is_flag=True, help='End work')
 @click.option('-m', type=click.STRING, help='Add message')
@@ -66,6 +66,24 @@ def analyze(cust, workcsv):
 @click.option('-cust', type=click.Path(exists=True), help='Custom file for archiving')
 @click.option('-a', is_flag=True, help='Plot your worktime')
 def work(s, e, m, sv, ex, cust, a):
+    """
+    This command compute how much time you work and save it
+
+    \b
+    Start your journey using -s and end with -e.
+    The final time will be saved in a .csv file, but
+    if you don't want to save, use -e with -sv.
+
+    \b
+    To save the time with a note, use -m [message]
+
+    \b
+    The time.csv will be created in the actual directory of the terminal.
+    Other file named cache.json are created to, and it saves the time
+    you start your work. After save data on csv, this file is deleted.
+
+    - To maintain the data, be sure to always perform this in the same folder.
+    """
     cache = os.path.join(abs_path_data(), 'cache.json')
     workcsv = os.path.join(abs_path_data(), 'work.csv')
     now = datetime.now()

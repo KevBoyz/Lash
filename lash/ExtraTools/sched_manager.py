@@ -3,12 +3,13 @@ from os import system
 from time import sleep
 from datetime import datetime
 from re import search
+from typing import List
 
 
 def reg_crono(h, m, s):
     if s > 0:
         s -= 1
-    if s == 0:
+    else:
         if m > 0:
             m -= 1
             s = 60
@@ -19,17 +20,15 @@ def reg_crono(h, m, s):
     return h, m, s
 
 
-def time_format(h, m, s):
-    s = str(s)
-    m = str(m)
-    h = str(h)
-    if len(s) == 1:
-        s = '0'+s
-    if len(m) == 1:
-        m = '0'+m
-    if len(h) == 1:
-        h = '0'+h
-    return h, m, s
+def time_format(*args: int) -> List:
+    """
+    Take an int and format it to time display:
+    1 -> 01, 7 -> 07, 12 -> 12
+    """
+    fmt = list(map(lambda x:
+                         '0' + str(x) if len(str(x)) == 1
+                         else str(x), args))
+    return fmt
 
 
 @click.group('sched', help='Schedule tasks at the command line level')

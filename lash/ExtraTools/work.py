@@ -10,7 +10,7 @@ from typing import List, Tuple, NoReturn
 
 def time_format(*args: int) -> List:
     """
-    Take an int and format it to time display like:
+    Take an int and format it to time display:
     1 -> 01, 7 -> 07, 12 -> 12
     """
     fmt = list(map(lambda x:
@@ -62,7 +62,7 @@ def del_cache(cache: str) -> NoReturn:
     os.remove(cache)
 
 
-def analyze(workcsv) -> NoReturn:
+def analyze(workcsv: str) -> NoReturn:
     """
     This command reads a csv and plot the data
     on a pyplot graph (cyberpunk style).
@@ -133,7 +133,7 @@ def work(s, e, m, sv, a):
             try:
                 time = json.loads(file.read())
             except json.JSONDecodeError:
-                print('Error: Cache empty or can\' be readied. '
+                print('Error: Cache empty or can\' be readied.'
                       'Be sure that you use [command -s] before run this')
         date_time = datetime(time['year'], time['month'],
                 time['day'], time['hour'], time['minute'])

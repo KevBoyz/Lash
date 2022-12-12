@@ -20,7 +20,7 @@ def time_format(*args: int) -> List:
 
 def time_conversor(s: float) -> Tuple[str, float]:
     """
-    Take seconds, and return it in h:m:s format
+    Take seconds, and return it in h:m:s format.
 
     x seconds -> 00:05:12
 
@@ -98,7 +98,7 @@ def analyze(workcsv) -> NoReturn:
 @click.option('-a', is_flag=True, help='Plot your worktime')
 def work(s, e, m, sv, a):
     """
-    This command compute how much time you work and save it
+    This command compute how much time you work and save it.
 
     \b
     Start your journey using -s and end with -e.

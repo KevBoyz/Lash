@@ -10,8 +10,8 @@ def reg_crono(h:int, m:int, s:int) -> Tuple[int, int, int]:
     """
     Regressive clocker.
 
-    Takes hrs,mts,scs and subtract then.
-    Return the values subtracted.
+    Takes hrs,mts,scs and regress then. (-1sec)
+    Return the values regressed.
     """
     if s > 0:
         s -= 1

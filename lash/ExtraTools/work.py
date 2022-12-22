@@ -18,25 +18,24 @@ def time_format(*args: int) -> List:
                          else str(x), args))
     return fmt
 
-def time_conversor(s: float) -> Tuple[str, int, str]:
+def time_conversor(s: float) -> Tuple[str, int]:
     """
     Take seconds, and return it in h:m:s format.
 
     x seconds -> 00:05:12
 
     total_hours, total_minutes are saved in the
-    csv database. tm to plot, th only to register.
+    csv database. rt to plot, th only to register.
 
     total_minutes is used to make a groupby using
     pandas when -a are inputted.
     """
     h = int(s / 3600)
-    total_hours = f'{(s / 3600):.2f}'
     total_minutes = int(s / 60)
     m = int(s / 60) - h * 60  # Rest
     s = int(s - total_minutes * 60)
     h, m, s = time_format(h, m, s)
-    return f'{h}:{m}:{s}', total_minutes, total_hours
+    return f'{h}:{m}:{s}', total_minutes
 
 
 def make_files(s, cache:str, csv:str) -> NoReturn:
@@ -66,7 +65,7 @@ def analyze(workcsv: str) -> NoReturn:
     set_loglevel('error')  # Hide terminal warnings
     df = pd.read_csv(workcsv)
     df = df.drop(columns=['message'], axis=1)
-    df = df.drop(columns=['hours'], axis=1)
+    df = df.drop(columns=['real_time'], axis=1)
     fdf = df.groupby(['date']).sum()
     plt.style.use('seaborn-dark')
 
@@ -131,12 +130,12 @@ def work(s, e, m, sv, a):
         date_time = datetime(cache_time['year'], cache_time['month'],
                 cache_time['day'], cache_time['hour'], cache_time['minute'])
         delta = now - date_time
-        time, total_minutes, total_hours = time_conversor(delta.total_seconds())
-        print(f'Time worked: {time}')
+        real_time, total_minutes = time_conversor(delta.total_seconds())
+        print(f'Time worked: {real_time}')
         if sv:
             date = date_time.date()
             csv = pd.read_csv(workcsv)
-            csv.loc[len(csv.index)] = [date, total_minutes, total_hours, m]
+            csv.loc[len(csv.index)] = [date, total_minutes, real_time, m]
             with open(workcsv, 'w') as file:
                file.write(csv.to_csv(index=False))
             del_cache(cache)

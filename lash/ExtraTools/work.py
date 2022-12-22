@@ -81,7 +81,7 @@ def analyze(workcsv: str) -> NoReturn:
 
     plt.title('Work time')
     plt.xlabel('Date')
-    plt.ylabel('Time (hours.minutes)')
+    plt.ylabel('Minutes')
 
     plt.plot(fdf, color='#00ff41', marker='o')
     plt.show()

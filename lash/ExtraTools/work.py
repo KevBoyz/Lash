@@ -18,29 +18,25 @@ def time_format(*args: int) -> List:
                          else str(x), args))
     return fmt
 
-def time_conversor(s: float) -> Tuple[str, float]:
+def time_conversor(s: float) -> Tuple[str, int, str]:
     """
     Take seconds, and return it in h:m:s format.
 
     x seconds -> 00:05:12
 
-    ntime is hours.minutes like:
-    h = 2, m = 10 -> 2.1
+    total_hours, total_minutes are saved in the
+    csv database. tm to plot, th only to register.
 
-    ntime is used to make a groupby using
-    pandas when -a are inputted. This will be
-    saved on a csv database.
+    total_minutes is used to make a groupby using
+    pandas when -a are inputted.
     """
     h = int(s / 3600)
-    tm = int(s / 60)  # Total minutes
+    total_hours = f'{(s / 3600):.2f}'
+    total_minutes = int(s / 60)
     m = int(s / 60) - h * 60  # Rest
-    s = int(s - tm * 60)
-    if len(str(m)) == 1:  # Equivalent to m/10
-        ntime = float(f'{h}.0{m}')
-    else:
-        ntime = float(f'{h}.{m}')
+    s = int(s - total_minutes * 60)
     h, m, s = time_format(h, m, s)
-    return f'{h}:{m}:{s}', ntime
+    return f'{h}:{m}:{s}', total_minutes, total_hours
 
 
 def make_files(s, cache:str, csv:str) -> NoReturn:
@@ -70,6 +66,7 @@ def analyze(workcsv: str) -> NoReturn:
     set_loglevel('error')  # Hide terminal warnings
     df = pd.read_csv(workcsv)
     df = df.drop(columns=['message'], axis=1)
+    df = df.drop(columns=['hours'], axis=1)
     fdf = df.groupby(['date']).sum()
     plt.style.use('seaborn-dark')
 
@@ -120,7 +117,7 @@ def work(s, e, m, sv, a):
     make_files(s, cache, workcsv)
     now = datetime.now()
     if not m:
-        m = 'unknown'
+        m = 'none'
     if s:
         json_time = {'year': now.year, 'month': now.month,
                   'day': now.day, 'hour': now.hour, 'minute': now.minute}
@@ -130,20 +127,16 @@ def work(s, e, m, sv, a):
         print(f'Starting at {hr}:{_min}:{sec}')
     elif e:
         with open(cache, 'r') as file:
-            try:
-                time = json.loads(file.read())
-            except json.JSONDecodeError:
-                print('Error: Cache empty or can\' be readied.'
-                      'Be sure that you use [command -s] before run this')
-        date_time = datetime(time['year'], time['month'],
-                time['day'], time['hour'], time['minute'])
+            cache_time = json.loads(file.read())
+        date_time = datetime(cache_time['year'], cache_time['month'],
+                cache_time['day'], cache_time['hour'], cache_time['minute'])
         delta = now - date_time
-        date = date_time.date()
-        time, ntime = time_conversor(delta.total_seconds())
+        time, total_minutes, total_hours = time_conversor(delta.total_seconds())
         print(f'Time worked: {time}')
         if sv:
+            date = date_time.date()
             csv = pd.read_csv(workcsv)
-            csv.loc[len(csv.index)] = [date, ntime, m]
+            csv.loc[len(csv.index)] = [date, total_minutes, total_hours, m]
             with open(workcsv, 'w') as file:
                file.write(csv.to_csv(index=False))
             del_cache(cache)

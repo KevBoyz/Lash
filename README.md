@@ -1,14 +1,14 @@
 # Lash,  the py-package ![](Images/desktop.png)![](Images/lash_gif.gif)
 
-This package provides a set of desktop tools that simplify and automate repetitive  
-processes. Lash also has utility functions that cover some needs of desktop users.
+This package provides a set of desktop tools that simplify and automate multiple   
+processes. Lash also has utility functions that cover some needs of desktop users.  
 
-Thinking about being simple and effective, Lash was developed with a command   
-line interface, having syntax similar to cli's linux, with options args and help sections.
+Thinking about being simple and effective, Lash was developed with a command     
+line interface, having syntax similar to cli's linux, with options args and help sections.  
 
 ~ **Installing:** `pip install lash` ~ **Executing:** `python -m lash` ~ **help-sec**: `--help`
 
-![image][]   
+![](Images/lash_print2.png)  
 **Access [KevBoyz-Docs/lash](https://kevboyz.github.io/KevBoyz-Docs/sub-pages/documentations/lash/index.html) for documentation.
 [Pypi/lash](https://pypi.org/project/lash/1.2.1/) for Pypi page.** <br>
 **Updated version (pt-br): [7562Hall/lash](https://kevboyz.github.io/7562Hall/sub-pages/lash/index.html)**
@@ -48,14 +48,24 @@ line interface, having syntax similar to cli's linux, with options args and help
 
 # Release notes
 
+## v1.2.6 - General upgrades
+
+* New command: `work` for time manage
+* New command `cartesian` for _math group_
+* Better clock display for _sched group_
+* Bugfix in `monitor` command
+* _Code review_ (All files)
+* Some commands and functions have been _documented_
+* Some commands have been moved to other groups
+
 ## v1.2.5 - Web scraping
 
 * Read Wikipedia articles/summaries with `wiki`
 * Read top news using `news` (Google News)
-* Yt moved to web group, new feature: -list
-* Command new removed
-* Command taskkiler removed
-* Command Getconfig removed
+* Yt moved to _web group_, new feature: **-list**
+* Command _new_ removed
+* Command _taskkiler_ removed
+* Command _getconfig_ removed
 
 ## v1.2.4 - Media support
 

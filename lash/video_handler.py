@@ -13,7 +13,7 @@ from lash.Exportables.videoTools import *
 from lash.Exportables.fileTools import get_last, get_ext, path_no_file
 
 
-@click.group('video', help='Video tolls')
+@click.group('video', help='Video tools')
 def video():
     ...
 

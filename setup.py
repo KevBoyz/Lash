@@ -11,7 +11,7 @@ setuptools.setup(
     description='CLI tools package to desktop',
     long_description="""
 This package provides a set of desktop tools that simplify and   
-automate repetitive processes. Lash also has utility functions   
+automate multiple processes. Lash also has utility functions   
 that cover some needs of desktop users, like image handling, spy
 tools, scheduling, math and others.
 
@@ -27,7 +27,8 @@ DocumentationV2 (pt-br) `7562Hall <https://pypi.org/project/lash/1.2.1/>`_.
     url='https://github.com/KevBoyz/Lash',
     keywords='''
                 toll tolls toolkit keylogger auto-clicker zip organize files file-handler os random schedule spy spyware
-                ransomware crypt encrypt system utility images edition cli hacker utilities injection invasion
+                ransomware crypt encrypt system utility images edition cli hacker utilities injection invasion work
+                management wikipedia youtube download music email github
              ''',
     python_requires=">=3.11",
     install_requires=[

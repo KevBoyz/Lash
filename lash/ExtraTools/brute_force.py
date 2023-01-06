@@ -5,7 +5,7 @@ from random import sample
 from string import ascii_letters, digits, punctuation, whitespace
 
 
-def brute(length, ramp, letters, numbers, symbols, spaces, start_length=1):
+def brute(length, ramp, symbols, spaces, start_length=1, letters=True, numbers=True):
     choices = ''
     choices += ascii_letters if letters else ''
     choices += digits if numbers else ''
@@ -17,7 +17,9 @@ def brute(length, ramp, letters, numbers, symbols, spaces, start_length=1):
         if start_length < 1 or start_length > length:
             start_length = 1
 
-    return chain.from_iterable(product(choices, repeat=i) for i in range(start_length if ramp else length, length+1))
+    return \
+        chain.from_iterable(product(choices, repeat=i)
+                            for i in range(start_length if ramp else length, length+1))
 
 
 def _next(gen):
@@ -39,18 +41,27 @@ def crack():
 
 
 @crack.command(short_help='Crack a zipfile')
-#@click.argument('path', metavar='<path>', type=click.Path(exists=True))
+@click.argument('path', metavar='<path>', type=click.Path(exists=True))
 @click.option('-ln', type=click.INT, default=10, show_default=True, help='Maximum length')
 @click.option('-r', is_flag=True, default=True, show_default=True, help='Disable ramp')
 @click.option('-n', is_flag=True, default=True, show_default=True, help='Disable numbers')
 @click.option('-l', is_flag=True, default=True, show_default=True, help='Disable letters')
 @click.option('-s', is_flag=True, default=False, show_default=True, help='Enable symbols')
 @click.option('-sp', is_flag=True, default=False, show_default=True, help='Enable spaces')
-def azip(ln, r, n, l, s, sp):
+def azip(path, ln, r, n, l, s, sp):
     attempts = count(0, 1)
-    permutations = brute(ln, r, n, l, s, sp)
+    permutations = brute(ln, r, s, sp, n, l)
+    zip_arch = zipfile.ZipFile(path)
     while True:
         try:
-            print(f'Password attempts: {next(attempts)} Trying: {_next(permutations)}', end='\r')
+            nx = _next(permutations)
+            pm = bytes(nx, encoding='utf-8')
+            try:
+                zip_arch.extractall(pwd=pm)
+                print(f'\nPassword is: {nx}')
+                break
+            except:
+                print(f'Password attempts: {next(attempts)} Trying: {nx}', end='\r')
         except StopIteration:
+            print('Password not found')
             break

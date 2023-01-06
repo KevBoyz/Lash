@@ -203,12 +203,9 @@ def encode(path, password):
     try:
         os.chdir(path_no_file(path))
         file = get_file(path)
-        pyminizip.compress(file, None, file,  # None = prefix path
+        output = 'enc-'+file.replace(get_ext(file), '.zip')
+        pyminizip.compress(file, None, output,  # None = prefix path
                            password, 5)  # 5 = compress level
         print('File encoded')
     except FileNotFoundError:
         print('File not found')
-
-
-
-

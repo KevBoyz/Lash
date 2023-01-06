@@ -55,6 +55,7 @@ DocumentationV2 (pt-br) `7562Hall <https://pypi.org/project/lash/1.2.1/>`_.
         'pyautogui>=0.9.53',
         'psutil>=5.9.3',
         'pandas>=1.5.1',
+        'pyminizip>=0.2.6',
     ],
     packages=setuptools.find_packages(
         os.path.join(os.path.dirname(__file__))),

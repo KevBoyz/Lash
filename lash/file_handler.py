@@ -2,6 +2,7 @@ import click, zipfile, os, shutil as sh
 from lash.Exportables.fileTools import *
 from random import shuffle
 from rich import print
+import pyminizip
 
 
 @click.command()
@@ -108,7 +109,7 @@ def view(path):
 @click.option('-fn', type=click.STRING, help='Output file name')
 @click.option('-v', is_flag=True, default=True, show_default=True, help='Verbose mode ')
 @click.option('-fo', is_flag=True, default=False, show_default=True, help='Files only mode')
-def compress(path, fn, v, fo):
+def compress(path, fn, v, fo, p):
     if not fn:
         fn = get_last(path=path) + '.zip'
     else:
@@ -193,3 +194,21 @@ def extract(path, to, v, ex=0):
                 print(e) if v else None
     _zip.close()
     print(f'[green]Process completed: {ex} files extracted[/green]')
+
+
+@zip_group.command(help='Encode a zipfile')
+@click.argument('path', metavar='<file_path>', type=click.Path(exists=True))
+@click.argument('password', type=click.STRING)
+def encode(path, password):
+    try:
+        os.chdir(path_no_file(path))
+        file = get_file(path)
+        pyminizip.compress(file, None, file,  # None = prefix path
+                           password, 5)  # 5 = compress level
+        print('File encoded')
+    except FileNotFoundError:
+        print('File not found')
+
+
+
+

@@ -10,7 +10,7 @@ line interface, having syntax similar to cli's linux, with options args and help
 
 ![](Images/lash_print2.png)  
 **Access [KevBoyz-Docs/lash](https://kevboyz.github.io/KevBoyz-Docs/sub-pages/documentations/lash/index.html) for documentation.
-[Pypi/lash](https://pypi.org/project/lash/1.2.1/) for Pypi page.** <br>
+[Pypi/lash](https://pypi.org/project/lash) for Pypi page.** <br>
 **Updated version (pt-br): [7562Hall/lash](https://kevboyz.github.io/7562Hall/sub-pages/lash/index.html)**
 
 ## Some examples

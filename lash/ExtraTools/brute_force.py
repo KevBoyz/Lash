@@ -1,11 +1,13 @@
+import os
 import click
 import zipfile
 from itertools import chain, product, count
 from random import sample
 from string import ascii_letters, digits, punctuation, whitespace
+from lash.Exportables.fileTools import path_no_file
 
 
-def brute(length, ramp, symbols, spaces, start_length=1, letters=True, numbers=True):
+def brute(length, ramp, letters, numbers, symbols, spaces, start_length=1):
     choices = ''
     choices += ascii_letters if letters else ''
     choices += digits if numbers else ''
@@ -44,13 +46,14 @@ def crack():
 @click.argument('path', metavar='<path>', type=click.Path(exists=True))
 @click.option('-ln', type=click.INT, default=10, show_default=True, help='Maximum length')
 @click.option('-r', is_flag=True, default=True, show_default=True, help='Disable ramp')
-@click.option('-n', is_flag=True, default=True, show_default=True, help='Disable numbers')
+@click.option('-n', is_flag=True, default=False, show_default=True, help='Enable numbers')
 @click.option('-l', is_flag=True, default=True, show_default=True, help='Disable letters')
 @click.option('-s', is_flag=True, default=False, show_default=True, help='Enable symbols')
 @click.option('-sp', is_flag=True, default=False, show_default=True, help='Enable spaces')
 def azip(path, ln, r, n, l, s, sp):
+    os.chdir(path_no_file(path))
     attempts = count(0, 1)
-    permutations = brute(ln, r, s, sp, n, l)
+    permutations = brute(ln, r, l, n, s, sp)
     zip_arch = zipfile.ZipFile(path)
     while True:
         try:

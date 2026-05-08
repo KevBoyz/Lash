@@ -1,9 +1,7 @@
 import click
 import lash.plugins as plugin_registry
 from lash.core.lazy_group import LazyGroup
-from lash.core.downloader import download
-from lash.core.remover import remove
-from lash.core.plugin_list import plugins
+from lash.core.plugin_group import plugin
 
 
 @click.group(
@@ -13,10 +11,8 @@ from lash.core.plugin_list import plugins
 )
 def Global():
     """\b
-        - Lash 1.2.7 by KevBoyz ~ https://github.com/KevBoyz/Lash
+        - Lash 1.3.0 by KevBoyz ~ https://github.com/KevBoyz/Lash
     """
 
 
-Global.add_command(download)
-Global.add_command(remove)
-Global.add_command(plugins)
+Global.add_command(plugin)

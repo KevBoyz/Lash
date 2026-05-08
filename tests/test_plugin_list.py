@@ -24,14 +24,23 @@ def _setup(tmp_path):
 
 
 def _invoke(args, plugins_dir, state_file):
-    from lash.core.plugin_list import make_plugins_command
-    cmd = make_plugins_command(plugins_dir=plugins_dir, state_file=state_file)
+    from lash.core.plugin_list import make_plugin_list_command
+    cmd = make_plugin_list_command(plugins_dir=plugins_dir, state_file=state_file)
     runner = CliRunner()
     return runner.invoke(cmd, args)
 
 
-class TestPluginsList:
-    def test_shows_installed_commands(self, tmp_path):
+class TestPluginList:
+    def test_default_shows_all_plugins(self, tmp_path):
+        plugins_dir = _setup(tmp_path)
+        state_file = tmp_path / 'installed.json'
+        result = _invoke([], plugins_dir, state_file)
+        assert result.exit_code == 0
+        assert 'random_tools' in result.output
+        assert 'file_tools' in result.output
+        assert 'video_tools' in result.output
+
+    def test_default_shows_installed_and_not_installed_commands(self, tmp_path):
         plugins_dir = _setup(tmp_path)
         state_file = tmp_path / 'installed.json'
         state_file.write_text(json.dumps({
@@ -41,46 +50,67 @@ class TestPluginsList:
         }))
         result = _invoke([], plugins_dir, state_file)
         assert result.exit_code == 0
-        assert 'organize' in result.output
-        assert 'file_tools' in result.output
+        assert '+ organize' in result.output
+        assert '- zip' in result.output
 
-    def test_shows_core_commands(self, tmp_path):
+    def test_core_plugins_shown_as_installed(self, tmp_path):
         plugins_dir = _setup(tmp_path)
         state_file = tmp_path / 'installed.json'
         result = _invoke([], plugins_dir, state_file)
         assert result.exit_code == 0
-        assert 'random' in result.output
-        assert 'crack' in result.output
+        assert '+ random' in result.output
+        assert '+ crack' in result.output
 
-    def test_hides_uninstalled_non_core_by_default(self, tmp_path):
+    def test_installed_flag_hides_not_installed(self, tmp_path):
         plugins_dir = _setup(tmp_path)
         state_file = tmp_path / 'installed.json'
-        result = _invoke([], plugins_dir, state_file)
+        result = _invoke(['-i'], plugins_dir, state_file)
+        assert result.exit_code == 0
         assert 'video_tools' not in result.output
-        assert 'video' not in result.output
+        assert 'random_tools' in result.output
 
-    def test_available_flag_shows_uninstalled_plugins(self, tmp_path):
+    def test_not_installed_flag_hides_installed(self, tmp_path):
         plugins_dir = _setup(tmp_path)
         state_file = tmp_path / 'installed.json'
-        result = _invoke(['--available'], plugins_dir, state_file)
+        result = _invoke(['-ni'], plugins_dir, state_file)
         assert result.exit_code == 0
         assert 'video_tools' in result.output
+        assert 'random_tools' not in result.output
 
-    def test_available_flag_does_not_show_fully_installed_in_not_installed_section(self, tmp_path):
+    def test_not_installed_flag_shows_message_when_all_installed(self, tmp_path):
         plugins_dir = _setup(tmp_path)
         state_file = tmp_path / 'installed.json'
         state_file.write_text(json.dumps({
             'installed_commands': {
                 'organize': {'plugin': 'file_tools', 'requires': []},
                 'zip': {'plugin': 'file_tools', 'requires': []},
+                'video': {'plugin': 'video_tools', 'requires': []},
             }
         }))
-        result = _invoke(['--available'], plugins_dir, state_file)
-        not_installed_section = result.output.split('Not installed')[-1] if 'Not installed' in result.output else ''
-        assert 'file_tools' not in not_installed_section
+        result = _invoke(['-ni'], plugins_dir, state_file)
+        assert result.exit_code == 0
+        assert 'All available' in result.output
 
-    def test_no_plugins_installed_message(self, tmp_path):
+    def test_installed_flag_shows_message_when_nothing_installed(self, tmp_path):
         plugins_dir = _setup(tmp_path)
         state_file = tmp_path / 'installed.json'
+        # Remove all core commands so nothing is active
+        state_file.write_text(json.dumps({
+            'installed_commands': {},
+            'removed_commands': ['random', 'crack'],
+        }))
+        result = _invoke(['-i'], plugins_dir, state_file)
+        assert result.exit_code == 0
+        assert 'No plugins installed' in result.output
+
+    def test_partially_installed_plugin_shows_mixed_markers(self, tmp_path):
+        plugins_dir = _setup(tmp_path)
+        state_file = tmp_path / 'installed.json'
+        state_file.write_text(json.dumps({
+            'installed_commands': {
+                'organize': {'plugin': 'file_tools', 'requires': []},
+            }
+        }))
         result = _invoke([], plugins_dir, state_file)
-        assert 'No plugins installed' in result.output or 'lash download' in result.output
+        assert '+ organize' in result.output
+        assert '- zip' in result.output

@@ -32,14 +32,20 @@ def get_available_plugins(*, plugins_dir=None):
 def get_lazy_commands(*, plugins_dir=None, state_file=None):
     state = _load_state(state_file)
     installed_cmds = set(state.get('installed_commands', {}).keys())
+    removed_cmds = set(state.get('removed_commands', []))
     available = get_available_plugins(plugins_dir=plugins_dir)
 
     commands = {}
     for manifest in available.values():
         is_core = manifest.get('core', False)
         for cmd_name, cmd_info in manifest['commands'].items():
+            if cmd_name in removed_cmds:
+                continue
             if is_core or cmd_name in installed_cmds:
-                commands[cmd_name] = cmd_info['module']
+                commands[cmd_name] = {
+                    'module': cmd_info['module'],
+                    'description': cmd_info['description'],
+                }
     return commands
 
 
@@ -53,16 +59,29 @@ def mark_command_installed(cmd_name, plugin_name, requires, *, state_file=None):
         'plugin': plugin_name,
         'requires': requires,
     }
+    if 'removed_commands' in state and cmd_name in state['removed_commands']:
+        state['removed_commands'].remove(cmd_name)
     state_file.write_text(json.dumps(state, indent=2))
 
 
-def remove_command(cmd_name, *, state_file=None):
+def remove_command(cmd_name, *, state_file=None, plugins_dir=None):
     """Remove command from state. Returns list of now-orphaned dep strings."""
     state_file = pathlib.Path(state_file or _DEFAULT_STATE_FILE)
     state = _load_state(state_file)
     installed = state.get('installed_commands', {})
 
     if cmd_name not in installed:
+        available = get_available_plugins(plugins_dir=plugins_dir)
+        is_core = any(
+            cmd_name in m['commands'] and m.get('core')
+            for m in available.values()
+        )
+        if is_core:
+            removed = state.setdefault('removed_commands', [])
+            if cmd_name not in removed:
+                removed.append(cmd_name)
+            state_file.parent.mkdir(parents=True, exist_ok=True)
+            state_file.write_text(json.dumps(state, indent=2))
         return []
 
     cmd_requires = set(installed[cmd_name]['requires'])

@@ -54,7 +54,7 @@ class TestGetLazyCommands:
         state_file = tmp_path / 'installed.json'
         result = get_lazy_commands(plugins_dir=tmp_path, state_file=state_file)
         assert 'random' in result
-        assert result['random'] == 'lash.ExtraTools.app_random:random'
+        assert result['random']['module'] == 'lash.ExtraTools.app_random:random'
 
     def test_installed_commands_included(self, tmp_path):
         from lash.plugins import get_lazy_commands

@@ -2,75 +2,48 @@ import click
 from lash import plugins as plugin_registry
 
 
-def make_plugins_command(*, plugins_dir=None, state_file=None):
-    @click.command('plugins')
-    @click.option('--available', is_flag=True, help='Also show plugins available to install.')
-    def plugins(available):
-        """List installed plugins and commands."""
-        all_plugins = plugin_registry.get_available_plugins(plugins_dir=plugins_dir)
-        state = plugin_registry._load_state(state_file)
-        installed_cmds = state.get('installed_commands', {})
+def make_plugin_list_command(*, plugins_dir=None, state_file=None):
+    @click.command('list')
+    @click.option('--installed', '-i', is_flag=True, help='Show only installed plugins.')
+    @click.option('--not-installed', '-ni', 'not_installed', is_flag=True, help='Show only uninstalled plugins.')
+    def plugin_list(installed, not_installed):
+        """List plugins and their install status."""
+        available = plugin_registry.get_available_plugins(plugins_dir=plugins_dir)
+        active_cmds = set(
+            plugin_registry.get_lazy_commands(plugins_dir=plugins_dir, state_file=state_file).keys()
+        )
 
-        core_plugins = {n: m for n, m in all_plugins.items() if m.get('core')}
-        user_plugins = {n: m for n, m in all_plugins.items() if not m.get('core')}
+        found_any = False
+        for plugin_name in sorted(available.keys()):
+            manifest = available[plugin_name]
+            cmds = manifest['commands']
+            active_count = sum(1 for c in cmds if c in active_cmds)
 
-        has_any_installed = {
-            v['plugin'] for v in installed_cmds.values()
-        } & set(user_plugins.keys())
+            is_any_active = active_count > 0
+            is_fully_active = active_count == len(cmds)
+            is_not_installed = active_count == 0
 
-        fully_installed_plugin_names = {
-            n for n in has_any_installed
-            if all(cmd in installed_cmds for cmd in user_plugins[n]['commands'].keys())
-        }
+            if installed and not is_any_active:
+                continue
+            if not_installed and not is_not_installed:
+                continue
 
-        if has_any_installed:
-            click.echo("Installed:")
-            for plugin_name in sorted(has_any_installed):
-                manifest = user_plugins[plugin_name]
-                click.echo(f"  {plugin_name}")
-                for cmd_name, cmd_info in manifest['commands'].items():
-                    if cmd_name in installed_cmds:
-                        click.echo(f"    + {cmd_name:<16} {cmd_info['description']}")
-                    else:
-                        click.echo(f"    - {cmd_name:<16} (not installed)")
+            found_any = True
+            click.echo(f"  {plugin_name}")
+            for cmd_name, cmd_info in cmds.items():
+                marker = '+' if cmd_name in active_cmds else '-'
+                click.echo(f"    {marker} {cmd_name:<16} {cmd_info['description']}")
             click.echo()
 
-        if core_plugins:
-            click.echo("Core (always available):")
-            for plugin_name in sorted(core_plugins.keys()):
-                manifest = core_plugins[plugin_name]
-                click.echo(f"  {plugin_name}")
-                for cmd_name, cmd_info in manifest['commands'].items():
-                    click.echo(f"    * {cmd_name:<16} {cmd_info['description']}")
-            click.echo()
-
-        if available:
-            not_installed = {
-                n: m for n, m in user_plugins.items()
-                if not any(cmd in installed_cmds for cmd in m['commands'].keys())
-            }
-            partially_installed = {
-                n: m for n, m in user_plugins.items()
-                if n in has_any_installed and n not in fully_installed_plugin_names
-            }
-
-            if not_installed or partially_installed:
-                click.echo("Not installed (run 'lash download <plugin>'):")
-                for plugin_name in sorted(not_installed.keys()):
-                    manifest = not_installed[plugin_name]
-                    click.echo(f"  {plugin_name:<20} {manifest['description']}")
-                for plugin_name in sorted(partially_installed.keys()):
-                    manifest = partially_installed[plugin_name]
-                    click.echo(f"  {plugin_name:<20} {manifest['description']} (partial)")
-            else:
+        if not found_any:
+            if installed:
+                click.echo("No plugins installed.")
+                click.echo("Run 'lash plugin add <plugin>' to install.")
+            elif not_installed:
                 click.echo("All available plugins are installed.")
 
-        if not has_any_installed and not available:
-            click.echo("No plugins installed.")
-            click.echo("Run 'lash plugins --available' to see what's available.")
-            click.echo("Run 'lash download <plugin>' to install.")
-
-    return plugins
+    return plugin_list
 
 
-plugins = make_plugins_command()
+# Backward-compatible alias used by tests
+make_plugins_command = make_plugin_list_command

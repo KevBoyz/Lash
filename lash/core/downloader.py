@@ -5,11 +5,11 @@ from lash import plugins as plugin_registry
 
 
 def make_download_command(*, plugins_dir=None, state_file=None):
-    @click.command('download')
+    @click.command('add')
     @click.argument('plugin')
     @click.option('--only', multiple=True, metavar='CMD', help='Install only these commands from the plugin.')
-    def download(plugin, only):
-        """Install a lash plugin. Use --only to select individual commands."""
+    def add(plugin, only):
+        """Add a plugin. Use --only to select individual commands."""
         available = plugin_registry.get_available_plugins(plugins_dir=plugins_dir)
 
         if plugin not in available:
@@ -38,7 +38,7 @@ def make_download_command(*, plugins_dir=None, state_file=None):
         }
 
         if not commands_to_install:
-            click.echo(f"All selected commands already installed.")
+            click.echo("All selected commands already installed.")
             return
 
         all_requires = list({
@@ -48,7 +48,7 @@ def make_download_command(*, plugins_dir=None, state_file=None):
         })
 
         if all_requires:
-            click.echo(f"Installing dependencies...")
+            click.echo("Installing dependencies...")
             result = subprocess.run(
                 [sys.executable, '-m', 'pip', 'install'] + all_requires,
                 capture_output=True,
@@ -67,9 +67,9 @@ def make_download_command(*, plugins_dir=None, state_file=None):
             )
             click.echo(f"  + {cmd_name}")
 
-        click.echo(f"Done. Try: lash <command> --help")
+        click.echo("Done. Try: lash <command> --help")
 
-    return download
+    return add
 
 
 download = make_download_command()

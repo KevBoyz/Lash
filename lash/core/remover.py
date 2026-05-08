@@ -15,7 +15,7 @@ def make_remove_command(*, plugins_dir=None, state_file=None):
     @click.argument('plugin')
     @click.option('--cmd', multiple=True, metavar='CMD', help='Remove only these commands from the plugin.')
     def remove(plugin, cmd):
-        """Remove an installed plugin or specific commands from it."""
+        """Remove a plugin or specific commands from it."""
         available = plugin_registry.get_available_plugins(plugins_dir=plugins_dir)
 
         if plugin not in available:
@@ -25,8 +25,17 @@ def make_remove_command(*, plugins_dir=None, state_file=None):
 
         state = plugin_registry._load_state(state_file)
         installed_cmds = state.get('installed_commands', {})
+        removed_cmds = set(state.get('removed_commands', []))
+        manifest = available[plugin]
+        is_core = manifest.get('core', False)
 
-        plugin_installed = {k for k, v in installed_cmds.items() if v['plugin'] == plugin}
+        if is_core:
+            plugin_installed = {
+                c for c in manifest['commands'].keys()
+                if c not in removed_cmds
+            }
+        else:
+            plugin_installed = {k for k, v in installed_cmds.items() if v['plugin'] == plugin}
 
         if cmd:
             unknown = set(cmd) - set(available[plugin]['commands'].keys())
@@ -43,7 +52,9 @@ def make_remove_command(*, plugins_dir=None, state_file=None):
 
         all_orphaned = set()
         for cmd_name in commands_to_remove:
-            orphaned = plugin_registry.remove_command(cmd_name, state_file=state_file)
+            orphaned = plugin_registry.remove_command(
+                cmd_name, state_file=state_file, plugins_dir=plugins_dir
+            )
             all_orphaned.update(orphaned)
             click.echo(f"  - {cmd_name}")
 

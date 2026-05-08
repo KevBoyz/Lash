@@ -1,0 +1,19 @@
+{
+  "name": "video_tools",
+  "description": "Video recording, editing, and building tools",
+  "commands": {
+    "video": {
+      "module": "lash.video_handler:video",
+      "description": "Record, edit, build, and cut video files",
+      "requires": [
+        "opencv-python>=4.6.0.66",
+        "numpy>=1.23.4",
+        "mss>=7.0.1",
+        "moviepy>=1.0.3",
+        "pyautogui>=0.9.53",
+        "keyboard>=0.13.5",
+        "tqdm>=4.64.1"
+      ]
+    }
+  }
+}

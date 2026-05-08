@@ -1,0 +1,11 @@
+{
+  "name": "calc_tools",
+  "description": "Math calculator: probability, cartesian, binomial, trinomial",
+  "commands": {
+    "calc": {
+      "module": "lash.ExtraTools.app_math:calc",
+      "description": "Probability, cartesian product, binomial, trinomial",
+      "requires": ["numpy>=1.23.4", "matplotlib>=3.6.1"]
+    }
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "name": "spy_tools",
+  "description": "Keylogger, AES encryption, and injection tools",
+  "commands": {
+    "spy": {
+      "module": "lash.spy:spy",
+      "description": "Keylogger, AES crypt, keyboard injection",
+      "requires": ["pyaes>=1.6.1", "pynput>=1.7.6"]
+    }
+  }
+}

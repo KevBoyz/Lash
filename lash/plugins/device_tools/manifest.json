@@ -1,0 +1,16 @@
+{
+  "name": "device_tools",
+  "description": "Keyboard hold and mouse auto-click automation",
+  "commands": {
+    "autoclick": {
+      "module": "lash.ExtraTools.Devices.tmouse:autoclick",
+      "description": "Automate mouse clicks at intervals",
+      "requires": ["pynput>=1.7.6"]
+    },
+    "keyhold": {
+      "module": "lash.ExtraTools.Devices.keyboard:keyhold",
+      "description": "Hold a keyboard key for a duration",
+      "requires": ["pynput>=1.7.6"]
+    }
+  }
+}

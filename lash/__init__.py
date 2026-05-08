@@ -1,37 +1,22 @@
 import click
-from lash.file_handler import *
-from lash.image_handler import *
-from lash.audio_handler import *
-from lash.video_handler import *
-from lash.web_scraping import *
-from lash.ExtraTools import *
-from lash.spy import *
+from lash.core.lazy_group import LazyGroup
+from lash.core.downloader import download
+from lash.core.remover import remove
+from lash.core.plugin_list import plugins
+from lash import plugins as plugin_registry
 
 
-@click.group('global')
+@click.group(
+    name='lash',
+    cls=LazyGroup,
+    lazy_subcommands=plugin_registry.get_lazy_commands(),
+)
 def Global():
     """\b
         - Lash 1.2.7 by KevBoyz ~ https://github.com/KevBoyz/Lash
     """
 
 
-# Global Commands
-Global.add_command(random)
-Global.add_command(organize)
-Global.add_command(autoclick)
-Global.add_command(keyhold)
-Global.add_command(monitor)
-Global.add_command(work)
-
-# Groups
-Global.add_command(sched)
-Global.add_command(spy)
-Global.add_command(web)
-Global.add_command(zip_group)
-Global.add_command(image)
-Global.add_command(calc)
-Global.add_command(video)
-Global.add_command(audio_group)
-Global.add_command(crack)
-
-Global()
+Global.add_command(download)
+Global.add_command(remove)
+Global.add_command(plugins)

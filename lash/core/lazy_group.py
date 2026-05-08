@@ -17,3 +17,17 @@ class LazyGroup(click.Group):
             module = importlib.import_module(module_path)
             return getattr(module, attr)
         return super().get_command(ctx, cmd_name)
+
+    def format_commands(self, ctx, formatter):
+        rows = []
+        for cmd_name in self.list_commands(ctx):
+            if cmd_name in self._lazy:
+                rows.append((cmd_name, ''))
+            else:
+                cmd = super().get_command(ctx, cmd_name)
+                if cmd is None or cmd.hidden:
+                    continue
+                rows.append((cmd_name, cmd.get_short_help_str(limit=formatter.width)))
+        if rows:
+            with formatter.section('Commands'):
+                formatter.write_dl(rows)

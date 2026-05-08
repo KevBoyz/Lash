@@ -92,7 +92,7 @@ class TestDownloadOnly:
     def test_only_with_multiple_commands(self, tmp_path):
         plugins_dir = _setup_plugins(tmp_path)
         state_file = tmp_path / 'installed.json'
-        result, _ = _invoke('device_tools', ['--only', 'autoclick', 'keyhold'], plugins_dir, state_file)
+        result, _ = _invoke('device_tools', ['--only', 'autoclick', '--only', 'keyhold'], plugins_dir, state_file)
         assert result.exit_code == 0
         state = json.loads(state_file.read_text())
         assert 'autoclick' in state['installed_commands']

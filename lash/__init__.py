@@ -1,9 +1,9 @@
 import click
+import lash.plugins as plugin_registry
 from lash.core.lazy_group import LazyGroup
 from lash.core.downloader import download
 from lash.core.remover import remove
 from lash.core.plugin_list import plugins
-from lash import plugins as plugin_registry
 
 
 @click.group(

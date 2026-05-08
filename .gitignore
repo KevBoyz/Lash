@@ -8,3 +8,5 @@ work.csv
 __pycache__
 /env/
 docs
+.venv
+.pytest_cache

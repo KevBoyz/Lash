@@ -1,132 +1,73 @@
 # Running & Contributing
 
-## Install
+## Requirements
+
+- Python >= 3.11
+- pip
+
+---
+
+## Setup
 
 ```bash
-pip install lash          # core only (click)
-pip install lash[all]     # all optional dependencies
+git clone https://github.com/KevBoyz/Lash
+cd Lash
+python -m venv .venv
 ```
 
-## Run
+**Windows:**
+```powershell
+.venv\Scripts\activate
+```
+
+**Linux/macOS:**
+```bash
+source .venv/bin/activate
+```
+
+Install core dependencies:
+```bash
+pip install -e .
+```
+
+Install all optional dependencies:
+```bash
+pip install -e ".[all]"
+```
+
+---
+
+## Run locally
 
 ```bash
+lash --help
+# or
 python -m lash --help
 ```
 
 ---
 
-## Plugin system
+## Build
 
-Lash uses an opt-in plugin system. The core install is lightweight — plugins add commands and install their own dependencies on demand.
-
-### See what's available
-
-```
-$ python -m lash plugins --available
-
-Core (always available):
-  crack_tools
-    * crack            Brute-force crack password-protected zip files
-  random_tools
-    * random           Generate random numbers, strings, and sequences
-
-Not installed (run 'lash download <plugin>'):
-  audio_tools          Audio editing: cut, get
-  calc_tools           Math and calculus tools
-  device_tools         Keyboard hold and mouse auto-click automation
-  file_tools           File organization and ZIP compression tools
-  image_tools          Image editing: flip, resize, adjust
-  monitor_tools        System resource monitor (TUI dashboard)
-  sched_tools          Task scheduling: run, wait, exec
-  spy_tools            Keylogger, screenshot, and injection tools
-  video_tools          Video editing and recording
-  web_tools            Web scraping, YouTube download, Wikipedia, news
-  work_tools           Time and task management
+```bash
+pip install build
+python -m build
 ```
 
-### Install a plugin
-
+Output in `dist/`:
 ```
-$ python -m lash download file_tools
-Installing dependencies...
-  + organize
-  + zip
-Done. Try: lash <command> --help
-```
-
-### Install only specific commands
-
-```
-$ python -m lash download device_tools --only keyhold
-Installing dependencies...
-  + keyhold
-Done. Try: lash <command> --help
-```
-
-### Remove a plugin
-
-```
-$ python -m lash remove file_tools
-  - organize
-  - zip
-Uninstalling orphaned dependencies: rich, pyminizip
-Done.
-```
-
-### Remove a single command
-
-```
-$ python -m lash remove file_tools --cmd zip
-  - zip
-Uninstalling orphaned dependencies: pyminizip
-Done.
+dist/
+├── lash-1.3.0.tar.gz
+└── lash-1.3.0-py3-none-any.whl
 ```
 
 ---
 
-## Examples
+## Publish to PyPI
 
-### Organize files by type
-
-```
-$ python -m lash download file_tools
-$ python -m lash organize C:\Users\User\Documents
-```
-
-### Compress a directory
-
-```
-$ python -m lash zip compress C:\Users\User\Documents
-Compacting archives, please wait...
-
-- - Process list - -
-Compacting: .gitattributes
-Compacting: .gitignore
-Compacting: setup.py
-[...]
-process completed, 206 files compacted
-```
-
-### Schedule a recurring command
-
-```
-$ python -m lash download sched_tools
-$ python -m lash sched run --help
-Usage: lash sched run [OPTIONS] command <hours> <minutes> <seconds>
-
-$ python -m lash sched run "python -m lash random" 0 0 2
-78311
-13918
-64280
-[...]
-Aborted!
-```
-
-### Generate a random number
-
-```
-$ python -m lash random
-42917
+```bash
+pip install twine
+twine upload dist/*
 ```
 
 ---

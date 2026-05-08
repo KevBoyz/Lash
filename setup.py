@@ -4,7 +4,7 @@ import os.path
 
 setuptools.setup(
     name='lash',
-    version='1.2.6',
+    version='1.3.0',
     license='GNU GPLv3',
     author='Kevin Pontes',
     author_email='kevboyz@pm.me',

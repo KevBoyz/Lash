@@ -1,15 +1,9 @@
 # Lash — Release Notes
 
-## v1.3.0 — Plugin architecture & lazy loading
+## v1.3.0 — Plugin architecture & Performace improvements
 
-* **Plugin system** — tools are now optional and installed on demand via `lash download <plugin>`
-* **Lazy loading** — startup imports only `click`; heavy dependencies load only when the command runs
-* **Granular install** — `lash download <plugin> --only <cmd>` installs a single command and its deps
-* **Plugin manager** — `lash plugins [--available]` lists installed and available plugins
-* **Removal with dep cleanup** — `lash remove <plugin> [--cmd <cmd>]` uninstalls commands and orphaned packages
-* **Core commands always available** — `random` and `crack` require no extra packages
-* `install_requires` reduced to `click` only; all optional deps grouped under `extras_require[all]`
-
+* Plugin system: command groups are now optional (instalation) and managed with `plugin` command.
+* Lazy loading: startup imports only `click`; heavy dependencies load only when the command runs.
 ---
 
 ## v1.2.6 — General upgrades

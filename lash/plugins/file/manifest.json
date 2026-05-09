@@ -1,0 +1,17 @@
+{
+  "name": "file",
+  "category": "File Tools",
+  "description": "File organization and ZIP compression tools",
+  "commands": {
+    "organize": {
+      "module": "lash.plugins.file.cli:organize",
+      "description": "Organize files in a directory by type",
+      "requires": ["rich>=12.6.0"]
+    },
+    "zip": {
+      "module": "lash.plugins.file.cli:zip_group",
+      "description": "ZIP compression, extraction, encoding",
+      "requires": ["pyminizip>=0.2.6", "rich>=12.6.0"]
+    }
+  }
+}

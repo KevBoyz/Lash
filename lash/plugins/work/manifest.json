@@ -1,0 +1,12 @@
+{
+  "name": "work",
+  "category": "Work Tracker",
+  "description": "Work time tracker with CSV logging and graph plotting",
+  "commands": {
+    "work": {
+      "module": "lash.plugins.work.cli:work",
+      "description": "Track and analyze your work time sessions",
+      "requires": ["pandas>=1.4.3", "matplotlib>=3.5.3"]
+    }
+  }
+}

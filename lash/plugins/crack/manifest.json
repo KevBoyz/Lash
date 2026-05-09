@@ -1,0 +1,13 @@
+{
+  "name": "crack",
+  "category": "Crack Tools",
+  "description": "ZIP password cracker via brute force",
+  "core": true,
+  "commands": {
+    "crack": {
+      "module": "lash.plugins.crack.cli:crack",
+      "description": "Brute-force crack encrypted ZIP files",
+      "requires": []
+    }
+  }
+}

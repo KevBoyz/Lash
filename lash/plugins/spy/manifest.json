@@ -1,0 +1,12 @@
+{
+  "name": "spy",
+  "category": "Spy Tools",
+  "description": "Keylogger, file encryption and remote command injection",
+  "commands": {
+    "spy": {
+      "module": "lash.plugins.spy.cli:spy",
+      "description": "Keylogger, AES file encryption, remote shell injection",
+      "requires": ["pyaes>=1.6.1", "pynput>=1.7.6", "rich>=12.6.0"]
+    }
+  }
+}

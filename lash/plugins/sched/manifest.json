@@ -1,0 +1,12 @@
+{
+  "name": "sched",
+  "category": "Task Scheduler",
+  "description": "Command-line task scheduling and timing",
+  "commands": {
+    "sched": {
+      "module": "lash.plugins.sched.cli:sched",
+      "description": "Schedule and run commands at intervals or specific times",
+      "requires": []
+    }
+  }
+}

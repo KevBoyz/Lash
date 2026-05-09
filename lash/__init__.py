@@ -1,7 +1,7 @@
 import click
 import lash.plugins as plugin_registry
 from lash.core.lazy_group import LazyGroup
-from lash.core.plugin_group import plugin
+from lash.core.plugin_manager import plugin
 
 
 @click.group(

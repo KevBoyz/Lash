@@ -1,0 +1,12 @@
+{
+  "name": "image",
+  "category": "Image Tools",
+  "description": "Batch image editing: flip, resize, adjust, filter, watermark",
+  "commands": {
+    "image": {
+      "module": "lash.plugins.image.cli:image",
+      "description": "Flip, resize, adjust, filter and watermark images",
+      "requires": ["Pillow>=9.2.0", "tqdm>=4.64.1", "matplotlib>=3.5.3"]
+    }
+  }
+}

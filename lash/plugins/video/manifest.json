@@ -1,0 +1,12 @@
+{
+  "name": "video",
+  "category": "Video Tools",
+  "description": "Screen recording, video building, cutting and compositing",
+  "commands": {
+    "video": {
+      "module": "lash.plugins.video.cli:video",
+      "description": "Record, build, resume, cut and compose videos",
+      "requires": ["moviepy>=1.0.3", "opencv-python>=4.6.0", "mss>=6.1.0", "pyautogui>=0.9.53", "keyboard>=0.13.5", "tqdm>=4.64.1", "numpy>=1.23.0"]
+    }
+  }
+}

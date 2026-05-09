@@ -1,0 +1,12 @@
+{
+  "name": "web",
+  "category": "Web Tools",
+  "description": "Web scraping, Wikipedia, YouTube downloader, Google News",
+  "commands": {
+    "web": {
+      "module": "lash.plugins.web.cli:web",
+      "description": "Scrape GitHub, Wikipedia, download YouTube, read news",
+      "requires": ["beautifulsoup4>=4.11.1", "requests>=2.28.1", "wikipedia>=1.4.0", "pytube>=12.1.0", "gnews>=0.3.0", "rich>=12.6.0", "tqdm>=4.64.1"]
+    }
+  }
+}

@@ -1,0 +1,83 @@
+import click
+from os import system
+from time import sleep
+from datetime import datetime
+from re import search
+from lash.plugins.sched.core import reg_crono, time_format
+
+
+@click.group('sched', help='Schedule tasks at the command line level')
+def sched():
+    pass
+
+
+@sched.command()
+@click.argument('command', metavar='command', type=click.STRING)
+@click.argument('h', metavar='<hours>', type=click.INT, required=False, default=0)
+@click.argument('m', metavar='<minutes>', type=click.INT, required=False, default=0)
+@click.argument('s', metavar='<seconds>', type=click.INT, required=False, default=0)
+def run(command, s, m, h):
+    """\b
+       Run the command repetitively at a given interval.
+
+       \b
+       Example: run "help" 0 0 5 """
+    try:
+        if h <= 0 and m <= 0 and s <= 0:
+            raise Exception('Error: Time delay is not defined')
+    except Exception as e:
+        print(e)
+    t = h * 3600 + m * 60 + s
+    while True:
+        h2, m2, s2 = h, m, s
+        for i in range(0, t):
+            h2, m2, s2 = reg_crono(h2, m2, s2)
+            fh, fm, fs = time_format(h2, m2, s2)
+            print(f'Time remaining: {fh}:{fm}:{fs}', end="\r")
+            sleep(1)
+        print(f'Time remaining: 00:00:00 ', end="\r")
+        system(command=command)
+        print()
+
+
+@sched.command()
+@click.argument('command', metavar='command', type=click.STRING)
+@click.argument('h', metavar='<hours>', type=click.INT, required=False, default=0)
+@click.argument('m', metavar='<minutes>', type=click.INT, required=False, default=0)
+@click.argument('s', metavar='<seconds>', type=click.INT, required=False, default=0)
+def wait(command, h, m, s):
+    """
+        Wait x time, run a command once and exit.
+
+        \b
+        Example: wait "help" 0 0 10
+    """
+    t = h * 3600 + m * 60 + s
+    for i in range(0, t):
+        h, m, s = reg_crono(h, m, s)
+        fh, fm, fs = time_format(h, m, s)
+        print(f'Time remaining: {fh}:{fm}:{fs}', end="\r")
+        sleep(1)
+    print(f'Time remaining: 00:00:00 ', end="\r")
+    system(command=command)
+
+
+@sched.command()
+@click.argument('time', metavar='time', type=click.STRING)
+@click.argument('command', metavar='<command>', type=click.STRING)
+def exec(time, command):
+    """\b
+        Execute a command from determined moment of day.
+
+        \b
+        The time need to have this syntax: 10:30:0
+        Example: exec 15:25:0 "help"
+    """
+    if not search('\d:\d:\d', time):
+        return print('ERROR sytax incorrect, try use 10:30:0, 1:4:5 with time')
+    if time[-1] and time[-2] == '0':
+        time = time[:-1]
+        print(time)
+    while f'{datetime.now().hour}:{datetime.now().minute}:{datetime.now().second}' != time:
+        print(f' Waiting {datetime.now().hour}:{datetime.now().minute}:{datetime.now().second} -> {time}', end='\r')
+    system(command=command)

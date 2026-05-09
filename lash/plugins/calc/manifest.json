@@ -1,0 +1,12 @@
+{
+  "name": "calc",
+  "category": "Calculation Tools",
+  "description": "Math utilities: probability, cartesian product, polynomial functions",
+  "commands": {
+    "calc": {
+      "module": "lash.plugins.calc.cli:calc",
+      "description": "Probability, cartesian product, binomial, trinomial",
+      "requires": ["numpy>=1.23.0", "matplotlib>=3.5.3"]
+    }
+  }
+}

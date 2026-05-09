@@ -1,0 +1,12 @@
+{
+  "name": "monitor",
+  "category": "System Monitor",
+  "description": "Real-time system resource monitor TUI",
+  "commands": {
+    "monitor": {
+      "module": "lash.plugins.monitor.cli:monitor",
+      "description": "System panel: CPU, RAM, disk, processes",
+      "requires": ["psutil>=5.9.2", "dashing>=0.1.0"]
+    }
+  }
+}

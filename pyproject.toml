@@ -1,0 +1,69 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "lash"
+version = "1.3.0"
+description = "CLI tools package to desktop"
+readme = "README.md"
+license = { file = "LICENSE" }
+authors = [{ name = "Kevin Pontes", email = "kevboyz@pm.me" }]
+requires-python = ">=3.11"
+keywords = [
+    "toolkit", "keylogger", "auto-clicker", "zip", "organize", "files",
+    "file-handler", "os", "random", "schedule", "spy", "crypt", "encrypt",
+    "system", "utility", "images", "cli", "utilities", "wikipedia",
+    "youtube", "download", "music", "email", "github",
+]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Programming Language :: Python :: 3.11",
+    "Intended Audience :: End Users/Desktop",
+    "Natural Language :: English",
+    "Operating System :: OS Independent",
+    "Topic :: Desktop Environment :: File Managers",
+    "Topic :: Software Development :: Build Tools",
+    "Topic :: System :: Archiving :: Compression",
+    "Topic :: System :: Monitoring",
+    "Topic :: Utilities",
+    "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
+]
+dependencies = ["click>=8.1.3"]
+
+[project.optional-dependencies]
+all = [
+    "rich>=12.6.0",
+    "pyminizip>=0.2.6",
+    "Pillow>=9.3.0",
+    "tqdm>=4.64.1",
+    "opencv-python>=4.6.0.66",
+    "numpy>=1.23.4",
+    "mss>=7.0.1",
+    "moviepy>=1.0.3",
+    "pyautogui>=0.9.53",
+    "keyboard>=0.13.5",
+    "bs4>=0.0.1",
+    "requests>=2.28.0",
+    "wikipedia>=1.4.0",
+    "pytube>=12.1.0",
+    "gnews>=0.2.7",
+    "quick-mailer>=2022.2.22",
+    "pyaes>=1.6.1",
+    "pynput>=1.7.6",
+    "matplotlib>=3.6.1",
+    "psutil>=5.9.3",
+    "py-dashing>=0.3.dev0",
+    "pandas>=1.5.1",
+    "schedule>=1.1.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/KevBoyz/Lash"
+Documentation = "https://kevboyz.github.io/KevBoyz-Docs/sub-pages/documentations/lash/index.html"
+
+[project.scripts]
+lash = "lash:Global"
+
+[tool.setuptools.packages.find]
+where = ["."]

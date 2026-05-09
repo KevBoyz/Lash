@@ -1,0 +1,13 @@
+{
+  "name": "random",
+  "category": "Random Generators",
+  "description": "Random sequence generator",
+  "core": true,
+  "commands": {
+    "random": {
+      "module": "lash.plugins.random.cli:random",
+      "description": "Generate random sequences of numbers, letters and symbols",
+      "requires": []
+    }
+  }
+}

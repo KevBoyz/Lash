@@ -5,5 +5,8 @@ work.csv
 /lash.egg-info/
 /build/
 /.idea/
-/__pycache__/
+__pycache__
 /env/
+docs
+.venv
+.pytest_cache

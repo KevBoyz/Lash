@@ -1,5 +1,5 @@
 # pytest lash/plugins/web/tests/test_helpers.py
-from lash.plugins.web.helpers import impress_news
+from lash.plugins.web.core import impress_news
 
 
 class TestImpressNews:

@@ -12,7 +12,7 @@ from rich.console import Console
 from rich.table import Table
 from rich.text import Text
 from rich.panel import Panel
-from lash.plugins.web.helpers import (
+from lash.plugins.web.core import (
     get_video_by_link, get_video_by_search,
     get_audio_by_link, get_audio_by_search,
     impress_news,

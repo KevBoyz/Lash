@@ -1,5 +1,5 @@
 # pytest lash/plugins/file/tests/test_helpers.py
-from lash.plugins.file.helpers import bar_template, get_ext, get_last, file_types
+from lash.plugins.file.core import bar_template, get_ext, get_last, file_types
 
 
 class TestBarTemplate:

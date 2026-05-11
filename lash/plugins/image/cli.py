@@ -2,7 +2,7 @@ import click
 import os
 from tqdm import tqdm
 from PIL import Image, UnidentifiedImageError
-from lash.plugins.image.helpers import (
+from lash.plugins.image.core import (
     files_range, get_file,
     f_flip, re_size, adjust_exec, filter_apply, wmarke, compare, save,
 )

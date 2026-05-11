@@ -5,7 +5,7 @@ import pyaes as pya
 from threading import Thread
 from pynput.keyboard import Listener
 from rich import print
-from lash.plugins.spy.helpers import (
+from lash.plugins.spy.core import (
     key_down, key_up, port_verify, injection_client_msg,
     handle_connection, custom_client_manager,
 )

@@ -9,7 +9,7 @@ from time import sleep, time
 from pyautogui import position
 from keyboard import is_pressed
 from moviepy.editor import VideoFileClip, concatenate_videoclips
-from lash.plugins.video.helpers import (
+from lash.plugins.video.core import (
     get_last, get_ext, path_no_file, tuple_to_seconds,
     resize_images, alt_build, render_cursor, get_images,
 )

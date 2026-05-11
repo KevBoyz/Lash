@@ -5,7 +5,7 @@ import shutil as sh
 from random import shuffle
 from rich import print
 import pyminizip
-from lash.plugins.file.helpers import (
+from lash.plugins.file.core import (
     bar_template, file_types, get_ext, get_last, get_file, path_no_file
 )
 

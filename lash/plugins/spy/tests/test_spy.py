@@ -59,7 +59,7 @@ class TestInjectionClientMsg:
     def test_table_has_two_columns(self):
         from lash.plugins.spy.core import injection_client_msg
         result = injection_client_msg()
-        assert result.column_count == 2
+        assert len(result.columns) == 2
 
     def test_table_contains_chdir_row(self):
         from lash.plugins.spy.core import injection_client_msg

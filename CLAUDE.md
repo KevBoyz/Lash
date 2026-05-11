@@ -15,9 +15,9 @@ lash/
     ├── __init__.py      # Registry: get_available_plugins, get_lazy_commands, mark/remove command
     └── <name>/          # One package per plugin (audio, calc, crack, device, file, ...)
         ├── manifest.json
-        ├── cli.py       # Click commands/groups
-        ├── core.py      # Business logic called by cli
-        ├── helpers.py   # Utility functions (moved from Exportables/ExtraTools)
+        ├── cli.py       # Entry points da interface CLI (Click commands/groups, output ao usuário)
+        ├── core.py      # Grandes funções chamadas pelos entry points (lógica de negócio, I/O de arquivos)
+        ├── helpers.py   # Pequenas funções utilitárias usadas pelo core.py
         └── tests/
 
 tests/
@@ -53,13 +53,44 @@ lash plugin add <plugin>...        # install one or more plugins
 lash plugin remove <plugin>...     # uninstall one or more plugins
 ```
 
+## Plugin File Distribution Rules
+
+Respeitar a separação entre os 3 arquivos é obrigatório:
+
+- **`cli.py`**: só entry points Click + output (`print`/`click.echo`). Sem lógica de negócio, sem I/O de arquivo direto.
+- **`core.py`**: funções grandes chamadas pelo cli. Sem `print()` — retornar valores, deixar o cli exibir. Sem imports de Display/UI (tqdm, matplotlib interativo).
+- **`helpers.py`**: funções pequenas e reutilizáveis usadas pelo core. Ex: formatação, setup de plot, parsers genéricos.
+
+**Direção de dependência**: `cli.py → core.py → helpers.py`. Nunca inverter.
+
+## manifest.json — Regras
+
+- `name`: deve ser idêntico ao nome do diretório do plugin
+- `commands` keys: devem bater com os nomes reais dos objetos Click em `cli.py`
+- `module`: formato `lash.plugins.<name>.cli:<objeto>` — verificar que o objeto existe
+- `requires`: listar **todos** os pacotes third-party importados pelo plugin (incluindo transitivos usados diretamente). Ex: `rich` usado em `cli.py` deve aparecer em `requires`.
+- `core: true`: só para plugins sempre ativos (crack, random)
+
 ## Tests
 
 ```
-pytest tests/core/   # core plugin system tests
+pytest tests/core/              # testa o sistema de plugins (core/)
+pytest lash/plugins/<name>/tests/   # testa um plugin específico
 ```
 
 No test execution during development — run only when explicitly requested.
+
+### Convenções de testes
+
+- Framework: pytest
+- Estrutura: uma classe por feature/função testada (`class TestNomeDaFuncao`)
+- Nomes de método descrevem o cenário: `test_retorna_erro_quando_fc_maior_que_pc`
+- Imports dentro dos métodos de teste (padrão do projeto)
+- `tmp_path` fixture para qualquer operação de filesystem — nunca tocar `~/.lash/` real
+- `CliRunner` do Click para testar comandos CLI
+- Importar `pytest` **apenas quando usar sua API**: `pytest.raises`, `pytest.approx`, `pytest.importorskip`, `pytest.mark`
+- `pytest.approx` para comparações de float — evitar `abs(x - y) < 1e-9`
+- `pytest.importorskip('pandas')` para pular testes de dependências opcionais
 
 ## Current Plugins
 

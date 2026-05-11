@@ -1,6 +1,7 @@
+import json
 import os
-from matplotlib import pyplot as plt, set_loglevel
 from typing import List, Tuple, NoReturn
+from matplotlib import pyplot as plt, set_loglevel
 
 
 def time_format(*args: int) -> List:
@@ -19,25 +20,42 @@ def time_conversor(s: float) -> Tuple[str, int]:
     return f'{h}:{m}:{s}', total_minutes
 
 
-def make_files(s, cache: str, csv: str) -> NoReturn:
+def make_files(s: bool, cache: str, csv: str) -> NoReturn:
     if s:
         with open(cache, 'w'):
             pass
-    if not os.path.exists('work.csv'):
+    if not os.path.exists(csv):
         with open(csv, 'w') as file:
-            file.write('date,time,message\n')
+            file.write('date,minutes,real_time,message\n')
+
+
+def save_cache(cache: str, data: dict) -> NoReturn:
+    with open(cache, 'w') as file:
+        file.write(json.dumps(data))
+
+
+def load_cache(cache: str) -> dict:
+    with open(cache, 'r') as file:
+        return json.loads(file.read())
 
 
 def del_cache(cache: str) -> NoReturn:
     os.remove(cache)
 
 
+def save_session(workcsv: str, date, minutes: int, real_time: str, message: str) -> NoReturn:
+    import pandas as pd
+    csv = pd.read_csv(workcsv)
+    csv.loc[len(csv.index)] = [date, minutes, real_time, message]
+    with open(workcsv, 'w') as file:
+        file.write(csv.to_csv(index=False))
+
+
 def analyze(workcsv: str) -> NoReturn:
     import pandas as pd
     set_loglevel('error')
     df = pd.read_csv(workcsv)
-    df = df.drop(columns=['message'], axis=1)
-    df = df.drop(columns=['real_time'], axis=1)
+    df = df.drop(columns=['message', 'real_time'], axis=1)
     fdf = df.groupby(['date']).sum()
     plt.style.use('seaborn-dark')
 

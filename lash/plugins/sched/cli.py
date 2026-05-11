@@ -2,7 +2,6 @@ import click
 from os import system
 from time import sleep
 from datetime import datetime
-from re import search
 from lash.plugins.sched.core import reg_crono, time_format
 
 
@@ -22,11 +21,9 @@ def run(command, s, m, h):
 
        \b
        Example: run "help" 0 0 5 """
-    try:
-        if h <= 0 and m <= 0 and s <= 0:
-            raise Exception('Error: Time delay is not defined')
-    except Exception as e:
-        print(e)
+    if h <= 0 and m <= 0 and s <= 0:
+        print('Error: Time delay is not defined')
+        return
     t = h * 3600 + m * 60 + s
     while True:
         h2, m2, s2 = h, m, s
@@ -70,14 +67,15 @@ def exec(time, command):
         Execute a command from determined moment of day.
 
         \b
-        The time need to have this syntax: 10:30:0
+        The time needs this syntax: HH:MM:SS, e.g. 10:30:0
         Example: exec 15:25:0 "help"
     """
-    if not search('\d:\d:\d', time):
-        return print('ERROR sytax incorrect, try use 10:30:0, 1:4:5 with time')
-    if time[-1] and time[-2] == '0':
-        time = time[:-1]
-        print(time)
-    while f'{datetime.now().hour}:{datetime.now().minute}:{datetime.now().second}' != time:
-        print(f' Waiting {datetime.now().hour}:{datetime.now().minute}:{datetime.now().second} -> {time}', end='\r')
+    parts = time.split(':')
+    if len(parts) != 3 or not all(p.isdigit() for p in parts):
+        print('ERROR: syntax incorrect, use HH:MM:SS format, e.g. 10:30:0')
+        return
+    target_h, target_m, target_s = int(parts[0]), int(parts[1]), int(parts[2])
+    while (datetime.now().hour, datetime.now().minute, datetime.now().second) != (target_h, target_m, target_s):
+        now = datetime.now()
+        print(f' Waiting {now.hour}:{now.minute}:{now.second} -> {time}', end='\r')
     system(command=command)

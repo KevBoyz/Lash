@@ -1,44 +1,25 @@
 from random import sample, randint
-from tqdm import tqdm
 
 
 def get_size(c, n, l, s):
-    m = 0
-    if n:
-        m += 1
-    if l:
-        m += 1
-    if s:
-        m += 1
+    m = sum([n, l, s])
+    if m == 0:
+        return c
     return c // m
 
 
-def gen_random(size, n, s, l, ul, v):
+def gen_random(size, n, s, l, ul):
     rand_l = []
     letters = 'qwertyuiopasdfghjklzxcvbnm'
     symbols = '!?@#$%&*_+-'
-    pbar = None
-    if size > 1:
-        pbar = tqdm(total=size)
-    else:
-        v = False
-    for c in range(0, size):
-        if v:
-            pbar.update(1)
+    for _ in range(size):
         if n:
             rand_l.append(str(randint(0, 9)))
         if l:
             letter = ''.join(sample(letters, 1))
-            if ul:
-                if randint(0, 1) == 1:
-                    rand_l.append(letter.upper())
-                else:
-                    rand_l.append(letter)
-            else:
-                rand_l.append(letter)
+            rand_l.append(letter.upper() if ul and randint(0, 1) else letter)
         if s:
-            symbol = ''.join(sample(symbols, 1))
-            rand_l.append(symbol)
+            rand_l.append(''.join(sample(symbols, 1)))
     return rand_l
 
 
@@ -47,4 +28,4 @@ def file_save(random_seq):
     fname = f'output{r_name}.txt'
     with open(fname, 'w') as file:
         file.write("".join(random_seq))
-    print(f'Copied to {fname}')
+    return fname

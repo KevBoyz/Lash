@@ -1,13 +1,13 @@
+import ast
 import click
-from cmath import sqrt
-import math
 from numpy import linspace
 from matplotlib import pyplot as plt
 from rich import print
 from itertools import product
 from functools import reduce
 from operator import mul
-from lash.plugins.calc.core import cartesian_plan, get_signal
+from lash.plugins.calc.core import get_signal, probability, solve_quadratic, solve_affine
+from lash.plugins.calc.helpers import cartesian_plan
 
 
 @click.group('calc', help='Math utilities')
@@ -21,64 +21,55 @@ def calc():
 @click.option('-d', is_flag=True, help='[Flag] Decimal output, more accurate result')
 def prob(pc, fc, d):
     if fc > pc:
-        try:
-            raise Exception('[fc > pc], Operation not possible')
-        except Exception as e:
-            click.echo(e)
+        click.echo('[fc > pc], Operation not possible')
+        return
+    r = probability(fc, pc)
     if d:
-        click.echo(f'{fc / pc}')
+        click.echo(f'{r}')
     else:
-        r = (fc / pc) * 100
-        if r <= 0.01:
+        pct = r * 100
+        if pct <= 0.01:
             print('[0.0%] For better result, use -d (flag)')
         else:
-            click.echo(f'{r:.1f}%')
+            click.echo(f'{pct:.1f}%')
 
 
 @calc.command(help='Cartesian product of multiple sets')
-@click.option('-b', help='Build points')
-@click.option('-t', help='Get total of sets')
+@click.option('-b', help='Build points, e.g. \'[(1,2),(3,4)]\'')
+@click.option('-t', help='Get total of sets, e.g. \'[2, 3, 4]\'')
 def cartesian(b, t):
     if b:
-        b = eval(b)
         try:
+            b = ast.literal_eval(b)
             print(list(product(*b)))
-        except TypeError as e:
+        except (ValueError, TypeError) as e:
             print(f'{e}. Correct use: -b \'[(1,2), (2,3)]\'')
     if t:
-        t = eval(t)
-        print(reduce(mul, t))
+        try:
+            t = ast.literal_eval(t)
+            print(reduce(mul, t))
+        except (ValueError, TypeError) as e:
+            print(f'{e}. Correct use: -t \'[2, 3, 4]\'')
 
 
 @calc.command()
 @click.argument('coefs', nargs=3, type=click.STRING)
-@click.option('-d', is_flag=True, default=True, help='plot function graph', show_default=True)
-@click.option('-r', is_flag=True, default=True, help='plot function roots', show_default=True)
-@click.option('-v', is_flag=True, default=True, help='plot function vertices', show_default=True)
+@click.option('-d', is_flag=True, default=False, help='Plot function graph')
+@click.option('-r', is_flag=True, default=False, help='Plot function roots on graph')
+@click.option('-v', is_flag=True, default=False, help='Plot function vertex on graph')
 @click.option('-xm', type=click.INT, default=5, help='x axis interval', show_default=True)
-@click.option('-t', type=click.INT, default=40, help='times calculated', show_default=True)
+@click.option('-t', type=click.INT, default=40, help='Times calculated', show_default=True)
 def trinomial(coefs, d, r, v, xm, t):
     """
        Calculate a quadratic function
 
        \b
        Example: calc trinomial n3 4 7
-       use (n) to mark an coef value as negative
+       use (n) to mark a coef value as negative
        """
-    letters = get_signal(coefs)
-    a = letters[0]
-    b = letters[1]
-    c = letters[2]
-
-    delta = (b ** 2) - (4 * a * c)
-    if delta < 0:
-        x1 = (-b + sqrt(delta)) / (2 * a)
-        x2 = (-b - sqrt(delta)) / (2 * a)
-    else:
-        x1 = (-b + math.sqrt(delta)) / (2 * a)
-        x2 = (-b - math.sqrt(delta)) / (2 * a)
-    xv = -b / (2 * a)
-    yv = -delta / (4 * a)
+    a, b, c = get_signal(coefs)
+    result = solve_quadratic(a, b, c)
+    x1, x2, xv, yv, delta = result['x1'], result['x2'], result['xv'], result['yv'], result['delta']
 
     if d:
         cartesian_plan()
@@ -103,19 +94,18 @@ def trinomial(coefs, d, r, v, xm, t):
 @click.option('-t', type=click.INT, default=40, help='Times resolved to graph')
 def binomial(coefs, xm, t):
     """
-       Calculate a affine function
+       Calculate an affine function
 
        \b
-       Example: calc trinomial n5 3
-       use (n) to mark an coef value as negative
+       Example: calc binomial n5 3
+       use (n) to mark a coef value as negative
        """
-    letters = get_signal(coefs)
-    a = letters[0]
-    b = letters[1]
+    a, b = get_signal(coefs)
+    result = solve_affine(a, b)
     x = linspace(xm * (-1), xm, t)
-    y = a * x + b
+    y = result['a'] * x + result['b']
     cartesian_plan()
     plt.plot(x, y, 'r')
-    plt.plot(0, b, 'ro', label=f'{b:.2f}')
+    plt.plot(0, result['b'], 'ro', label=f'{result["b"]:.2f}')
     plt.legend()
     plt.show()

@@ -7,11 +7,11 @@ def reg_crono(h: int, m: int, s: int) -> Tuple[int, int, int]:
     else:
         if m > 0:
             m -= 1
-            s = 60
+            s = 59
         else:
             if h > 0:
                 h -= 1
-                m = 60
+                m = 59
     return h, m, s
 
 

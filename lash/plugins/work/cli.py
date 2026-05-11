@@ -1,14 +1,16 @@
 import click
-import json
 from datetime import datetime
-from lash.plugins.work.core import time_format, time_conversor, make_files, del_cache, analyze
+from lash.plugins.work.core import (
+    time_format, time_conversor, make_files,
+    del_cache, analyze, save_cache, load_cache, save_session,
+)
 
 
 @click.command(short_help='Manage your work time')
 @click.option('-s', is_flag=True, help='Start working')
 @click.option('-e', is_flag=True, help='End work')
 @click.option('-m', type=click.STRING, help='Add message')
-@click.option('-sv', is_flag=True, default=True, show_default=True, help='Save data')
+@click.option('-sv', is_flag=True, default=False, show_default=True, help='Suppress save')
 @click.option('-a', is_flag=True, help='Plot your worktime')
 def work(s, e, m, sv, a):
     """
@@ -38,25 +40,19 @@ def work(s, e, m, sv, a):
     if s:
         json_time = {'year': now.year, 'month': now.month,
                      'day': now.day, 'hour': now.hour, 'minute': now.minute}
-        with open(cache, 'w') as file:
-            file.write(json.dumps(json_time))
+        save_cache(cache, json_time)
         hr, _min, sec = time_format(json_time["hour"], json_time["minute"], now.second)
         print(f'Starting at {hr}:{_min}:{sec}')
     elif e:
-        with open(cache, 'r') as file:
-            cache_time = json.loads(file.read())
+        cache_time = load_cache(cache)
         date_time = datetime(cache_time['year'], cache_time['month'],
                              cache_time['day'], cache_time['hour'], cache_time['minute'])
         delta = now - date_time
         real_time, total_minutes = time_conversor(delta.total_seconds())
         print(f'Time worked: {real_time}')
-        if sv:
-            import pandas as pd
+        if not sv:
             date = date_time.date()
-            csv = pd.read_csv(workcsv)
-            csv.loc[len(csv.index)] = [date, total_minutes, real_time, m]
-            with open(workcsv, 'w') as file:
-                file.write(csv.to_csv(index=False))
+            save_session(workcsv, date, total_minutes, real_time, m)
             del_cache(cache)
     elif a:
         analyze(workcsv)

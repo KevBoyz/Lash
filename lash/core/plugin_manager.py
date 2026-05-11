@@ -10,8 +10,6 @@ def _package_name(requirement):
     return re.split(r'[><=!]', requirement)[0].strip()
 
 
-# ── add ───────────────────────────────────────────────────────────────────────
-
 def make_download_command(*, plugins_dir=None, state_file=None):
     @click.command('add')
     @click.argument('plugins', nargs=-1, required=True)
@@ -69,8 +67,6 @@ def make_download_command(*, plugins_dir=None, state_file=None):
 
 download = make_download_command()
 
-
-# ── remove ────────────────────────────────────────────────────────────────────
 
 def make_remove_command(*, plugins_dir=None, state_file=None):
     @click.command('remove')
@@ -135,8 +131,6 @@ def make_remove_command(*, plugins_dir=None, state_file=None):
 remove = make_remove_command()
 
 
-# ── list ──────────────────────────────────────────────────────────────────────
-
 def make_plugin_list_command(*, plugins_dir=None, state_file=None):
     @click.command('list')
     @click.option('--installed', '-i', is_flag=True, help='Show only installed plugins.')
@@ -187,8 +181,6 @@ def make_plugin_list_command(*, plugins_dir=None, state_file=None):
 
 make_plugins_command = make_plugin_list_command
 
-
-# ── plugin group ──────────────────────────────────────────────────────────────
 
 def make_plugin_group(*, plugins_dir=None, state_file=None):
     @click.group('plugin')

@@ -1,5 +1,5 @@
 import click
-from moviepy.editor import VideoFileClip, AudioFileClip
+from moviepy import VideoFileClip, AudioFileClip
 from lash.plugins.audio.core import get_last, tuple_to_seconds
 
 

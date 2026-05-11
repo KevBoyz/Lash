@@ -63,6 +63,7 @@ class TestGetFile:
         assert get_file('photo.jpg') == 'photo.jpg'
         assert get_file('archive.zip') == 'archive.zip'
 
+    @pytest.mark.skipif(os.name != 'nt', reason='Windows backslash path handling only')
     def test_windows_path_returns_filename(self, tmp_path):
         from lash.plugins.image.core import get_file
 

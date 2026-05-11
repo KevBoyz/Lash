@@ -13,12 +13,11 @@ class TestRunAutoclickSingle:
         mock_controller_instance = MagicMock()
         mock_controller_cls = MagicMock(return_value=mock_controller_instance)
 
-        with patch('lash.plugins.device.core.__import__', side_effect=__import__):
-            with patch.dict('sys.modules', {
-                'pynput': MagicMock(),
-                'pynput.mouse': MagicMock(Controller=mock_controller_cls, Button=mock_button),
-            }):
-                run_autoclick_single()
+        with patch.dict('sys.modules', {
+            'pynput': MagicMock(),
+            'pynput.mouse': MagicMock(Controller=mock_controller_cls, Button=mock_button),
+        }):
+            run_autoclick_single()
 
         mock_controller_instance.press.assert_called_once_with(mock_button.left)
         mock_controller_instance.release.assert_called_once_with(mock_button.left)

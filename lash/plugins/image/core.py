@@ -5,7 +5,7 @@ from PIL import Image, ImageEnhance, ImageFilter, ImageFont, ImageDraw
 
 def files_range():
     total = 0
-    for root, files, folders in os.walk('.'):
+    for root, dirs, files in os.walk('.'):
         for file in files:
             total += 1
     return total

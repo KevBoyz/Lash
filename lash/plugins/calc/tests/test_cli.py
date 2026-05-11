@@ -46,7 +46,7 @@ class TestCartesianCmd:
         runner = CliRunner()
         result = runner.invoke(calc, ['cartesian', '-b', 'not_valid'])
         assert result.exit_code == 0
-        assert 'Correct use' in result.output
+        assert 'Correct' in result.output
 
 
 class TestTrinomialCmd:

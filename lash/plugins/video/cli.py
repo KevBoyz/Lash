@@ -2,13 +2,11 @@ import os
 import cv2
 import click
 from numpy import mean
-from mss import mss
 from tqdm import tqdm
 from math import ceil, trunc
 from time import sleep, time
-from pyautogui import position
 from keyboard import is_pressed
-from moviepy.editor import VideoFileClip, concatenate_videoclips
+from moviepy import VideoFileClip, concatenate_videoclips
 from lash.plugins.video.core import (
     get_last, get_ext, path_no_file, tuple_to_seconds,
     resize_images, alt_build, render_cursor, get_images,
@@ -74,6 +72,8 @@ def build(path, fps, n, num, r):
 @click.option('-b', is_flag=True, default=True, show_default=True, help='Build video after record')
 @click.option('-f', is_flag=True, default=True, show_default=True, help='Delete frames after build')
 def rec(path, w, n, c, b, f):
+    from mss import mss
+    from pyautogui import position
     os.chdir(path)
     image_folder = os.getcwd()
     if w:

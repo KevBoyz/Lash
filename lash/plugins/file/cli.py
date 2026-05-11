@@ -31,7 +31,7 @@ def organize(path, t, m, d, o, s, v):
         os.chdir(path)
         files = os.listdir()
         if t:
-            if t.find('.'):
+            if not t.startswith('.'):
                 t = '.' + t
             cfiles = list()
             os.mkdir(f'({t}) Files') if f'({t}) Files' not in files else None
@@ -46,7 +46,7 @@ def organize(path, t, m, d, o, s, v):
             if m:
                 os.mkdir('Midia') if 'Midia' not in files else files.remove('Midia')
                 os.chdir('Midia')
-                if os.listdir('..') == 0:
+                if not os.listdir('..'):
                     os.mkdir('Images')
                     os.mkdir('Videos')
                     os.mkdir('Musics')
@@ -64,7 +64,7 @@ def organize(path, t, m, d, o, s, v):
 
             with click.progressbar(range(len(files)), empty_char='─', fill_char='█', bar_template=bar_template()) as p:
                 for c in p:
-                    print(c, p)
+
                     if not os.path.isdir(files[c]):
                         if get_ext(files[c]) in ft['midia']['images']:
                             sh.move(os.path.join(path, files[c]), os.path.join('Midia', 'Images', files[c]))
@@ -81,8 +81,8 @@ def organize(path, t, m, d, o, s, v):
                             sh.move(os.path.join(path, files[c]), os.path.join('Sub-folders', files[c]))
                         else:
                             continue
-    except:
-        pass
+    except Exception as e:
+        click.echo(f'Error: {e}', err=True)
 
 
 @click.group('zip', help='Zip tools')
@@ -132,7 +132,7 @@ def compress(path, fn, v, fo):
                         _zip.write(file, compress_type=zipfile.ZIP_DEFLATED)
                         arch += 1
                         os.chdir(way)
-                    except:
+                    except Exception:
                         pass
     else:
         for folder, sub_folders, files in os.walk('.'):
@@ -162,7 +162,7 @@ def compress(path, fn, v, fo):
         os.chdir('..')
         try:
             sh.move(fn, '.')
-        except:
+        except Exception:
             os.chdir(path)
     print(f'[bright_green]Saved in[/bright_green] [bright_blue]{os.path.join(os.getcwd(), fn)}[/bright_blue]\n')
 

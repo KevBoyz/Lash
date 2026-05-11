@@ -1,5 +1,7 @@
 import ast
 import click
+import matplotlib
+matplotlib.use('Qt5Agg')
 from numpy import linspace
 from matplotlib import pyplot as plt
 from rich import print

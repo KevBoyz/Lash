@@ -6,7 +6,7 @@
     "calc": {
       "module": "lash.plugins.calc.cli:calc",
       "description": "Probability, cartesian product, binomial, trinomial",
-      "requires": ["numpy>=1.23.0", "matplotlib>=3.5.3", "rich>=12.6.0"]
+      "requires": ["numpy>=1.23.0", "matplotlib>=3.5.3", "rich>=12.6.0", "PyQt5>=5.15.0"]
     }
   }
 }

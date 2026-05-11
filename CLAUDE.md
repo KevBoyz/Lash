@@ -55,13 +55,27 @@ lash plugin remove <plugin>...     # uninstall one or more plugins
 
 ## Plugin File Distribution Rules
 
-Respeitar a separação entre os 3 arquivos é obrigatório:
+### Hierarquia de desenvolvimento (obrigatória)
 
-- **`cli.py`**: só entry points Click + output (`print`/`click.echo`). Sem lógica de negócio, sem I/O de arquivo direto.
-- **`core.py`**: funções grandes chamadas pelo cli. Sem `print()` — retornar valores, deixar o cli exibir. Sem imports de Display/UI (tqdm, matplotlib interativo).
-- **`helpers.py`**: funções pequenas e reutilizáveis usadas pelo core. Ex: formatação, setup de plot, parsers genéricos.
+Os arquivos crescem de forma hierárquica — cada nível só existe se o anterior precisar dele:
+
+1. **`cli.py`** — ponto de partida sempre. Só entry points Click + output (`print`/`click.echo`). Sem lógica de negócio, sem I/O de arquivo direto.
+2. **`core.py`** — criado quando `cli.py` precisa extrair funções maiores. Sem `print()` — retornar valores, deixar o cli exibir. Sem imports de Display/UI (tqdm, matplotlib interativo).
+3. **`helpers.py`** — criado quando `core.py` precisa extrair funções pequenas e reutilizáveis. Ex: formatação, setup de plot, parsers genéricos.
 
 **Direção de dependência**: `cli.py → core.py → helpers.py`. Nunca inverter.
+
+### Regras de existência dos arquivos
+
+- `helpers.py` **só existe se `core.py` precisar dele**. Se `core.py` estiver vazio ou trivial, mover o conteúdo de `helpers.py` para `core.py` e deletar `helpers.py`.
+- `core.py` **só existe se `cli.py` precisar dele**. Plugin simples pode ter só `cli.py`.
+- **Antipadrão proibido**: `helpers.py` populado + `core.py` vazio. Se encontrar isso ao revisar ou criar código, corrigir: mover tudo para `core.py`, deletar `helpers.py`.
+
+### Ao revisar ou criar plugins — checar obrigatoriamente
+
+- `helpers.py` existe? → `core.py` tem conteúdo substancial? Se não, consolidar.
+- `core.py` existe? → `cli.py` realmente delega lógica para ele? Se não, inline no cli.
+- Dependência invertida? (`core.py` importando de `cli.py`, `helpers.py` importando de `core.py`) → corrigir.
 
 ## manifest.json — Regras
 

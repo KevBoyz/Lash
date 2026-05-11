@@ -1,6 +1,6 @@
 import click
 from moviepy.editor import VideoFileClip, AudioFileClip
-from lash.plugins.audio.helpers import get_last, tuple_to_seconds
+from lash.plugins.audio.core import get_last, tuple_to_seconds
 
 
 @click.group('audio', help='Audio tools')
@@ -15,7 +15,7 @@ def get(path, o):
     video = VideoFileClip(path)
     filename = get_last(path)
     if o:
-        video.audio.write_audiofile(f'{path.replace(filename, o)}.mp4')
+        video.audio.write_audiofile(f'{path.replace(filename, o)}.mp3')
     else:
         video.audio.write_audiofile(path.replace(".mp4", ".mp3"))
 
@@ -31,10 +31,7 @@ def cut(path, o, i, f):
     initial_time = tuple_to_seconds(i)
     final_time = tuple_to_seconds(f)
     clip = audio.subclip(initial_time, final_time)
-    try:
-        if o:
-            clip.write_audiofile(f'{path.replace(filename, o)}.mp3')
-        else:
-            clip.write_audiofile(path)
-    except OSError:
-        pass
+    if o:
+        clip.write_audiofile(f'{path.replace(filename, o)}.mp3')
+    else:
+        clip.write_audiofile(path)

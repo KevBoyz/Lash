@@ -1,25 +1,23 @@
 import click
-import pynput.keyboard as kb
-from pynput.mouse import Controller, Button
 from keyboard import is_pressed
-from time import sleep
+from lash.plugins.device.core import (
+    run_keyhold, run_autoclick_single, run_autoclick_double,
+    run_autoclick_hold, run_autoclick_repeat,
+)
 
 
-@click.command(short_help='Hold a keyboard key')
+@click.command(short_help='Hold a keyboard key', help='Hold a keyboard key until F3 is pressed')
 @click.argument('key', metavar='<key>', type=click.STRING)
 def keyhold(key):
-    k = kb.Controller()
-    print('initialized, f4 to start, f3 to stop')
+    click.echo('initialized, f4 to start, f3 to stop')
     while True:
         if is_pressed('f4'):
-            print('[== -- *typing* -- ==]')
+            click.echo('[== -- *typing* -- ==]')
             break
     try:
-        while not is_pressed('f3'):
-            k.press(key)
-    except:
-        pass
-    pass
+        run_keyhold(key)
+    except Exception as e:
+        click.echo(f'Error: {e}', err=True)
 
 
 @click.command(help='Auto clicker')
@@ -28,37 +26,16 @@ def keyhold(key):
 @click.option('-sg', is_flag=True, default=False, show_default=True, help='Do a single click')
 @click.option('-db', is_flag=True, default=False, show_default=True, help='Do a double click')
 def autoclick(cd, ch, sg, db):
-    mouse = Controller()
     if sg:
-        mouse.press(Button.left)
-        mouse.release(Button.left)
+        run_autoclick_single()
     elif db:
-        for c in range(0, 2):
-            mouse.press(Button.left)
-            mouse.release(Button.left)
+        run_autoclick_double()
     else:
         if not ch:
-            print('Auto Clicker initialized, f4 to start f3 to stop')
+            click.echo('Auto Clicker initialized, f4 to start f3 to stop')
         else:
-            print('Auto Clicker initialized, f4 to start, *click* to stop')
+            click.echo('Auto Clicker initialized, f4 to start, *click* to stop')
         if ch:
-            while True:
-                if is_pressed('f4'):
-                    break
-            try:
-                with mouse.press(Button.left):
-                    pass
-            except:
-                pass
+            run_autoclick_hold()
         else:
-            while True:
-                if is_pressed('f4'):
-                    while True:
-                        if is_pressed('f3'):
-                            break
-                        else:
-                            sleep(cd)
-                            mouse.press(Button.left)
-                            mouse.release(Button.left)
-                else:
-                    continue
+            run_autoclick_repeat(cd)

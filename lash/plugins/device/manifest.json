@@ -6,12 +6,12 @@
     "autoclick": {
       "module": "lash.plugins.device.cli:autoclick",
       "description": "Automate mouse clicks at intervals",
-      "requires": ["pynput>=1.7.6"]
+      "requires": ["pynput>=1.7.6", "keyboard"]
     },
     "keyhold": {
       "module": "lash.plugins.device.cli:keyhold",
       "description": "Hold a keyboard key for a duration",
-      "requires": ["pynput>=1.7.6"]
+      "requires": ["pynput>=1.7.6", "keyboard"]
     }
   }
 }

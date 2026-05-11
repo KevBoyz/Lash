@@ -3,7 +3,11 @@ import subprocess
 import sys
 from collections import defaultdict
 import click
+from rich.console import Console
+from rich.markup import escape
 from lash import plugins as plugin_registry
+
+_console = Console()
 
 
 def _package_name(requirement):
@@ -44,21 +48,22 @@ def make_download_command(*, plugins_dir=None, state_file=None):
         })
 
         if all_requires:
-            click.echo("Installing dependencies...")
-            result = subprocess.run(
-                [sys.executable, '-m', 'pip', 'install'] + all_requires,
-                capture_output=True,
-                text=True,
-            )
-            if result.returncode != 0:
-                click.echo(f"Dependency install failed:\n{result.stderr}")
-                raise SystemExit(1)
+            with _console.status("", spinner="dots") as status:
+                for dep in all_requires:
+                    status.update(f"Installing dependencies:  \\[{escape(dep)}]")
+                    result = subprocess.run(
+                        [sys.executable, '-m', 'pip', 'install', dep],
+                        capture_output=True,
+                        text=True,
+                    )
+                    if result.returncode != 0:
+                        _console.print(f"[red]Dependency install failed:[/red]\n{result.stderr}")
+                        raise SystemExit(1)
 
         for cmd_name, (plugin_name, cmd_info) in commands_to_install.items():
             plugin_registry.mark_command_installed(
                 cmd_name, plugin_name, cmd_info.get('requires', []), state_file=state_file
             )
-            click.echo(f"  + {cmd_name}")
 
         click.echo("Done. Try: lash <command> --help")
 

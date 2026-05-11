@@ -152,24 +152,25 @@ def yt(l, s, a, f, low, file):
         Reset your ip address: Your IP may have been moved to a blacklist.
     """
     if not file:
+        p_bar_ref = [None]
         def on_progress(vid, chunk, bytes_remaining):
             totalsz = round((vid.filesize / 1024) / 1024, 1)
             remain = round((bytes_remaining / 1024) / 1024, 1)
-            p_bar.reset()
-            p_bar.update(int(totalsz - remain))
-            p_bar.refresh()
-        global p_bar
+            if p_bar_ref[0] is not None:
+                p_bar_ref[0].reset()
+                p_bar_ref[0].update(int(totalsz - remain))
+                p_bar_ref[0].refresh()
         print('Getting video', end='')
         if l and not a:
             yt_obj = YouTube(l, on_progress_callback=on_progress)
             video, totalsz = get_video_by_link(yt_obj, low)
-            p_bar = tqdm(range(int(totalsz)), colour='green')
+            p_bar_ref[0] = tqdm(range(int(totalsz)), colour='green')
             video.download(f)
         elif a:
             if l:
                 yt_obj = YouTube(l, on_progress_callback=on_progress)
                 video, totalsz = get_audio_by_link(yt_obj)
-                p_bar = tqdm(range(int(totalsz)), colour='green')
+                p_bar_ref[0] = tqdm(range(int(totalsz)), colour='green')
             elif s:
                 video = get_audio_by_search(s)
             out_file = video.download(output_path=f)

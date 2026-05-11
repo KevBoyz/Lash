@@ -58,19 +58,23 @@ def crypt(p, key, dc, ex, cl, v):
         print(f'\nFile decrypted successfully') if v else None
     else:
         if cl:
+            original_cwd = os.getcwd()
             try:
                 os.chdir(fp)
-            except:
+            except Exception:
                 print(f'\nError the path {fp} is not valid!')
                 return
-            for root, folder, files in os.walk('.'):
-                for file in files:
-                    file_value = open(os.path.join(root, file), 'rb')
-                    crip = pya.AESModeOfOperationCTR(bkey)
-                    data = crip.encrypt(file_value.read())
-                    file_value.close()
-                    crypted = open(os.path.join(root, file), 'wb')
-                    crypted.write(data)
+            try:
+                for root, folder, files in os.walk('.'):
+                    for file in files:
+                        file_value = open(os.path.join(root, file), 'rb')
+                        crip = pya.AESModeOfOperationCTR(bkey)
+                        data = crip.encrypt(file_value.read())
+                        file_value.close()
+                        crypted = open(os.path.join(root, file), 'wb')
+                        crypted.write(data)
+            finally:
+                os.chdir(original_cwd)
         else:
             file = open(fp, 'rb')
             crip = pya.AESModeOfOperationCTR(bkey)

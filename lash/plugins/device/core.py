@@ -108,6 +108,85 @@ def _dispatch_event(event, kb_ctrl, mouse_ctrl):
         mouse_ctrl.scroll(event['dx'], event['dy'])
 
 
+def record_macro(name: str) -> dict | None:
+    if macro_path(name).exists():
+        raise ValueError(f"macro '{name}' already exists. Delete it first.")
+
+    import importlib
+    kb = importlib.import_module('pynput.keyboard')
+    from pynput.mouse import Listener as MouseListener
+
+    events = []
+    start_time = [None]
+    last_move_time = [0.0]
+    stop_event = threading.Event()
+
+    def elapsed():
+        return time() - start_time[0] if start_time[0] is not None else 0.0
+
+    def on_press(key):
+        if start_time[0] is None:
+            start_time[0] = time()
+        if hasattr(key, '_value_') and key == kb.Key.f3:
+            stop_event.set()
+            return
+        serialized = serialize_key(key)
+        if serialized is None:
+            return
+        events.append({'t': elapsed(), 'type': 'key_down', 'key': serialized})
+
+    def on_release(key):
+        if start_time[0] is None:
+            return
+        if hasattr(key, '_value_') and key == kb.Key.f3:
+            return
+        serialized = serialize_key(key)
+        if serialized is None:
+            return
+        events.append({'t': elapsed(), 'type': 'key_up', 'key': serialized})
+
+    def on_move(x, y):
+        if start_time[0] is None:
+            start_time[0] = time()
+        t = elapsed()
+        if t - last_move_time[0] < 0.05:
+            return
+        last_move_time[0] = t
+        events.append({'t': t, 'type': 'mouse_move', 'x': x, 'y': y})
+
+    def on_click(x, y, button, pressed):
+        if start_time[0] is None:
+            start_time[0] = time()
+        btn_name = button.name
+        etype = 'mouse_down' if pressed else 'mouse_up'
+        events.append({'t': elapsed(), 'type': etype, 'button': btn_name})
+
+    def on_scroll(x, y, dx, dy):
+        if start_time[0] is None:
+            start_time[0] = time()
+        events.append({'t': elapsed(), 'type': 'mouse_scroll', 'dx': dx, 'dy': dy})
+
+    minimize_terminal()
+
+    with kb.Listener(on_press=on_press, on_release=on_release):
+        with MouseListener(on_move=on_move, on_click=on_click, on_scroll=on_scroll):
+            stop_event.wait()
+
+    if not events:
+        return None
+
+    from datetime import datetime
+    duration = events[-1]['t']
+    data = {
+        'name': name,
+        'created_at': datetime.now().strftime('%Y-%m-%dT%H:%M:%S'),
+        'duration': round(duration, 3),
+        'events': events,
+    }
+    save_macro(name, data)
+    return data
+
+
 def play_macro(name: str, speed: float, full_speed: bool, repeat: int, loop: bool) -> None:
     try:
         data = load_macro(name)

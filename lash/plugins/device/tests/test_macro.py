@@ -351,3 +351,115 @@ class TestPlayMacro:
         monkeypatch.setattr(Path, 'home', lambda: tmp_path)
         with pytest.raises(ValueError, match="not found"):
             play_macro('ghost', speed=1.0, full_speed=False, repeat=1, loop=False)
+
+
+class TestRecordMacro:
+    def test_raises_value_error_when_macro_exists(self, tmp_path, monkeypatch):
+        import pytest
+        from lash.plugins.device.helpers import save_macro
+        from lash.plugins.device.core import record_macro
+        monkeypatch.setattr(Path, 'home', lambda: tmp_path)
+        save_macro('exists', {'name': 'exists', 'created_at': '2026-05-15T10:00:00', 'duration': 0.0, 'events': []})
+        with pytest.raises(ValueError, match="already exists"):
+            record_macro('exists')
+
+    def test_saves_macro_with_events_from_listeners(self, tmp_path, monkeypatch):
+        from unittest.mock import MagicMock, patch
+        from lash.plugins.device.core import record_macro
+        from lash.plugins.device.helpers import load_macro
+        monkeypatch.setattr(Path, 'home', lambda: tmp_path)
+
+        captured_kb_on_press = None
+
+        def fake_kb_listener(**kwargs):
+            nonlocal captured_kb_on_press
+            captured_kb_on_press = kwargs.get('on_press')
+            m = MagicMock()
+            m.__enter__ = lambda s: s
+            m.__exit__ = MagicMock(return_value=False)
+            return m
+
+        def fake_mouse_listener(**kwargs):
+            m = MagicMock()
+            m.__enter__ = lambda s: s
+            m.__exit__ = MagicMock(return_value=False)
+            return m
+
+        def fake_stop_event():
+            e = MagicMock()
+            def wait():
+                from unittest.mock import MagicMock as MM
+                mock_key = MM()
+                mock_key.char = 'a'
+                if captured_kb_on_press:
+                    captured_kb_on_press(mock_key)
+                e.is_set.return_value = True
+            e.wait = wait
+            e.is_set.return_value = False
+            return e
+
+        mock_kb_mod = MagicMock()
+        mock_kb_mod.Listener = fake_kb_listener
+        mock_kb_mod.Key = MagicMock()
+
+        mock_mouse_mod = MagicMock()
+        mock_mouse_mod.Listener = fake_mouse_listener
+
+        with patch.dict('sys.modules', {
+                'pynput': MagicMock(),
+                'pynput.keyboard': mock_kb_mod,
+                'pynput.mouse': mock_mouse_mod,
+            }), \
+             patch('lash.plugins.device.core.threading') as mock_threading, \
+             patch('lash.plugins.device.core.minimize_terminal'), \
+             patch('lash.plugins.device.core.time', return_value=0.0):
+            mock_threading.Event = fake_stop_event
+            record_macro('new_macro')
+
+        data = load_macro('new_macro')
+        assert data['name'] == 'new_macro'
+        assert len(data['events']) >= 1
+
+    def test_does_not_save_when_no_events(self, tmp_path, monkeypatch):
+        import pytest
+        from unittest.mock import MagicMock, patch
+        from lash.plugins.device.core import record_macro
+        monkeypatch.setattr(Path, 'home', lambda: tmp_path)
+
+        def fake_kb_listener(**kwargs):
+            m = MagicMock()
+            m.__enter__ = lambda s: s
+            m.__exit__ = MagicMock(return_value=False)
+            return m
+
+        def fake_mouse_listener(**kwargs):
+            m = MagicMock()
+            m.__enter__ = lambda s: s
+            m.__exit__ = MagicMock(return_value=False)
+            return m
+
+        def fake_stop_event():
+            e = MagicMock()
+            e.wait = lambda: None
+            e.is_set.return_value = True
+            return e
+
+        mock_kb_mod = MagicMock()
+        mock_kb_mod.Listener = fake_kb_listener
+        mock_kb_mod.Key = MagicMock()
+        mock_mouse_mod = MagicMock()
+        mock_mouse_mod.Listener = fake_mouse_listener
+
+        with patch.dict('sys.modules', {
+                'pynput': MagicMock(),
+                'pynput.keyboard': mock_kb_mod,
+                'pynput.mouse': mock_mouse_mod,
+            }), \
+             patch('lash.plugins.device.core.threading') as mock_threading, \
+             patch('lash.plugins.device.core.minimize_terminal'):
+            mock_threading.Event = fake_stop_event
+            result = record_macro('empty_macro')
+
+        assert result is None
+        from lash.plugins.device.helpers import macro_path
+        assert not macro_path('empty_macro').exists()

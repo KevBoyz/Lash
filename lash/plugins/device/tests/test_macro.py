@@ -64,12 +64,15 @@ class TestListMacroFiles:
 
 class TestRenameMacroFile:
     def test_renames_file_and_updates_name_field(self, tmp_path, monkeypatch):
+        import pytest
         from lash.plugins.device.helpers import save_macro, rename_macro_file, load_macro
         monkeypatch.setattr(Path, 'home', lambda: tmp_path)
         save_macro('old', {'name': 'old', 'created_at': '2026-05-15T10:00:00', 'duration': 1.0, 'events': []})
         rename_macro_file('old', 'new')
         result = load_macro('new')
         assert result['name'] == 'new'
+        with pytest.raises(FileNotFoundError):
+            load_macro('old')
 
     def test_raises_when_source_not_found(self, tmp_path, monkeypatch):
         import pytest
@@ -123,8 +126,8 @@ class TestSerializeKey:
     def test_unknown_key_returns_none(self):
         from lash.plugins.device.helpers import serialize_key
         from unittest.mock import MagicMock
-        key = MagicMock(spec=[])
-        del key.char
+        key = MagicMock()
+        key.char = None  # pynput KeyCode with no printable char
         assert serialize_key(key) is None
 
 

@@ -30,7 +30,7 @@ def list_macro_files() -> list:
     for f in files:
         try:
             macros.append(json.loads(f.read_text(encoding='utf-8')))
-        except (json.JSONDecodeError, KeyError):
+        except (json.JSONDecodeError, KeyError, OSError):
             continue
     return sorted(macros, key=lambda m: m.get('created_at', ''), reverse=True)
 
@@ -44,7 +44,9 @@ def rename_macro_file(old: str, new: str) -> None:
         raise FileExistsError(new)
     data = json.loads(src.read_text(encoding='utf-8'))
     data['name'] = new
-    dst.write_text(json.dumps(data, indent=2), encoding='utf-8')
+    tmp = dst.with_suffix('.tmp')
+    tmp.write_text(json.dumps(data, indent=2), encoding='utf-8')
+    tmp.rename(dst)
     src.unlink()
 
 
@@ -82,6 +84,6 @@ def minimize_terminal() -> None:
         import ctypes
         hwnd = ctypes.windll.kernel32.GetConsoleWindow()
         if hwnd:
-            ctypes.windll.user32.ShowWindow(hwnd, 6)
+            ctypes.windll.user32.ShowWindow(hwnd, 6)  # SW_MINIMIZE
     except Exception:
         pass

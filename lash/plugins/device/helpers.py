@@ -65,13 +65,10 @@ def delete_macro_file(name: str) -> None:
 def serialize_key(key) -> str | None:
     if hasattr(key, 'char') and key.char is not None:
         return key.char
-    try:
-        s = str(key).replace('pynput.keyboard.Key.', 'Key.')
-        if s.startswith('Key.'):
-            return s
-        return None
-    except Exception:
-        return None
+    import enum
+    if isinstance(key, enum.Enum):
+        return f'Key.{key.name}'
+    return None
 
 
 def deserialize_key(s: str):

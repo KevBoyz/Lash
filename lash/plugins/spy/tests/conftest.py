@@ -1,4 +1,5 @@
 import sys
+import pytest
 from enum import Enum, auto
 from unittest.mock import MagicMock
 
@@ -16,12 +17,14 @@ class _Key(Enum):
     esc = auto()
 
 
-_mock_keyboard = MagicMock()
-_mock_keyboard.Key = _Key
-_mock_keyboard.Listener = MagicMock
+@pytest.fixture(autouse=True)
+def mock_pynput(monkeypatch):
+    mock_keyboard = MagicMock()
+    mock_keyboard.Key = _Key
+    mock_keyboard.Listener = MagicMock
 
-_mock_pynput = MagicMock()
-_mock_pynput.keyboard = _mock_keyboard
+    mock_pynput_mod = MagicMock()
+    mock_pynput_mod.keyboard = mock_keyboard
 
-sys.modules['pynput'] = _mock_pynput
-sys.modules['pynput.keyboard'] = _mock_keyboard
+    monkeypatch.setitem(sys.modules, 'pynput', mock_pynput_mod)
+    monkeypatch.setitem(sys.modules, 'pynput.keyboard', mock_keyboard)

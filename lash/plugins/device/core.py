@@ -89,8 +89,6 @@ def _mouse_controller():
 
 
 def _dispatch_event(event, kb_ctrl, mouse_ctrl):
-    from pynput.mouse import Button
-
     t = event['type']
     if t == 'key_down':
         kb_ctrl.press(deserialize_key(event['key']))
@@ -99,6 +97,7 @@ def _dispatch_event(event, kb_ctrl, mouse_ctrl):
     elif t == 'mouse_move':
         mouse_ctrl.position = (event['x'], event['y'])
     elif t in ('mouse_down', 'mouse_up'):
+        from pynput.mouse import Button
         btn = getattr(Button, event['button'])
         if t == 'mouse_down':
             mouse_ctrl.press(btn)

@@ -576,3 +576,38 @@ class TestMacroCommand:
             from lash.plugins.device.cli import macro
             result = CliRunner().invoke(macro, ['-p', 'x', '--loop', '-n', '3'])
         assert result.exit_code != 0
+
+    def test_record_without_name_shows_error(self, tmp_path, monkeypatch):
+        from click.testing import CliRunner
+        monkeypatch.setattr(Path, 'home', lambda: tmp_path)
+        from lash.plugins.device.cli import macro
+        result = CliRunner().invoke(macro, ['-r'])
+        assert result.exit_code != 0
+
+    def test_play_without_name_shows_error(self, tmp_path, monkeypatch):
+        from click.testing import CliRunner
+        monkeypatch.setattr(Path, 'home', lambda: tmp_path)
+        from lash.plugins.device.cli import macro
+        result = CliRunner().invoke(macro, ['-p'])
+        assert result.exit_code != 0
+
+    def test_delete_without_name_shows_error(self, tmp_path, monkeypatch):
+        from click.testing import CliRunner
+        monkeypatch.setattr(Path, 'home', lambda: tmp_path)
+        from lash.plugins.device.cli import macro
+        result = CliRunner().invoke(macro, ['-d'])
+        assert result.exit_code != 0
+
+    def test_rename_with_only_one_arg_shows_error(self, tmp_path, monkeypatch):
+        from click.testing import CliRunner
+        monkeypatch.setattr(Path, 'home', lambda: tmp_path)
+        from lash.plugins.device.cli import macro
+        result = CliRunner().invoke(macro, ['--rename', 'old'])
+        assert result.exit_code != 0
+
+    def test_play_negative_speed_shows_error(self, tmp_path, monkeypatch):
+        from click.testing import CliRunner
+        monkeypatch.setattr(Path, 'home', lambda: tmp_path)
+        from lash.plugins.device.cli import macro
+        result = CliRunner().invoke(macro, ['-p', 'x', '--speed', '-1'])
+        assert result.exit_code != 0

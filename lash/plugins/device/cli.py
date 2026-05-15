@@ -4,8 +4,8 @@ from lash.plugins.device.core import (
     run_keyhold, run_autoclick_single, run_autoclick_double,
     run_autoclick_hold, run_autoclick_repeat,
     record_macro, play_macro, list_macros, rename_macro, delete_macro,
+    minimize_terminal,
 )
-from lash.plugins.device.helpers import minimize_terminal
 
 
 @click.command(short_help='Hold a keyboard key', help='Hold a keyboard key until F3 is pressed')
@@ -52,7 +52,7 @@ def autoclick(cd, ch, sg, db):
 @click.argument('name',   required=False)
 @click.argument('newname', required=False)
 @click.option('-n',           type=int,   default=1,    help='Repeat N times (with -p)')
-@click.option('--loop',       is_flag=True,             help='Loop indefinitely (with -p), F3 to stop')
+@click.option('--loop',       is_flag=True,             help='Loop indefinitely (with -p), F3 to stop between runs')
 @click.option('--speed',      type=float, default=1.0,  help='Playback speed multiplier (with -p)')
 @click.option('--full-speed', is_flag=True,             help='No delays between events (with -p)')
 def macro(action, name, newname, n, loop, speed, full_speed):
@@ -91,6 +91,8 @@ def macro(action, name, newname, n, loop, speed, full_speed):
             raise click.UsageError("--speed and --full-speed are mutually exclusive")
         if loop and n != 1:
             raise click.UsageError("--loop and -n are mutually exclusive")
+        if speed <= 0:
+            raise click.UsageError("--speed must be greater than 0")
         if loop:
             click.echo(f"Playing '{name}' (loop, F3 to stop)...")
         else:

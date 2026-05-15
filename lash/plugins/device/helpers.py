@@ -10,7 +10,10 @@ def get_data_dir() -> Path:
 
 
 def macro_path(name: str) -> Path:
-    return get_data_dir() / f'{name}.json'
+    p = (get_data_dir() / f'{name}.json').resolve()
+    if p.parent != get_data_dir().resolve():
+        raise ValueError(f"Invalid macro name: '{name}'")
+    return p
 
 
 def save_macro(name: str, data: dict) -> None:
@@ -29,7 +32,9 @@ def list_macro_files() -> list:
     macros = []
     for f in files:
         try:
-            macros.append(json.loads(f.read_text(encoding='utf-8')))
+            data = json.loads(f.read_text(encoding='utf-8'))
+            _ = data['name'], data['created_at'], data['duration']
+            macros.append(data)
         except (json.JSONDecodeError, KeyError, OSError):
             continue
     return sorted(macros, key=lambda m: m.get('created_at', ''), reverse=True)

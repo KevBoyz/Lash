@@ -149,3 +149,67 @@ class TestMinimizeTerminal:
     def test_does_not_raise_on_any_platform(self):
         from lash.plugins.device.helpers import minimize_terminal
         minimize_terminal()
+
+
+class TestListMacros:
+    def test_returns_formatted_list(self, tmp_path, monkeypatch):
+        from lash.plugins.device.helpers import save_macro
+        from lash.plugins.device.core import list_macros
+        monkeypatch.setattr(Path, 'home', lambda: tmp_path)
+        save_macro('login', {'name': 'login', 'created_at': '2026-05-15T14:32:00', 'duration': 4.821, 'events': []})
+        result = list_macros()
+        assert len(result) == 1
+        assert result[0]['name'] == 'login'
+        assert result[0]['duration'] == 4.821
+        assert result[0]['created_at'] == '2026-05-15T14:32:00'
+
+    def test_returns_empty_list_when_no_macros(self, tmp_path, monkeypatch):
+        from lash.plugins.device.core import list_macros
+        monkeypatch.setattr(Path, 'home', lambda: tmp_path)
+        assert list_macros() == []
+
+
+class TestRenameMacro:
+    def test_renames_successfully(self, tmp_path, monkeypatch):
+        from lash.plugins.device.helpers import save_macro, load_macro
+        from lash.plugins.device.core import rename_macro
+        monkeypatch.setattr(Path, 'home', lambda: tmp_path)
+        save_macro('old', {'name': 'old', 'created_at': '2026-05-15T10:00:00', 'duration': 1.0, 'events': []})
+        rename_macro('old', 'new')
+        assert load_macro('new')['name'] == 'new'
+
+    def test_raises_value_error_when_source_not_found(self, tmp_path, monkeypatch):
+        import pytest
+        from lash.plugins.device.core import rename_macro
+        monkeypatch.setattr(Path, 'home', lambda: tmp_path)
+        with pytest.raises(ValueError, match="not found"):
+            rename_macro('missing', 'new')
+
+    def test_raises_value_error_when_target_exists(self, tmp_path, monkeypatch):
+        import pytest
+        from lash.plugins.device.helpers import save_macro
+        from lash.plugins.device.core import rename_macro
+        monkeypatch.setattr(Path, 'home', lambda: tmp_path)
+        save_macro('a', {'name': 'a', 'created_at': '2026-05-15T10:00:00', 'duration': 1.0, 'events': []})
+        save_macro('b', {'name': 'b', 'created_at': '2026-05-15T10:00:00', 'duration': 1.0, 'events': []})
+        with pytest.raises(ValueError, match="already exists"):
+            rename_macro('a', 'b')
+
+
+class TestDeleteMacro:
+    def test_deletes_successfully(self, tmp_path, monkeypatch):
+        import pytest
+        from lash.plugins.device.helpers import save_macro, load_macro
+        from lash.plugins.device.core import delete_macro
+        monkeypatch.setattr(Path, 'home', lambda: tmp_path)
+        save_macro('bye', {'name': 'bye', 'created_at': '2026-05-15T10:00:00', 'duration': 1.0, 'events': []})
+        delete_macro('bye')
+        with pytest.raises(FileNotFoundError):
+            load_macro('bye')
+
+    def test_raises_value_error_when_not_found(self, tmp_path, monkeypatch):
+        import pytest
+        from lash.plugins.device.core import delete_macro
+        monkeypatch.setattr(Path, 'home', lambda: tmp_path)
+        with pytest.raises(ValueError, match="not found"):
+            delete_macro('missing')

@@ -72,10 +72,9 @@ def serialize_key(key) -> str | None:
 
 
 def deserialize_key(s: str):
-    import pynput.keyboard as kb
     if s.startswith('Key.'):
-        attr = s[4:]
-        return getattr(kb.Key, attr)
+        import pynput.keyboard as kb
+        return getattr(kb.Key, s[4:])
     return s
 
 

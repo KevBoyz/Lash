@@ -89,7 +89,6 @@ def _mouse_controller():
 
 
 def _dispatch_event(event, kb_ctrl, mouse_ctrl):
-    import pynput.keyboard as kb
     from pynput.mouse import Button
 
     t = event['type']

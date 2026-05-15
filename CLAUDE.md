@@ -123,3 +123,11 @@ No test execution during development — run only when explicitly requested.
 | video   | Video Tools       | video                 |
 | web     | Web Tools         | web                   |
 | work    | Work Tracker      | work                  |
+
+## Executando comandos 
+
+Nunca tente instalar coisas no meu python global quando um comando não rodar. Todos os comandos python devem ser executados no .venv do projeto.  Execute testes usando um comando que segue o padrão:
+/c/dev/Personal/Lash/.venv/Scripts/python.exe -m pytest 
+
+Tudo relacionado a testes já esta intalado nele, não tente instalar mais nada.
+Trate de não esquecer da forma exigida para executar comandos durante as seções.

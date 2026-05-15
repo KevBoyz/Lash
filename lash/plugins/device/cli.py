@@ -100,9 +100,11 @@ def macro(action, name, newname, n, loop, speed, full_speed):
             click.echo(f"Playing '{name}' ({label})...")
         minimize_terminal()
         try:
-            play_macro(name, speed=speed, full_speed=full_speed, repeat=n, loop=loop)
+            force_stopped = play_macro(name, speed=speed, full_speed=full_speed, repeat=n, loop=loop)
         except ValueError as e:
             raise click.ClickException(str(e))
+        if force_stopped:
+            click.echo('\nForce stopped (F3)')
         return
 
     if action == 'rename':

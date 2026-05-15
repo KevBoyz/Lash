@@ -187,7 +187,7 @@ def record_macro(name: str) -> dict | None:
     return data
 
 
-def play_macro(name: str, speed: float, full_speed: bool, repeat: int, loop: bool) -> None:
+def play_macro(name: str, speed: float, full_speed: bool, repeat: int, loop: bool) -> bool:
     try:
         data = load_macro(name)
     except FileNotFoundError:
@@ -199,16 +199,47 @@ def play_macro(name: str, speed: float, full_speed: bool, repeat: int, loop: boo
     kb_ctrl = _kb_controller()
     mouse_ctrl = _mouse_controller()
 
+    force_stopped = threading.Event()
+    done = threading.Event()
+
+    def _watch_f3():
+        from keyboard import is_pressed
+        while not done.is_set():
+            if is_pressed('f3'):
+                force_stopped.set()
+                break
+            sleep(0.05)
+
+    watcher = threading.Thread(target=_watch_f3, daemon=True)
+    watcher.start()
+
+    def interruptible_sleep(seconds):
+        end = time() + seconds
+        while time() < end:
+            if force_stopped.is_set():
+                return
+            sleep(min(0.05, end - time()))
+
     def run_once():
         for i, event in enumerate(events):
+            if force_stopped.is_set():
+                return
             wait = (event['t'] - events[i - 1]['t']) * delay_factor if i > 0 else 0
-            sleep(wait)
+            if wait > 0:
+                interruptible_sleep(wait)
+            if force_stopped.is_set():
+                return
             _dispatch_event(event, kb_ctrl, mouse_ctrl)
 
     if loop:
-        from keyboard import is_pressed
-        while not is_pressed('f3'):
+        while not force_stopped.is_set():
             run_once()
     else:
         for _ in range(repeat):
+            if force_stopped.is_set():
+                break
             run_once()
+
+    done.set()
+    watcher.join(timeout=0.2)
+    return force_stopped.is_set()

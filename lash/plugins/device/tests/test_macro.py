@@ -213,3 +213,141 @@ class TestDeleteMacro:
         monkeypatch.setattr(Path, 'home', lambda: tmp_path)
         with pytest.raises(ValueError, match="not found"):
             delete_macro('missing')
+
+
+class TestPlayMacro:
+    def _make_macro(self, tmp_path, monkeypatch, events):
+        from lash.plugins.device.helpers import save_macro
+        monkeypatch.setattr(Path, 'home', lambda: tmp_path)
+        save_macro('test', {
+            'name': 'test',
+            'created_at': '2026-05-15T10:00:00',
+            'duration': 1.0,
+            'events': events,
+        })
+
+    def test_plays_key_down_event(self, tmp_path, monkeypatch):
+        from unittest.mock import MagicMock, patch
+        from lash.plugins.device.core import play_macro
+        self._make_macro(tmp_path, monkeypatch, [
+            {'t': 0.0, 'type': 'key_down', 'key': 'a'},
+        ])
+        mock_kb_ctrl = MagicMock()
+        mock_mouse_ctrl = MagicMock()
+        with patch('lash.plugins.device.core._kb_controller', return_value=mock_kb_ctrl), \
+             patch('lash.plugins.device.core._mouse_controller', return_value=mock_mouse_ctrl), \
+             patch('lash.plugins.device.core.sleep'):
+            play_macro('test', speed=1.0, full_speed=False, repeat=1, loop=False)
+        mock_kb_ctrl.press.assert_called_once_with('a')
+
+    def test_plays_key_up_event(self, tmp_path, monkeypatch):
+        from unittest.mock import MagicMock, patch
+        from lash.plugins.device.core import play_macro
+        self._make_macro(tmp_path, monkeypatch, [
+            {'t': 0.0, 'type': 'key_up', 'key': 'a'},
+        ])
+        mock_kb_ctrl = MagicMock()
+        mock_mouse_ctrl = MagicMock()
+        with patch('lash.plugins.device.core._kb_controller', return_value=mock_kb_ctrl), \
+             patch('lash.plugins.device.core._mouse_controller', return_value=mock_mouse_ctrl), \
+             patch('lash.plugins.device.core.sleep'):
+            play_macro('test', speed=1.0, full_speed=False, repeat=1, loop=False)
+        mock_kb_ctrl.release.assert_called_once_with('a')
+
+    def test_plays_mouse_move(self, tmp_path, monkeypatch):
+        from unittest.mock import MagicMock, patch
+        from lash.plugins.device.core import play_macro
+        self._make_macro(tmp_path, monkeypatch, [
+            {'t': 0.0, 'type': 'mouse_move', 'x': 100, 'y': 200},
+        ])
+        mock_kb_ctrl = MagicMock()
+        mock_mouse_ctrl = MagicMock()
+        with patch('lash.plugins.device.core._kb_controller', return_value=mock_kb_ctrl), \
+             patch('lash.plugins.device.core._mouse_controller', return_value=mock_mouse_ctrl), \
+             patch('lash.plugins.device.core.sleep'):
+            play_macro('test', speed=1.0, full_speed=False, repeat=1, loop=False)
+        assert mock_mouse_ctrl.position == (100, 200)
+
+    def test_plays_mouse_down_and_up(self, tmp_path, monkeypatch):
+        from unittest.mock import MagicMock, patch
+        from lash.plugins.device.core import play_macro
+        self._make_macro(tmp_path, monkeypatch, [
+            {'t': 0.0, 'type': 'mouse_down', 'button': 'left'},
+            {'t': 0.1, 'type': 'mouse_up',   'button': 'left'},
+        ])
+        mock_kb_ctrl = MagicMock()
+        mock_mouse_ctrl = MagicMock()
+        with patch('lash.plugins.device.core._kb_controller', return_value=mock_kb_ctrl), \
+             patch('lash.plugins.device.core._mouse_controller', return_value=mock_mouse_ctrl), \
+             patch('lash.plugins.device.core.sleep'):
+            play_macro('test', speed=1.0, full_speed=False, repeat=1, loop=False)
+        mock_mouse_ctrl.press.assert_called_once()
+        mock_mouse_ctrl.release.assert_called_once()
+
+    def test_plays_mouse_scroll(self, tmp_path, monkeypatch):
+        from unittest.mock import MagicMock, patch
+        from lash.plugins.device.core import play_macro
+        self._make_macro(tmp_path, monkeypatch, [
+            {'t': 0.0, 'type': 'mouse_scroll', 'dx': 0, 'dy': -3},
+        ])
+        mock_kb_ctrl = MagicMock()
+        mock_mouse_ctrl = MagicMock()
+        with patch('lash.plugins.device.core._kb_controller', return_value=mock_kb_ctrl), \
+             patch('lash.plugins.device.core._mouse_controller', return_value=mock_mouse_ctrl), \
+             patch('lash.plugins.device.core.sleep'):
+            play_macro('test', speed=1.0, full_speed=False, repeat=1, loop=False)
+        mock_mouse_ctrl.scroll.assert_called_once_with(0, -3)
+
+    def test_full_speed_skips_sleep(self, tmp_path, monkeypatch):
+        from unittest.mock import MagicMock, patch
+        from lash.plugins.device.core import play_macro
+        self._make_macro(tmp_path, monkeypatch, [
+            {'t': 0.0, 'type': 'key_down', 'key': 'a'},
+            {'t': 1.0, 'type': 'key_up',   'key': 'a'},
+        ])
+        mock_kb_ctrl = MagicMock()
+        mock_mouse_ctrl = MagicMock()
+        mock_sleep = MagicMock()
+        with patch('lash.plugins.device.core._kb_controller', return_value=mock_kb_ctrl), \
+             patch('lash.plugins.device.core._mouse_controller', return_value=mock_mouse_ctrl), \
+             patch('lash.plugins.device.core.sleep', mock_sleep):
+            play_macro('test', speed=1.0, full_speed=True, repeat=1, loop=False)
+        for c in mock_sleep.call_args_list:
+            assert c.args[0] == 0
+
+    def test_speed_multiplier_scales_delays(self, tmp_path, monkeypatch):
+        from unittest.mock import MagicMock, patch
+        from lash.plugins.device.core import play_macro
+        self._make_macro(tmp_path, monkeypatch, [
+            {'t': 0.0, 'type': 'key_down', 'key': 'a'},
+            {'t': 1.0, 'type': 'key_up',   'key': 'a'},
+        ])
+        mock_kb_ctrl = MagicMock()
+        mock_mouse_ctrl = MagicMock()
+        sleep_calls = []
+        with patch('lash.plugins.device.core._kb_controller', return_value=mock_kb_ctrl), \
+             patch('lash.plugins.device.core._mouse_controller', return_value=mock_mouse_ctrl), \
+             patch('lash.plugins.device.core.sleep', side_effect=lambda x: sleep_calls.append(x)):
+            play_macro('test', speed=2.0, full_speed=False, repeat=1, loop=False)
+        assert any(abs(v - 0.5) < 0.001 for v in sleep_calls)
+
+    def test_repeat_n_times(self, tmp_path, monkeypatch):
+        from unittest.mock import MagicMock, patch
+        from lash.plugins.device.core import play_macro
+        self._make_macro(tmp_path, monkeypatch, [
+            {'t': 0.0, 'type': 'key_down', 'key': 'a'},
+        ])
+        mock_kb_ctrl = MagicMock()
+        mock_mouse_ctrl = MagicMock()
+        with patch('lash.plugins.device.core._kb_controller', return_value=mock_kb_ctrl), \
+             patch('lash.plugins.device.core._mouse_controller', return_value=mock_mouse_ctrl), \
+             patch('lash.plugins.device.core.sleep'):
+            play_macro('test', speed=1.0, full_speed=False, repeat=3, loop=False)
+        assert mock_kb_ctrl.press.call_count == 3
+
+    def test_raises_value_error_when_macro_not_found(self, tmp_path, monkeypatch):
+        import pytest
+        from lash.plugins.device.core import play_macro
+        monkeypatch.setattr(Path, 'home', lambda: tmp_path)
+        with pytest.raises(ValueError, match="not found"):
+            play_macro('ghost', speed=1.0, full_speed=False, repeat=1, loop=False)

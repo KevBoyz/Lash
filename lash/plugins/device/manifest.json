@@ -1,7 +1,7 @@
 {
   "name": "device",
   "category": "Device Automation",
-  "description": "Keyboard hold and mouse auto-click automation",
+  "description": "Keyboard hold, mouse auto-click, and macro automation",
   "commands": {
     "autoclick": {
       "module": "lash.plugins.device.cli:autoclick",
@@ -11,6 +11,11 @@
     "keyhold": {
       "module": "lash.plugins.device.cli:keyhold",
       "description": "Hold a keyboard key for a duration",
+      "requires": ["pynput>=1.7.6", "keyboard"]
+    },
+    "macro": {
+      "module": "lash.plugins.device.cli:macro",
+      "description": "Record and play keyboard/mouse macros",
       "requires": ["pynput>=1.7.6", "keyboard"]
     }
   }

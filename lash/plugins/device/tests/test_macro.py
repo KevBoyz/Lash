@@ -466,7 +466,7 @@ class TestRecordMacro:
 
 class TestMacroCommand:
     def test_record_flag_calls_record_macro(self, tmp_path, monkeypatch):
-        from unittest.mock import patch, MagicMock
+        from unittest.mock import patch
         from click.testing import CliRunner
         monkeypatch.setattr(Path, 'home', lambda: tmp_path)
         with patch('lash.plugins.device.cli.record_macro', return_value={'name': 'x', 'duration': 1.0, 'events': [1]}) as mock_rec, \

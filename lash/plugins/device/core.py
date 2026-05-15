@@ -114,7 +114,8 @@ def record_macro(name: str) -> dict | None:
 
     import importlib
     kb = importlib.import_module('pynput.keyboard')
-    from pynput.mouse import Listener as MouseListener
+    mouse_mod = importlib.import_module('pynput.mouse')
+    MouseListener = mouse_mod.Listener
 
     events = []
     start_time = [None]

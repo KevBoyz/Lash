@@ -421,7 +421,6 @@ class TestRecordMacro:
         assert len(data['events']) >= 1
 
     def test_does_not_save_when_no_events(self, tmp_path, monkeypatch):
-        import pytest
         from unittest.mock import MagicMock, patch
         from lash.plugins.device.core import record_macro
         monkeypatch.setattr(Path, 'home', lambda: tmp_path)

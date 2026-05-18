@@ -1,11 +1,25 @@
 import click
 from keyboard import is_pressed
 from lash.plugins.device.core import (
+    key_down, key_up,
     run_keyhold, run_autoclick_single, run_autoclick_double,
     run_autoclick_hold, run_autoclick_repeat,
     record_macro, play_macro, list_macros, rename_macro, delete_macro,
     minimize_terminal,
 )
+
+
+@click.command(help='Keylogger — logs keystrokes to Keylogger.txt, F3 to stop')
+@click.option('-p', type=click.Path(exists=True), default='.', help='Path to write output file')
+def keylogger(p):
+    from pynput.keyboard import Listener
+    click.echo('<running> f3 to stop')
+    import os
+    os.chdir(p)
+    listener = Listener(on_press=key_down, on_release=key_up)
+    listener.start()
+    listener.join()
+    click.echo('> Process Finished <')
 
 
 @click.command(short_help='Hold a keyboard key', help='Hold a keyboard key until F3 is pressed')

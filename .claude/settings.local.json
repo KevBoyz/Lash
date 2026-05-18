@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Skill(superpowers:brainstorming)",
+      "Skill(superpowers:brainstorming:*)",
+      "PowerShell(Get-ChildItem \"c:\\\\dev\\\\Personal\\\\Lash\\\\docs\\\\superpowers\\\\\" -ErrorAction SilentlyContinue; if \\(-not \\(Test-Path \"c:\\\\dev\\\\Personal\\\\Lash\\\\docs\\\\superpowers\\\\specs\"\\)\\) { New-Item -ItemType Directory -Force \"c:\\\\dev\\\\Personal\\\\Lash\\\\docs\\\\superpowers\\\\specs\" })",
+      "Skill(superpowers:writing-plans)",
+      "Skill(superpowers:writing-plans:*)",
+      "Skill(superpowers:subagent-driven-development)",
+      "Skill(superpowers:subagent-driven-development:*)",
+      "Bash(python -c \"import pynput.keyboard as kb; print\\(str\\(kb.Key.shift\\)\\); print\\(repr\\(str\\(kb.Key.shift\\)\\)\\)\")"
+    ]
+  }
+}

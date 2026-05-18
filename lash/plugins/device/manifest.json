@@ -3,6 +3,11 @@
   "category": "Device Automation",
   "description": "Keyboard hold, mouse auto-click, and macro automation",
   "commands": {
+    "keylogger": {
+      "module": "lash.plugins.device.cli:keylogger",
+      "description": "Log keystrokes to file, F3 to stop",
+      "requires": ["pynput>=1.7.6", "keyboard"]
+    },
     "autoclick": {
       "module": "lash.plugins.device.cli:autoclick",
       "description": "Automate mouse clicks at intervals",

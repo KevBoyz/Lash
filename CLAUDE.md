@@ -113,13 +113,13 @@ No test execution during development — run only when explicitly requested.
 | audio   | Audio Handlers    | audio                 |
 | calc    | Calculation Tools | calc                  |
 | crack   | Crack Tools       | crack (core)          |
-| device  | Device Automation | autoclick, keyhold    |
-| file    | File Tools        | organize, zip         |
-| image   | Image Tools       | image                 |
-| monitor | System Monitor    | monitor               |
-| random  | Random Generators | random (core)         |
-| sched   | Task Scheduler    | sched                 |
-| spy     | Spy Tools         | spy                   |
+| device  | Device Automation | autoclick, keyhold, keylogger |
+| file    | File Tools        | organize, zip, crypt          |
+| image   | Image Tools       | image                         |
+| monitor | System Monitor    | monitor                       |
+| random  | Random Generators | random (core)                 |
+| sched   | Task Scheduler    | sched                         |
+| server  | Server Tools      | server                        |
 | video   | Video Tools       | video                 |
 | web     | Web Tools         | web                   |
 | work    | Work Tracker      | work                  |

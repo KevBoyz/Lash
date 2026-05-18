@@ -3,6 +3,11 @@
   "category": "File Tools",
   "description": "File organization and ZIP compression tools",
   "commands": {
+    "crypt": {
+      "module": "lash.plugins.file.cli:crypt",
+      "description": "Encrypt/Decrypt files with AES algorithm",
+      "requires": ["pyaes>=1.6.1", "rich>=12.6.0"]
+    },
     "organize": {
       "module": "lash.plugins.file.cli:organize",
       "description": "Organize files in a directory by type",

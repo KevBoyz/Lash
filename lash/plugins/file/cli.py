@@ -5,9 +5,79 @@ import shutil as sh
 from random import shuffle
 from rich import print
 import pyminizip
+import pyaes as pya
 from lash.plugins.file.core import (
     bar_template, file_types, get_ext, get_last, get_file, path_no_file
 )
+
+
+@click.command()
+@click.argument('p', metavar='path', type=click.Path(exists=True), required=False, default='.')
+@click.argument('key', metavar='<key>', type=click.STRING)
+@click.option('-dc', is_flag=True, default=False, help='Decrypt file')
+@click.option('-ex', is_flag=True, default=False, help='Export key to text file')
+@click.option('-cl', is_flag=True, default=False, help='Crypt all files in a folder')
+@click.option('-v', is_flag=True, default=False, help='Verbose mode')
+def crypt(p, key, dc, ex, cl, v):
+    """\b
+    Encrypt/Decrypt files with AES algorithm
+
+    \b
+    Save the <key> you need her to decode
+    The key NEED have 16 characters (128bits)
+    \b
+    Ex: crypt -ex ...\text.txt $kvzis1@7y602qsx
+    """
+    bkey = str.encode(key)
+    if p.find('\\') == -1 or p.find('/') == -1:
+        fp = os.path.join('.', p)
+    else:
+        fp = p
+    if dc:
+        file = open(fp, 'rb')
+        crip = pya.AESModeOfOperationCTR(bkey)
+        data = crip.decrypt(file.read())
+        crypted = open(fp, 'wb')
+        crypted.write(data)
+        print(f'\nFile decrypted successfully') if v else None
+    else:
+        if cl:
+            original_cwd = os.getcwd()
+            try:
+                os.chdir(fp)
+            except Exception:
+                print(f'\nError the path {fp} is not valid!')
+                return
+            try:
+                for root, folder, files in os.walk('.'):
+                    for file in files:
+                        file_value = open(os.path.join(root, file), 'rb')
+                        crip = pya.AESModeOfOperationCTR(bkey)
+                        data = crip.encrypt(file_value.read())
+                        file_value.close()
+                        crypted = open(os.path.join(root, file), 'wb')
+                        crypted.write(data)
+            finally:
+                os.chdir(original_cwd)
+        else:
+            file = open(fp, 'rb')
+            crip = pya.AESModeOfOperationCTR(bkey)
+            data = crip.encrypt(file.read())
+            file.close()
+            crypted = open(fp, 'wb')
+            crypted.write(data)
+        if ex:
+            if os.name == 'nt':
+                if not cl:
+                    os.chdir(fp[:fp.rfind('\\')])
+                else:
+                    pass
+            else:
+                if not cl:
+                    os.chdir(fp[:fp.rfind('\\')])
+                pass
+            open('recovery-key.txt', 'w').write(key)
+        print('\nFile(s) encrypted') if v else None
 
 
 @click.command()

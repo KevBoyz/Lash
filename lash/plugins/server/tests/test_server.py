@@ -137,3 +137,37 @@ class TestInjectionCli:
         runner = CliRunner()
         result = runner.invoke(injection, ["-c", "127.0.0.1", "notaport"])
         assert result.exit_code != 0
+
+
+class TestSeekerPid:
+    def test_write_and_read_pid(self, tmp_path):
+        from unittest.mock import patch
+        pid_file = tmp_path / "seeker.pid"
+        with patch("lash.plugins.server.core.seeker_pid_path", return_value=pid_file):
+            from lash.plugins.server.core import write_pid, read_pid
+            write_pid(12345)
+            assert read_pid() == 12345
+
+    def test_read_pid_returns_none_when_missing(self, tmp_path):
+        from unittest.mock import patch
+        pid_file = tmp_path / "seeker.pid"
+        with patch("lash.plugins.server.core.seeker_pid_path", return_value=pid_file):
+            from lash.plugins.server.core import read_pid
+            assert read_pid() is None
+
+    def test_read_pid_returns_none_on_corrupt_file(self, tmp_path):
+        from unittest.mock import patch
+        pid_file = tmp_path / "seeker.pid"
+        pid_file.write_text("notanumber")
+        with patch("lash.plugins.server.core.seeker_pid_path", return_value=pid_file):
+            from lash.plugins.server.core import read_pid
+            assert read_pid() is None
+
+    def test_is_pid_alive_current_process(self):
+        import os
+        from lash.plugins.server.core import is_pid_alive
+        assert is_pid_alive(os.getpid()) is True
+
+    def test_is_pid_alive_dead_pid(self):
+        from lash.plugins.server.core import is_pid_alive
+        assert is_pid_alive(999999999) is False

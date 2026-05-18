@@ -1,11 +1,16 @@
 {
-  "name": "spy",
-  "category": "Spy Tools",
-  "description": "Keylogger, file encryption and remote command injection",
+  "name": "server",
+  "category": "Server Tools",
+  "description": "Remote command injection and auto-discovery daemon",
   "commands": {
-    "spy": {
-      "module": "lash.plugins.spy.cli:spy",
-      "description": "Keylogger, AES file encryption, remote shell injection",
+    "injection": {
+      "module": "lash.plugins.server.cli:injection",
+      "description": "Remote command injection — active server / passive client",
+      "requires": ["rich>=12.6.0"]
+    },
+    "seeker": {
+      "module": "lash.plugins.server.cli:seeker",
+      "description": "Background daemon that auto-discovers and connects to Lash servers",
       "requires": ["rich>=12.6.0"]
     }
   }

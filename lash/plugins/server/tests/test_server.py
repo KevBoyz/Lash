@@ -313,3 +313,43 @@ class TestSeekerDaemon:
             cmd = call_args[0][0]
             assert "seeker" in cmd
             assert "--_daemon" in cmd
+
+
+class TestSeekerCli:
+    def test_stop_flag_calls_stop_seeker(self):
+        from click.testing import CliRunner
+        from unittest.mock import patch
+        from lash.plugins.server.cli import seeker
+        runner = CliRunner()
+        with patch("lash.plugins.server.core.stop_seeker", return_value="Seeker stopped (PID: 123)") as mock_stop:
+            result = runner.invoke(seeker, ["--stop"])
+            assert "stopped" in result.output.lower() or mock_stop.called
+
+    def test_requires_addresses_and_ports_when_not_stopping(self):
+        from click.testing import CliRunner
+        from lash.plugins.server.cli import seeker
+        runner = CliRunner()
+        result = runner.invoke(seeker, [])
+        assert result.exit_code != 0
+
+    def test_already_running_warns_user(self):
+        from click.testing import CliRunner
+        from unittest.mock import patch
+        from lash.plugins.server.cli import seeker
+        runner = CliRunner()
+        with patch("lash.plugins.server.core.read_pid", return_value=12345), \
+             patch("lash.plugins.server.core.is_pid_alive", return_value=True):
+            result = runner.invoke(seeker, ["192.168.1.1", "8080"])
+            assert "already running" in result.output.lower()
+            assert result.exit_code != 0
+
+    def test_start_calls_spawn_daemon(self):
+        from click.testing import CliRunner
+        from unittest.mock import patch, MagicMock
+        from lash.plugins.server.cli import seeker
+        runner = CliRunner()
+        with patch("lash.plugins.server.core.read_pid", return_value=None), \
+             patch("lash.plugins.server.core.spawn_daemon") as mock_spawn:
+            result = runner.invoke(seeker, ["192.168.1.1", "8080"])
+            mock_spawn.assert_called_once_with("192.168.1.1", "8080", 10)
+            assert "started" in result.output.lower()

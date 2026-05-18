@@ -8,7 +8,12 @@
       "Skill(superpowers:writing-plans:*)",
       "Skill(superpowers:subagent-driven-development)",
       "Skill(superpowers:subagent-driven-development:*)",
-      "Bash(python -c \"import pynput.keyboard as kb; print\\(str\\(kb.Key.shift\\)\\); print\\(repr\\(str\\(kb.Key.shift\\)\\)\\)\")"
+      "Bash(python -c \"import pynput.keyboard as kb; print\\(str\\(kb.Key.shift\\)\\); print\\(repr\\(str\\(kb.Key.shift\\)\\)\\)\")",
+      "Bash(/c/dev/Personal/Lash/.venv/Scripts/python.exe -m pytest lash/plugins/server/tests/test_server.py -v)",
+      "Bash(/c/dev/Personal/Lash/.venv/Scripts/python.exe -m pytest lash/plugins/server/tests/test_server.py::TestInjectionCli -v)",
+      "Bash(/c/dev/Personal/Lash/.venv/Scripts/python.exe -m pytest lash/plugins/server/tests/test_server.py::TestSeekerPid -v)",
+      "Bash(/c/dev/Personal/Lash/.venv/Scripts/python.exe -m pytest lash/plugins/server/tests/test_server.py::TestSeekerScanLoop -v)",
+      "Bash(/c/dev/Personal/Lash/.venv/Scripts/python.exe -m pytest lash/plugins/server/tests/test_server.py::TestSeekerCli -v)"
     ]
   }
 }

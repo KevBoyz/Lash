@@ -5,16 +5,16 @@ import threading
 import click
 from rich import print
 
-from lash.plugins.server.core import port_verify, run_injection_client
-from lash.plugins.server.helpers import send_msg, recv_msg
+from lash.plugins.spider.core import port_verify, run_web_client
+from lash.plugins.spider.helpers import send_msg, recv_msg
 
 
-@click.command("injection", help="Remote command injection — active server / passive client")
+@click.command("web", help="Remote web shell — host a server or connect as passive client")
 @click.option("-h", "--host", "h", type=str, default=None,
               help="Host this machine. Pass port: -h 8080")
 @click.option("-c", "--connect", "c", type=str, nargs=2, default=None,
               help="Connect passively to host. Pass IP and port: -c 192.168.1.1 8080")
-def injection(h, c):
+def web(h, c):
     if h:
         host = socket.gethostbyname(socket.gethostname())
         try:
@@ -30,7 +30,7 @@ def injection(h, c):
         except ValueError as e:
             click.echo(str(e), err=True)
             sys.exit(1)
-        run_injection_client(host_ip, port)
+        run_web_client(host_ip, port)
     else:
         click.echo("Error: pass -h <port> to host or -c <ip> <port> to connect", err=True)
         sys.exit(1)
@@ -39,7 +39,7 @@ def injection(h, c):
 def _run_server(host: str, port: int) -> None:
     clients: dict[str, socket.socket] = {}
     lock = threading.Lock()
-    welcome = {"lash": "injection"}
+    welcome = {"lash": "web"}
 
     def handle_client(conn: socket.socket, addr: str) -> None:
         with lock:
@@ -117,7 +117,7 @@ def _run_server(host: str, port: int) -> None:
                     pass
 
 
-@click.command("seeker", help="Background daemon that auto-discovers and connects to Lash servers")
+@click.command("seeker", help="Background daemon that auto-discovers and connects to Spider servers")
 @click.argument("addresses", required=False)
 @click.argument("ports", required=False)
 @click.option("-s", "--stop", "do_stop", is_flag=True, help="Stop the running seeker")
@@ -125,7 +125,7 @@ def _run_server(host: str, port: int) -> None:
               help="Scan interval in seconds (default: 10)")
 @click.option("--_daemon", "is_daemon", is_flag=True, hidden=True)
 def seeker(addresses, ports, do_stop, ping_interval, is_daemon):
-    from lash.plugins.server.core import (
+    from lash.plugins.spider.core import (
         read_pid, write_pid, is_pid_alive, spawn_daemon,
         stop_seeker as _stop_seeker, seeker_scan_loop,
     )

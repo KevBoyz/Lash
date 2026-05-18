@@ -8,7 +8,7 @@ from datetime import datetime
 from itertools import product
 from pathlib import Path
 
-from lash.plugins.server.helpers import send_msg, recv_msg
+from lash.plugins.spider.helpers import send_msg, recv_msg
 
 
 def port_verify(port: str) -> int:
@@ -18,7 +18,7 @@ def port_verify(port: str) -> int:
         raise ValueError(f"Invalid port [{port}], must be an integer like 8080")
 
 
-def run_injection_client(host: str, port: int) -> None:
+def run_web_client(host: str, port: int) -> None:
     local_ip = socket.gethostbyname(socket.gethostname())
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         s.connect((host, port))

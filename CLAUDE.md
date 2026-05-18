@@ -119,7 +119,7 @@ No test execution during development — run only when explicitly requested.
 | monitor | System Monitor    | monitor                       |
 | random  | Random Generators | random (core)                 |
 | sched   | Task Scheduler    | sched                         |
-| server  | Server Tools      | server                        |
+| spider  | Spider Tools      | web, seeker                   |
 | video   | Video Tools       | video                 |
 | web     | Web Tools         | web                   |
 | work    | Work Tracker      | work                  |

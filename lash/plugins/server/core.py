@@ -132,3 +132,41 @@ def _spawn_client(server_cmd: str, ip: str, port: int) -> None:
             stderr=subprocess.DEVNULL,
             stdin=subprocess.DEVNULL,
         )
+
+
+def spawn_daemon(addresses: str, ports: str, ping_interval: int) -> None:
+    argv = [
+        sys.executable, "-m", "lash", "seeker",
+        addresses, ports,
+        "--ping", str(ping_interval),
+        "--_daemon",
+    ]
+    if sys.platform == "win32":
+        subprocess.Popen(
+            argv,
+            creationflags=subprocess.DETACHED_PROCESS | subprocess.CREATE_NEW_PROCESS_GROUP,
+            close_fds=True,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            stdin=subprocess.DEVNULL,
+        )
+    else:
+        subprocess.Popen(
+            argv,
+            start_new_session=True,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            stdin=subprocess.DEVNULL,
+        )
+
+
+def stop_seeker() -> str:
+    pid = read_pid()
+    if pid is None:
+        return "Seeker not running"
+    if not is_pid_alive(pid):
+        seeker_pid_path().unlink(missing_ok=True)
+        return "Seeker not running"
+    os.kill(pid, signal.SIGTERM)
+    seeker_pid_path().unlink(missing_ok=True)
+    return f"Seeker stopped (PID: {pid})"

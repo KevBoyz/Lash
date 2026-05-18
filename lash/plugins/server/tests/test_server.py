@@ -268,3 +268,48 @@ class TestSeekerScanLoop:
             assert "192.168.1.1" in log_content
             assert "8080" in log_content
             assert "lash injection -c 192.168.1.1 8080" in log_content
+
+
+class TestSeekerDaemon:
+    def test_stop_seeker_not_running_when_no_pid_file(self, tmp_path):
+        from unittest.mock import patch
+        from lash.plugins.server.core import stop_seeker
+        pid_file = tmp_path / "seeker.pid"
+        with patch("lash.plugins.server.core.seeker_pid_path", return_value=pid_file):
+            result = stop_seeker()
+            assert "not running" in result.lower()
+
+    def test_stop_seeker_not_running_when_pid_dead(self, tmp_path):
+        from unittest.mock import patch
+        from lash.plugins.server.core import stop_seeker
+        pid_file = tmp_path / "seeker.pid"
+        pid_file.write_text("999999999")
+        with patch("lash.plugins.server.core.seeker_pid_path", return_value=pid_file):
+            result = stop_seeker()
+            assert "not running" in result.lower()
+            assert not pid_file.exists()
+
+    def test_stop_seeker_kills_alive_pid(self, tmp_path):
+        import os
+        from unittest.mock import patch
+        from lash.plugins.server.core import stop_seeker
+        pid_file = tmp_path / "seeker.pid"
+        pid_file.write_text(str(os.getpid()))
+        with patch("lash.plugins.server.core.seeker_pid_path", return_value=pid_file), \
+             patch("os.kill") as mock_kill:
+            result = stop_seeker()
+            assert "stopped" in result.lower()
+            assert not pid_file.exists()
+            mock_kill.assert_called()
+
+    def test_spawn_daemon_calls_popen(self):
+        from unittest.mock import patch, MagicMock
+        from lash.plugins.server.core import spawn_daemon
+        with patch("lash.plugins.server.core.subprocess.Popen") as mock_popen:
+            mock_popen.return_value = MagicMock()
+            spawn_daemon("192.168.1.1", "8080", 10)
+            mock_popen.assert_called_once()
+            call_args = mock_popen.call_args
+            cmd = call_args[0][0]
+            assert "seeker" in cmd
+            assert "--_daemon" in cmd

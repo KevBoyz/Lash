@@ -171,3 +171,100 @@ class TestSeekerPid:
     def test_is_pid_alive_dead_pid(self):
         from lash.plugins.server.core import is_pid_alive
         assert is_pid_alive(999999999) is False
+
+
+class TestSeekerScanLoop:
+    def test_scan_once_adds_new_server_to_connected_set(self, tmp_path):
+        from unittest.mock import patch, MagicMock
+        from lash.plugins.server.core import _scan_once
+
+        connected = set()
+        log_file = tmp_path / "seeker.log"
+
+        with patch("lash.plugins.server.core.socket.socket") as mock_sock_cls, \
+             patch("lash.plugins.server.core.recv_msg") as mock_recv, \
+             patch("lash.plugins.server.core.seeker_log_path", return_value=log_file), \
+             patch("lash.plugins.server.core._spawn_client") as mock_spawn:
+
+            mock_sock_inst = MagicMock()
+            mock_sock_cls.return_value.__enter__ = lambda s, *a: mock_sock_inst
+            mock_sock_cls.return_value.__exit__ = MagicMock(return_value=False)
+            mock_recv.return_value = {"lash": "injection"}
+
+            _scan_once(["192.168.1.1"], [8080], connected)
+
+            assert ("192.168.1.1", 8080) in connected
+            mock_spawn.assert_called_once_with("injection", "192.168.1.1", 8080)
+
+    def test_scan_once_skips_already_connected(self, tmp_path):
+        from unittest.mock import patch, MagicMock
+        from lash.plugins.server.core import _scan_once
+
+        connected = {("192.168.1.1", 8080)}
+
+        with patch("lash.plugins.server.core.socket.socket") as mock_sock_cls, \
+             patch("lash.plugins.server.core._spawn_client") as mock_spawn:
+
+            _scan_once(["192.168.1.1"], [8080], connected)
+            mock_spawn.assert_not_called()
+
+    def test_scan_once_skips_connection_refused(self, tmp_path):
+        from unittest.mock import patch, MagicMock
+        from lash.plugins.server.core import _scan_once
+
+        connected = set()
+
+        with patch("lash.plugins.server.core.socket.socket") as mock_sock_cls, \
+             patch("lash.plugins.server.core._spawn_client") as mock_spawn:
+
+            mock_sock_inst = MagicMock()
+            mock_sock_inst.connect.side_effect = OSError("refused")
+            mock_sock_cls.return_value.__enter__ = lambda s, *a: mock_sock_inst
+            mock_sock_cls.return_value.__exit__ = MagicMock(return_value=False)
+
+            _scan_once(["192.168.1.1"], [8080], connected)
+            mock_spawn.assert_not_called()
+            assert len(connected) == 0
+
+    def test_scan_once_skips_non_lash_server(self, tmp_path):
+        from unittest.mock import patch, MagicMock
+        from lash.plugins.server.core import _scan_once
+
+        connected = set()
+
+        with patch("lash.plugins.server.core.socket.socket") as mock_sock_cls, \
+             patch("lash.plugins.server.core.recv_msg") as mock_recv, \
+             patch("lash.plugins.server.core._spawn_client") as mock_spawn:
+
+            mock_sock_inst = MagicMock()
+            mock_sock_cls.return_value.__enter__ = lambda s, *a: mock_sock_inst
+            mock_sock_cls.return_value.__exit__ = MagicMock(return_value=False)
+            mock_recv.return_value = {"not_lash": "something"}
+
+            _scan_once(["192.168.1.1"], [8080], connected)
+            mock_spawn.assert_not_called()
+
+    def test_scan_once_writes_to_log(self, tmp_path):
+        from unittest.mock import patch, MagicMock
+        from lash.plugins.server.core import _scan_once
+
+        connected = set()
+        log_file = tmp_path / "seeker.log"
+
+        with patch("lash.plugins.server.core.socket.socket") as mock_sock_cls, \
+             patch("lash.plugins.server.core.recv_msg") as mock_recv, \
+             patch("lash.plugins.server.core.seeker_log_path", return_value=log_file), \
+             patch("lash.plugins.server.core._spawn_client"):
+
+            mock_sock_inst = MagicMock()
+            mock_sock_cls.return_value.__enter__ = lambda s, *a: mock_sock_inst
+            mock_sock_cls.return_value.__exit__ = MagicMock(return_value=False)
+            mock_recv.return_value = {"lash": "injection"}
+
+            _scan_once(["192.168.1.1"], [8080], connected)
+
+            log_content = log_file.read_text()
+            assert "injection" in log_content
+            assert "192.168.1.1" in log_content
+            assert "8080" in log_content
+            assert "lash injection -c 192.168.1.1 8080" in log_content

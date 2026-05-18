@@ -2,6 +2,10 @@ import os
 import signal
 import socket
 import subprocess
+import sys
+import time
+from datetime import datetime
+from itertools import product
 from pathlib import Path
 
 from lash.plugins.server.helpers import send_msg, recv_msg
@@ -65,3 +69,66 @@ def is_pid_alive(pid: int) -> bool:
         return True
     except (OSError, ProcessLookupError):
         return False
+
+
+def seeker_scan_loop(addresses: list[str], ports: list[int], ping_interval: int) -> None:
+    connected_servers: set[tuple[str, int]] = set()
+    while True:
+        _scan_once(addresses, ports, connected_servers)
+        time.sleep(ping_interval)
+
+
+def _scan_once(
+    addresses: list[str],
+    ports: list[int],
+    connected_servers: set[tuple[str, int]],
+) -> None:
+    for ip, port in product(addresses, ports):
+        if (ip, port) in connected_servers:
+            continue
+        try:
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+                s.settimeout(2)
+                s.connect((ip, port))
+                s.settimeout(None)
+                msg = recv_msg(s)
+        except (OSError, ConnectionError):
+            continue
+
+        server_cmd = msg.get("lash")
+        if not server_cmd:
+            continue
+
+        connected_servers.add((ip, port))
+
+        log_path = seeker_log_path()
+        log_path.parent.mkdir(parents=True, exist_ok=True)
+        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        with open(log_path, "a", encoding="utf-8") as f:
+            f.write(
+                f"[{timestamp}] {server_cmd} @ {ip}:{port}"
+                f" -> lash {server_cmd} -c {ip} {port}\n"
+            )
+
+        _spawn_client(server_cmd, ip, port)
+
+
+def _spawn_client(server_cmd: str, ip: str, port: int) -> None:
+    argv = [sys.executable, "-m", "lash", server_cmd, "-c", ip, str(port)]
+    if sys.platform == "win32":
+        subprocess.Popen(
+            argv,
+            creationflags=subprocess.DETACHED_PROCESS | subprocess.CREATE_NEW_PROCESS_GROUP,
+            close_fds=True,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            stdin=subprocess.DEVNULL,
+        )
+    else:
+        subprocess.Popen(
+            argv,
+            start_new_session=True,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            stdin=subprocess.DEVNULL,
+        )

@@ -61,44 +61,32 @@ class TestProtocol:
 
 
 class TestInjectionClient:
-    def test_client_receives_and_executes_command(self, tmp_path):
-        from unittest.mock import patch, call
-        from lash.plugins.server.helpers import send_msg
+    def test_client_receives_and_executes_command(self):
+        from unittest.mock import patch
+        from lash.plugins.server.core import run_injection_client
 
-        a, b = socket.socketpair()
-        try:
-            send_msg(a, {"lash": "injection"})
-            send_msg(a, {"type": "cmd", "data": "echo hello"})
-            a.close()
+        with patch("lash.plugins.server.core.recv_msg") as mock_recv, \
+             patch("lash.plugins.server.core.send_msg") as mock_send, \
+             patch("lash.plugins.server.core.socket.socket") as mock_socket_cls, \
+             patch("lash.plugins.server.core.subprocess.run") as mock_run:
 
-            with patch("lash.plugins.server.core.recv_msg") as mock_recv, \
-                 patch("lash.plugins.server.core.send_msg") as mock_send, \
-                 patch("lash.plugins.server.core.socket.socket") as mock_socket_cls, \
-                 patch("subprocess.run") as mock_run:
+            mock_run.return_value = MagicMock(stdout="hello\n", stderr="")
+            mock_socket_inst = MagicMock()
+            mock_socket_cls.return_value.__enter__ = lambda s, *a: mock_socket_inst
+            mock_socket_cls.return_value.__exit__ = MagicMock(return_value=False)
 
-                mock_run.return_value = MagicMock(stdout="hello\n", stderr="")
-                mock_socket_inst = MagicMock()
-                mock_socket_cls.return_value.__enter__ = lambda s, *a: mock_socket_inst
-                mock_socket_cls.return_value.__exit__ = MagicMock(return_value=False)
+            mock_recv.side_effect = [
+                {"lash": "injection"},
+                {"type": "cmd", "data": "echo hello"},
+                ConnectionError("done"),
+            ]
 
-                mock_recv.side_effect = [
-                    {"lash": "injection"},
-                    {"type": "cmd", "data": "echo hello"},
-                    ConnectionError("done"),
-                ]
+            run_injection_client("127.0.0.1", 9999)
 
-                from lash.plugins.server.core import run_injection_client
-                run_injection_client("127.0.0.1", 9999)
-
-                assert mock_send.called
-                sent_result = mock_send.call_args[0][1]
-                assert sent_result["type"] == "result"
-                assert "hello" in sent_result["data"]
-        finally:
-            try:
-                b.close()
-            except Exception:
-                pass
+            assert mock_send.called
+            sent_result = mock_send.call_args[0][1]
+            assert sent_result["type"] == "result"
+            assert "hello" in sent_result["data"]
 
     def test_client_silently_ignores_invalid_welcome(self):
         from lash.plugins.server.core import run_injection_client
@@ -120,5 +108,5 @@ class TestInjectionClient:
 
     def test_port_verify_invalid_exits(self):
         from lash.plugins.server.core import port_verify
-        with pytest.raises(SystemExit):
+        with pytest.raises(ValueError):
             port_verify("notaport")

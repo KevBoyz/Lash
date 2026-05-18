@@ -1,7 +1,6 @@
 import os
 import socket
 import subprocess
-import sys
 
 from lash.plugins.server.helpers import send_msg, recv_msg
 
@@ -10,8 +9,7 @@ def port_verify(port: str) -> int:
     try:
         return int(port)
     except ValueError:
-        print(f"Invalid port [{port}], must be an integer like 8080")
-        sys.exit(1)
+        raise ValueError(f"Invalid port [{port}], must be an integer like 8080")
 
 
 def run_injection_client(host: str, port: int) -> None:

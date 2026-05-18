@@ -1,7 +1,6 @@
 import socket
 import sys
 import threading
-from threading import Thread
 
 import click
 from rich import print
@@ -71,11 +70,11 @@ def _run_server(host: str, port: int) -> None:
                     conn, (ip, p) = s.accept()
                     addr = f"{ip}:{p}"
                     send_msg(conn, welcome)
-                    Thread(target=handle_client, args=(conn, addr), daemon=True).start()
+                    threading.Thread(target=handle_client, args=(conn, addr), daemon=True).start()
                 except OSError:
                     break
 
-        Thread(target=accept_loop, daemon=True).start()
+        threading.Thread(target=accept_loop, daemon=True).start()
 
         while True:
             try:
@@ -137,6 +136,8 @@ def seeker(addresses, ports, do_stop, ping_interval, is_daemon):
         return
 
     if is_daemon:
+        if not addresses or not ports:
+            return
         write_pid(os.getpid())
         addr_list = [a.strip() for a in addresses.split(",")]
         port_list = [int(p.strip()) for p in ports.split(",")]

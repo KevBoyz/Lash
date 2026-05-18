@@ -118,7 +118,8 @@ class TestInjectionCli:
         from lash.plugins.server.cli import injection
         runner = CliRunner()
         result = runner.invoke(injection, [])
-        assert result.exit_code != 0 or "Error" in result.output
+        assert result.exit_code != 0
+        assert "Error" in result.output
 
     def test_connect_mode_calls_client(self):
         from click.testing import CliRunner
@@ -128,6 +129,7 @@ class TestInjectionCli:
         with patch("lash.plugins.server.cli.run_injection_client") as mock_client:
             result = runner.invoke(injection, ["-c", "127.0.0.1", "8080"])
             mock_client.assert_called_once_with("127.0.0.1", 8080)
+            assert result.exit_code == 0
 
     def test_invalid_port_exits(self):
         from click.testing import CliRunner

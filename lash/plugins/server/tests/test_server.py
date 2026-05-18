@@ -1,71 +1,60 @@
 # pytest lash/plugins/server/tests/test_server.py
-import os
+import socket
 import pytest
+from unittest.mock import MagicMock
 
 
-class TestPortVerify:
-    def test_valid_port(self):
-        from lash.plugins.server.core import port_verify
-        assert port_verify("8080") == 8080
+class TestProtocol:
+    def test_send_recv_round_trip(self):
+        from lash.plugins.server.helpers import send_msg, recv_msg
+        a, b = socket.socketpair()
+        try:
+            data = {"lash": "injection"}
+            send_msg(a, data)
+            result = recv_msg(b)
+            assert result == data
+        finally:
+            a.close()
+            b.close()
 
-    def test_valid_port_returns_int(self):
-        from lash.plugins.server.core import port_verify
-        result = port_verify("4254")
-        assert isinstance(result, int)
+    def test_round_trip_cmd_payload(self):
+        from lash.plugins.server.helpers import send_msg, recv_msg
+        a, b = socket.socketpair()
+        try:
+            data = {"type": "cmd", "data": "dir /b"}
+            send_msg(a, data)
+            assert recv_msg(b) == data
+        finally:
+            a.close()
+            b.close()
 
-    def test_invalid_port_exits(self):
-        from lash.plugins.server.core import port_verify
-        with pytest.raises(SystemExit):
-            port_verify("notaport")
+    def test_round_trip_result_payload(self):
+        from lash.plugins.server.helpers import send_msg, recv_msg
+        a, b = socket.socketpair()
+        try:
+            data = {"type": "result", "data": "file.txt\n", "addr": "192.168.1.5"}
+            send_msg(a, data)
+            assert recv_msg(b) == data
+        finally:
+            a.close()
+            b.close()
 
-    def test_invalid_port_float_string_exits(self):
-        from lash.plugins.server.core import port_verify
-        with pytest.raises(SystemExit):
-            port_verify("80.5")
+    def test_recv_exact_assembles_partial_reads(self):
+        from lash.plugins.server.helpers import _recv_exact
+        mock_sock = MagicMock()
+        mock_sock.recv.side_effect = [b"hel", b"lo"]
+        assert _recv_exact(mock_sock, 5) == b"hello"
 
+    def test_recv_exact_raises_on_closed_socket(self):
+        from lash.plugins.server.helpers import _recv_exact
+        mock_sock = MagicMock()
+        mock_sock.recv.return_value = b""
+        with pytest.raises(ConnectionError):
+            _recv_exact(mock_sock, 4)
 
-class TestInjectionClientMsg:
-    def test_returns_table(self):
-        from lash.plugins.server.core import injection_client_msg
-        from rich.table import Table
-        result = injection_client_msg()
-        assert isinstance(result, Table)
-
-    def test_table_has_rows(self):
-        from lash.plugins.server.core import injection_client_msg
-        result = injection_client_msg()
-        assert result.row_count > 0
-
-    def test_table_has_two_columns(self):
-        from lash.plugins.server.core import injection_client_msg
-        result = injection_client_msg()
-        assert len(result.columns) == 2
-
-    def test_table_contains_chdir_row(self):
-        from lash.plugins.server.core import injection_client_msg
-        from io import StringIO
-        from rich.console import Console
-        result = injection_client_msg()
-        buf = StringIO()
-        console = Console(file=buf, highlight=False)
-        console.print(result)
-        assert '-chdir' in buf.getvalue()
-
-    def test_table_contains_kill_row(self):
-        from lash.plugins.server.core import injection_client_msg
-        from io import StringIO
-        from rich.console import Console
-        result = injection_client_msg()
-        buf = StringIO()
-        console = Console(file=buf, highlight=False)
-        console.print(result)
-        assert '-kill' in buf.getvalue()
-
-
-class TestServerCommands:
-    @pytest.mark.skip(reason=(
-        "injection command opens real network sockets and blocks in an infinite loop — "
-        "not testable without live socket infrastructure."
-    ))
-    def test_injection_command_skipped(self):
-        pass
+    def test_recv_msg_raises_on_closed_socket(self):
+        from lash.plugins.server.helpers import recv_msg
+        mock_sock = MagicMock()
+        mock_sock.recv.return_value = b""
+        with pytest.raises(ConnectionError):
+            recv_msg(mock_sock)

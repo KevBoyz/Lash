@@ -131,3 +131,81 @@ class TestStartCommand:
         result = runner.invoke(work_group, ["start", "segunda"])
         assert result.exit_code != 0
         assert "already active" in result.output
+
+
+class TestStopCommand:
+    def test_para_tarefa_ativa(self, work_dir):
+        from lash.plugins.work.cli import work_group
+        runner = CliRunner()
+        runner.invoke(work_group, ["start", "trabalho"])
+        result = runner.invoke(work_group, ["stop"])
+        assert result.exit_code == 0
+        assert "Stopped" in result.output
+
+    def test_para_e_marca_concluida(self, work_dir):
+        import json
+        from lash.plugins.work.cli import work_group
+        runner = CliRunner()
+        runner.invoke(work_group, ["start", "trabalho"])
+        result = runner.invoke(work_group, ["stop", "--done"])
+        assert result.exit_code == 0
+        assert "Done" in result.output
+        sessions = json.loads((work_dir / "sessions.json").read_text())
+        assert len(sessions) == 1
+        assert sessions[0]["task_name"] == "trabalho"
+
+    def test_erro_sem_tarefa_ativa(self, work_dir):
+        from lash.plugins.work.cli import work_group
+        runner = CliRunner()
+        result = runner.invoke(work_group, ["stop"])
+        assert result.exit_code != 0
+
+
+class TestPauseCommand:
+    def test_pausa_tarefa_ativa(self, work_dir):
+        from lash.plugins.work.cli import work_group
+        runner = CliRunner()
+        runner.invoke(work_group, ["start", "pausar"])
+        result = runner.invoke(work_group, ["pause"])
+        assert result.exit_code == 0
+        assert "Paused" in result.output
+
+    def test_retoma_tarefa_pausada(self, work_dir):
+        from lash.plugins.work.cli import work_group
+        runner = CliRunner()
+        runner.invoke(work_group, ["start", "retomar"])
+        runner.invoke(work_group, ["pause"])
+        result = runner.invoke(work_group, ["pause"])
+        assert result.exit_code == 0
+        assert "Resumed" in result.output
+
+    def test_erro_sem_tarefa(self, work_dir):
+        from lash.plugins.work.cli import work_group
+        runner = CliRunner()
+        result = runner.invoke(work_group, ["pause"])
+        assert result.exit_code != 0
+
+
+class TestStatusCommand:
+    def test_exibe_tarefa_ativa(self, work_dir):
+        from lash.plugins.work.cli import work_group
+        runner = CliRunner()
+        runner.invoke(work_group, ["start", "status task"])
+        result = runner.invoke(work_group, ["status"])
+        assert result.exit_code == 0
+        assert "status task" in result.output
+        assert "Elapsed" in result.output
+
+    def test_exibe_pausado(self, work_dir):
+        from lash.plugins.work.cli import work_group
+        runner = CliRunner()
+        runner.invoke(work_group, ["start", "pausada"])
+        runner.invoke(work_group, ["pause"])
+        result = runner.invoke(work_group, ["status"])
+        assert "paused" in result.output
+
+    def test_erro_sem_tarefa(self, work_dir):
+        from lash.plugins.work.cli import work_group
+        runner = CliRunner()
+        result = runner.invoke(work_group, ["status"])
+        assert result.exit_code != 0

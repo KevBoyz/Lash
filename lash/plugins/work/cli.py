@@ -109,5 +109,57 @@ def start(task, pomo, work_mins, break_mins):
         click.echo(f"Started: {task_obj['name']}")
 
 
+@work_group.command()
+@click.option("--done", is_flag=True, help="Mark task as completed")
+def stop(done):
+    """Stop the current task."""
+    d = data_dir()
+    tasks_path = d / "tasks.json"
+    sessions_path = d / "sessions.json"
+    state = load_state(tasks_path)
+    try:
+        session_entry = stop_task(state, done=done)
+    except ValueError as e:
+        raise click.ClickException(str(e))
+    save_state(tasks_path, state)
+    if session_entry:
+        append_session(sessions_path, session_entry)
+        click.echo(f"Done: {session_entry['task_name']} ({format_duration(session_entry['total_minutes'] * 60)})")
+    else:
+        click.echo("Stopped.")
+
+
+@work_group.command()
+def pause():
+    """Pause or resume the current task."""
+    d = data_dir()
+    tasks_path = d / "tasks.json"
+    state = load_state(tasks_path)
+    try:
+        result = pause_task(state)
+    except ValueError as e:
+        raise click.ClickException(str(e))
+    save_state(tasks_path, state)
+    click.echo(result.capitalize() + ".")
+
+
+@work_group.command()
+def status():
+    """Show the current task and elapsed time."""
+    d = data_dir()
+    tasks_path = d / "tasks.json"
+    state = load_state(tasks_path)
+    active = state["active"]
+    if not active:
+        raise click.ClickException("No active task.")
+    task = next(t for t in state["tasks"] if t["id"] == active["task_id"])
+    elapsed = calc_elapsed(active)
+    paused = " (paused)" if active["is_paused"] else ""
+    click.echo(f"Task:    {task['name']}{paused}")
+    click.echo(f"Elapsed: {format_duration(elapsed)}")
+    if active["pomo"]:
+        click.echo(f"Pomodoro sessions: {active['pomo_sessions']}")
+
+
 def _run_pomodoro(tasks_path, task_name, work_mins, break_mins):
     pass  # implemented in Task 11

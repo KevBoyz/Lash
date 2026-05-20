@@ -128,3 +128,16 @@ def stop_task(state: dict, done: bool) -> dict | None:
         task["accumulated_segments"] = active["segments"]
     state["active"] = None
     return session_entry
+
+
+def format_log(sessions: list) -> list:
+    from collections import defaultdict
+    grouped = defaultdict(lambda: {"total_minutes": 0, "tasks": []})
+    for s in sessions:
+        grouped[s["date"]]["total_minutes"] += s["total_minutes"]
+        grouped[s["date"]]["tasks"].append({
+            "name": s["task_name"],
+            "minutes": s["total_minutes"],
+            "pomo_sessions": s["pomo_sessions"],
+        })
+    return [{"date": d, **v} for d, v in sorted(grouped.items(), reverse=True)]

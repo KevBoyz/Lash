@@ -57,6 +57,71 @@ class TestAppendSession:
         assert result == [{"task_name": "first", "total_minutes": 5}]
 
 
+class TestAddTask:
+    def test_adiciona_tarefa_ao_estado(self):
+        from lash.plugins.work.core import add_task
+        state = {"tasks": [], "active": None}
+        task = add_task(state, "estudar python")
+        assert len(state["tasks"]) == 1
+        assert task["name"] == "estudar python"
+        assert task["done"] is False
+        assert task["accumulated_segments"] == []
+        assert "id" in task
+
+    def test_erro_nome_duplicado(self):
+        import pytest
+        from lash.plugins.work.core import add_task
+        state = {"tasks": [], "active": None}
+        add_task(state, "alpha")
+        with pytest.raises(ValueError, match="already exists"):
+            add_task(state, "alpha")
+
+    def test_duplicado_case_insensitive(self):
+        import pytest
+        from lash.plugins.work.core import add_task
+        state = {"tasks": [], "active": None}
+        add_task(state, "Alpha")
+        with pytest.raises(ValueError):
+            add_task(state, "alpha")
+
+
+class TestRemoveTask:
+    def test_remove_por_nome(self):
+        from lash.plugins.work.core import add_task, remove_task
+        state = {"tasks": [], "active": None}
+        add_task(state, "remover esta")
+        removed = remove_task(state, "remover esta")
+        assert removed["name"] == "remover esta"
+        assert len(state["tasks"]) == 0
+
+    def test_remove_por_numero(self):
+        from lash.plugins.work.core import add_task, remove_task
+        state = {"tasks": [], "active": None}
+        add_task(state, "primeira")
+        add_task(state, "segunda")
+        removed = remove_task(state, "1")
+        assert removed["name"] == "primeira"
+        assert len(state["tasks"]) == 1
+
+    def test_erro_tarefa_nao_encontrada(self):
+        import pytest
+        from lash.plugins.work.core import remove_task
+        state = {"tasks": [], "active": None}
+        with pytest.raises(ValueError, match="not found"):
+            remove_task(state, "inexistente")
+
+    def test_erro_remover_tarefa_ativa(self):
+        import pytest
+        from lash.plugins.work.core import add_task, remove_task
+        state = {"tasks": [], "active": None}
+        task = add_task(state, "ativa")
+        state["active"] = {"task_id": task["id"], "segments": [], "current_start": None,
+                           "is_paused": False, "pomo": False, "pomo_work_mins": 25,
+                           "pomo_break_mins": 5, "pomo_sessions": 0}
+        with pytest.raises(ValueError, match="active"):
+            remove_task(state, "ativa")
+
+
 class TestFormatDuration:
     def test_apenas_segundos(self):
         from lash.plugins.work.helpers import format_duration

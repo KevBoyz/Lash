@@ -251,3 +251,32 @@ class TestLogCommand:
         result = runner.invoke(work_group, ["log", "--today"])
         assert "hoje" in result.output
         assert "ontem" not in result.output
+
+
+class TestPomodoro:
+    def test_start_pomo_chama_run_pomodoro(self, work_dir, monkeypatch):
+        from lash.plugins.work.cli import work_group
+        import lash.plugins.work.cli as cli_module
+        called = {}
+        def mock_pomo(tasks_path, task_name, work_mins, break_mins):
+            called["task_name"] = task_name
+            called["work_mins"] = work_mins
+            called["break_mins"] = break_mins
+        monkeypatch.setattr(cli_module, "_run_pomodoro", mock_pomo)
+        runner = CliRunner()
+        result = runner.invoke(work_group, ["start", "pomo task", "--pomo", "--work", "15", "--break", "3"])
+        assert result.exit_code == 0
+        assert called["task_name"] == "pomo task"
+        assert called["work_mins"] == 15
+        assert called["break_mins"] == 3
+
+    def test_start_pomo_salva_estado_antes_do_loop(self, work_dir, monkeypatch):
+        import json
+        from lash.plugins.work.cli import work_group
+        import lash.plugins.work.cli as cli_module
+        monkeypatch.setattr(cli_module, "_run_pomodoro", lambda *a, **kw: None)
+        runner = CliRunner()
+        runner.invoke(work_group, ["start", "salva antes", "--pomo"])
+        state = json.loads((work_dir / "tasks.json").read_text())
+        assert state["active"] is not None
+        assert state["active"]["pomo"] is True

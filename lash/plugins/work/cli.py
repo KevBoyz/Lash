@@ -198,4 +198,49 @@ def log(today):
 
 
 def _run_pomodoro(tasks_path, task_name, work_mins, break_mins):
-    pass  # implemented in Task 11
+    import time
+    from plyer import notification
+
+    def handle_interrupt(sig, frame):
+        state = load_state(tasks_path)
+        if state["active"]:
+            stop_task(state, done=False)
+            save_state(tasks_path, state)
+        click.echo("\n\nPomodoro stopped.")
+        raise SystemExit(0)
+
+    signal.signal(signal.SIGINT, handle_interrupt)
+    session = 0
+    while True:
+        session += 1
+        click.echo(f"\n[Session {session}] Work: {work_mins}min")
+        for remaining in range(work_mins * 60, 0, -1):
+            m, s = divmod(remaining, 60)
+            click.echo(f"\r  {m:02d}:{s:02d}", nl=False)
+            time.sleep(1)
+            state = load_state(tasks_path)
+            if not state["active"]:
+                return
+        state = load_state(tasks_path)
+        if not state["active"]:
+            return
+        state["active"]["pomo_sessions"] += 1
+        save_state(tasks_path, state)
+        notification.notify(
+            title="Lash Work",
+            message=f"Pomodoro encerrado! Pausa de {break_mins}min.",
+            timeout=10,
+        )
+        click.echo(f"\n  Break: {break_mins}min")
+        for remaining in range(break_mins * 60, 0, -1):
+            m, s = divmod(remaining, 60)
+            click.echo(f"\r  {m:02d}:{s:02d}", nl=False)
+            time.sleep(1)
+            state = load_state(tasks_path)
+            if not state["active"]:
+                return
+        notification.notify(
+            title="Lash Work",
+            message="Pausa encerrada! Próxima sessão.",
+            timeout=10,
+        )

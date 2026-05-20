@@ -13,7 +13,13 @@
       "Bash(/c/dev/Personal/Lash/.venv/Scripts/python.exe -m pytest lash/plugins/server/tests/test_server.py::TestInjectionCli -v)",
       "Bash(/c/dev/Personal/Lash/.venv/Scripts/python.exe -m pytest lash/plugins/server/tests/test_server.py::TestSeekerPid -v)",
       "Bash(/c/dev/Personal/Lash/.venv/Scripts/python.exe -m pytest lash/plugins/server/tests/test_server.py::TestSeekerScanLoop -v)",
-      "Bash(/c/dev/Personal/Lash/.venv/Scripts/python.exe -m pytest lash/plugins/server/tests/test_server.py::TestSeekerCli -v)"
+      "Bash(/c/dev/Personal/Lash/.venv/Scripts/python.exe -m pytest lash/plugins/server/tests/test_server.py::TestSeekerCli -v)",
+      "Bash(/c/dev/Personal/Lash/.venv/Scripts/python.exe -m pytest lash/plugins/work/tests/test_core.py -v)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(/c/dev/Personal/Lash/.venv/Scripts/python.exe -m pytest lash/plugins/work/tests/test_core.py::TestLoadState lash/plugins/work/tests/test_core.py::TestSaveState lash/plugins/work/tests/test_core.py::TestLoadSessions lash/plugins/work/tests/test_core.py::TestAppendSession -v)",
+      "Bash(/c/dev/Personal/Lash/.venv/Scripts/python.exe -m pytest lash/plugins/work/tests/test_core.py::TestAddTask lash/plugins/work/tests/test_core.py::TestRemoveTask -v)",
+      "Bash(/c/dev/Personal/Lash/.venv/Scripts/python.exe -m pytest *)"
     ]
   }
 }

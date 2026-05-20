@@ -1,57 +1,60 @@
-# pytest lash/plugins/work/tests/test_cli.py
-import os
 import pytest
 from click.testing import CliRunner
-from lash.plugins.work.cli import work
 
 
-class TestWorkStartFlag:
-    def test_s_creates_cache_and_prints_starting_at(self):
+@pytest.fixture
+def work_dir(tmp_path, monkeypatch):
+    d = tmp_path / "work"
+    d.mkdir()
+    monkeypatch.setattr("lash.plugins.work.cli.data_dir", lambda: d)
+    return d
+
+
+class TestAddCommand:
+    def test_adiciona_tarefa(self, work_dir):
+        from lash.plugins.work.cli import work_group
         runner = CliRunner()
-        with runner.isolated_filesystem():
-            result = runner.invoke(work, ['-s'])
-            assert result.exit_code == 0
-            assert 'Starting at' in result.output
-            assert os.path.exists('cache.json')
+        result = runner.invoke(work_group, ["add", "minha tarefa"])
+        assert result.exit_code == 0
+        assert "Added: minha tarefa" in result.output
 
-    def test_s_creates_work_csv(self):
+    def test_persiste_em_disco(self, work_dir):
+        import json
+        from lash.plugins.work.cli import work_group
         runner = CliRunner()
-        with runner.isolated_filesystem():
-            result = runner.invoke(work, ['-s'])
-            assert result.exit_code == 0
-            assert os.path.exists('work.csv')
-            with open('work.csv') as f:
-                header = f.readline()
-            assert 'date' in header
-            assert 'minutes' in header
+        runner.invoke(work_group, ["add", "persistida"])
+        state = json.loads((work_dir / "tasks.json").read_text())
+        assert any(t["name"] == "persistida" for t in state["tasks"])
 
-
-class TestWorkEndFlag:
-    def test_e_without_cache_raises(self):
+    def test_erro_nome_duplicado(self, work_dir):
+        from lash.plugins.work.cli import work_group
         runner = CliRunner()
-        with runner.isolated_filesystem():
-            result = runner.invoke(work, ['-e'])
-            assert result.exit_code != 0 or result.exception is not None
+        runner.invoke(work_group, ["add", "duplicada"])
+        result = runner.invoke(work_group, ["add", "duplicada"])
+        assert result.exit_code != 0
+        assert "already exists" in result.output
 
-    def test_e_with_sv_does_not_save(self):
-        pd = pytest.importorskip('pandas')
-        runner = CliRunner()
-        with runner.isolated_filesystem():
-            runner.invoke(work, ['-s'])
-            result = runner.invoke(work, ['-e', '-sv'])
-            assert result.exit_code == 0
-            assert 'Time worked' in result.output
-            assert os.path.exists('cache.json')
-            df = pd.read_csv('work.csv')
-            assert len(df) == 0
 
-    def test_e_saves_session_by_default(self):
-        pd = pytest.importorskip('pandas')
+class TestRmCommand:
+    def test_remove_por_nome(self, work_dir):
+        from lash.plugins.work.cli import work_group
         runner = CliRunner()
-        with runner.isolated_filesystem():
-            runner.invoke(work, ['-s'])
-            result = runner.invoke(work, ['-e'])
-            assert result.exit_code == 0
-            assert 'Time worked' in result.output
-            df = pd.read_csv('work.csv')
-            assert len(df) == 1
+        runner.invoke(work_group, ["add", "remover"])
+        result = runner.invoke(work_group, ["rm", "remover"])
+        assert result.exit_code == 0
+        assert "Removed: remover" in result.output
+
+    def test_remove_por_numero(self, work_dir):
+        from lash.plugins.work.cli import work_group
+        runner = CliRunner()
+        runner.invoke(work_group, ["add", "primeira"])
+        runner.invoke(work_group, ["add", "segunda"])
+        result = runner.invoke(work_group, ["rm", "1"])
+        assert result.exit_code == 0
+        assert "primeira" in result.output
+
+    def test_erro_nao_encontrada(self, work_dir):
+        from lash.plugins.work.cli import work_group
+        runner = CliRunner()
+        result = runner.invoke(work_group, ["rm", "inexistente"])
+        assert result.exit_code != 0

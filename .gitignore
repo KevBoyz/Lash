@@ -10,3 +10,5 @@ __pycache__
 docs
 .venv
 .pytest_cache
+.vscode
+.claude

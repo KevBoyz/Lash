@@ -22,32 +22,32 @@ class TestGetSize:
 
 class TestGenRandom:
     def test_numbers_only_all_digits(self):
-        result = gen_random(20, n=True, s=False, l=False, ul=False)
+        result = gen_random(20, n=True, s=False, letters=False, ul=False)
         assert all(c.isdigit() for c in result)
 
     def test_letters_only_all_alpha(self):
-        result = gen_random(20, n=False, s=False, l=True, ul=False)
+        result = gen_random(20, n=False, s=False, letters=True, ul=False)
         assert all(c.isalpha() for c in result)
 
     def test_symbols_only_all_symbols(self):
         symbols = set('!?@#$%&*_+-')
-        result = gen_random(20, n=False, s=True, l=False, ul=False)
+        result = gen_random(20, n=False, s=True, letters=False, ul=False)
         assert all(c in symbols for c in result)
 
     def test_numbers_and_letters_length(self):
-        result = gen_random(5, n=True, s=False, l=True, ul=False)
+        result = gen_random(5, n=True, s=False, letters=True, ul=False)
         assert len(result) == 10  # 2 chars per iteration (n + l)
 
     def test_returns_list(self):
-        result = gen_random(3, n=True, s=False, l=False, ul=False)
+        result = gen_random(3, n=True, s=False, letters=False, ul=False)
         assert isinstance(result, list)
 
     def test_empty_size_returns_empty(self):
-        result = gen_random(0, n=True, s=False, l=False, ul=False)
+        result = gen_random(0, n=True, s=False, letters=False, ul=False)
         assert result == []
 
     def test_ul_flag_produces_mixed_case(self):
-        result = gen_random(100, n=False, s=False, l=True, ul=True)
+        result = gen_random(100, n=False, s=False, letters=True, ul=True)
         joined = ''.join(result)
         assert any(c.isupper() for c in joined) or any(c.islower() for c in joined)
 

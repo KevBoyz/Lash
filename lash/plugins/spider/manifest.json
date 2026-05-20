@@ -3,14 +3,9 @@
   "category": "Spider Tools",
   "description": "Remote web shell and auto-discovery daemon",
   "commands": {
-    "web": {
-      "module": "lash.plugins.spider.cli:web",
-      "description": "Remote web shell — host a server or connect as passive client",
-      "requires": ["rich>=12.6.0"]
-    },
-    "seeker": {
-      "module": "lash.plugins.spider.cli:seeker",
-      "description": "Background daemon that auto-discovers and connects to Spider servers",
+    "spider": {
+      "module": "lash.plugins.spider.cli:spider",
+      "description": "Remote web shell and auto-discovery tools",
       "requires": ["rich>=12.6.0"]
     }
   }

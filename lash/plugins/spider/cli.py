@@ -1,15 +1,17 @@
 import socket
 import sys
-import threading
 
 import click
-from rich import print
 
-from lash.plugins.spider.core import port_verify, run_web_client
-from lash.plugins.spider.helpers import send_msg, recv_msg
+from lash.plugins.spider.core import port_verify, run_web_client, run_server
 
 
-@click.command("web", help="Remote web shell — host a server or connect as passive client")
+@click.group("spider", help="Remote web shell and auto-discovery tools")
+def spider():
+    pass
+
+
+@spider.command("web", help="Remote web shell — host a server or connect as passive client")
 @click.option("-h", "--host", "h", type=str, default=None,
               help="Host this machine. Pass port: -h 8080")
 @click.option("-c", "--connect", "c", type=str, nargs=2, default=None,
@@ -22,7 +24,7 @@ def web(h, c):
         except ValueError as e:
             click.echo(str(e), err=True)
             sys.exit(1)
-        _run_server(host, port)
+        run_server(host, port)
     elif c:
         host_ip, port_str = c
         try:
@@ -36,88 +38,7 @@ def web(h, c):
         sys.exit(1)
 
 
-def _run_server(host: str, port: int) -> None:
-    clients: dict[str, socket.socket] = {}
-    lock = threading.Lock()
-    welcome = {"lash": "web"}
-
-    def handle_client(conn: socket.socket, addr: str) -> None:
-        with lock:
-            clients[addr] = conn
-        print(f"[green][connected][/green] {addr}")
-        try:
-            while True:
-                msg = recv_msg(conn)
-                if msg.get("type") == "result":
-                    print(f"[cyan][{msg.get('addr', addr)}][/cyan] {msg['data']}", end="")
-        except (ConnectionError, OSError):
-            pass
-        finally:
-            with lock:
-                clients.pop(addr, None)
-            conn.close()
-            print(f"[red][disconnected][/red] {addr}")
-
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        s.bind((host, port))
-        s.listen()
-        print(f"[green]Server online[/green] [{host}:{port}] — waiting for connections...")
-
-        def accept_loop() -> None:
-            while True:
-                try:
-                    conn, (ip, p) = s.accept()
-                    addr = f"{ip}:{p}"
-                    send_msg(conn, welcome)
-                    threading.Thread(target=handle_client, args=(conn, addr), daemon=True).start()
-                except OSError:
-                    break
-
-        threading.Thread(target=accept_loop, daemon=True).start()
-
-        while True:
-            try:
-                command = input().strip()
-            except (KeyboardInterrupt, EOFError):
-                break
-
-            if not command:
-                continue
-
-            if command == "clients":
-                with lock:
-                    for addr in clients:
-                        print(f"  {addr}")
-                    if not clients:
-                        print("No clients connected")
-                continue
-
-            if command == "kill":
-                break
-
-            target_addr = None
-            if command.startswith("@"):
-                parts = command.split(None, 1)
-                if len(parts) == 2:
-                    target_addr = parts[0][1:]
-                    command = parts[1]
-
-            msg = {"type": "cmd", "data": command}
-            with lock:
-                targets = (
-                    {target_addr: clients[target_addr]}
-                    if target_addr and target_addr in clients
-                    else dict(clients)
-                )
-            for addr, conn in targets.items():
-                try:
-                    send_msg(conn, msg)
-                except OSError:
-                    pass
-
-
-@click.command("seeker", help="Background daemon that auto-discovers and connects to Spider servers")
+@spider.command("seeker", help="Background daemon that auto-discovers and connects to Spider servers")
 @click.argument("addresses", required=False)
 @click.argument("ports", required=False)
 @click.option("-s", "--stop", "do_stop", is_flag=True, help="Stop the running seeker")

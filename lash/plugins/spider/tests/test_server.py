@@ -61,7 +61,7 @@ class TestProtocol:
 
 
 class TestWebClient:
-    def test_client_receives_and_executes_command(self):
+    def test_client_sends_info_on_connect_then_result(self):
         from unittest.mock import patch
         from lash.plugins.spider.core import run_web_client
 
@@ -83,16 +83,50 @@ class TestWebClient:
 
             run_web_client("127.0.0.1", 9999)
 
-            assert mock_send.called
-            sent_result = mock_send.call_args[0][1]
-            assert sent_result["type"] == "result"
-            assert "hello" in sent_result["data"]
+            assert mock_send.call_count == 2
+            info_msg = mock_send.call_args_list[0][0][1]
+            assert info_msg["type"] == "info"
+            assert "path" in info_msg
+
+            result_msg = mock_send.call_args_list[1][0][1]
+            assert result_msg["type"] == "result"
+            assert "hello" in result_msg["data"]
+            assert "path" in result_msg
+
+    def test_client_cd_updates_path_in_result(self):
+        from unittest.mock import patch
+        from lash.plugins.spider.core import run_web_client
+
+        with patch("lash.plugins.spider.core.recv_msg") as mock_recv, \
+             patch("lash.plugins.spider.core.send_msg") as mock_send, \
+             patch("lash.plugins.spider.core.socket.socket") as mock_socket_cls, \
+             patch("lash.plugins.spider.core.os.chdir") as mock_chdir, \
+             patch("lash.plugins.spider.core.os.getcwd", return_value="/new/path"):
+
+            mock_socket_inst = MagicMock()
+            mock_socket_cls.return_value.__enter__ = lambda s, *a: mock_socket_inst
+            mock_socket_cls.return_value.__exit__ = MagicMock(return_value=False)
+
+            mock_recv.side_effect = [
+                {"lash": "web"},
+                {"type": "cmd", "data": "cd /new/path"},
+                ConnectionError("done"),
+            ]
+
+            run_web_client("127.0.0.1", 9999)
+
+            mock_chdir.assert_called_once_with("/new/path")
+            result_msg = mock_send.call_args_list[1][0][1]
+            assert result_msg["type"] == "result"
+            assert result_msg["path"] == "/new/path"
+            assert result_msg["data"] == ""
 
     def test_client_silently_ignores_invalid_welcome(self):
         from lash.plugins.spider.core import run_web_client
         from unittest.mock import patch, MagicMock
 
         with patch("lash.plugins.spider.core.recv_msg") as mock_recv, \
+             patch("lash.plugins.spider.core.send_msg") as mock_send, \
              patch("lash.plugins.spider.core.socket.socket") as mock_socket_cls:
 
             mock_socket_inst = MagicMock()
@@ -101,6 +135,7 @@ class TestWebClient:
             mock_recv.return_value = {"not_lash": "something"}
 
             run_web_client("127.0.0.1", 9999)
+            mock_send.assert_not_called()
 
     def test_port_verify_valid(self):
         from lash.plugins.spider.core import port_verify
@@ -115,27 +150,27 @@ class TestWebClient:
 class TestWebCli:
     def test_no_option_prints_error(self):
         from click.testing import CliRunner
-        from lash.plugins.spider.cli import web
+        from lash.plugins.spider.cli import spider
         runner = CliRunner()
-        result = runner.invoke(web, [])
+        result = runner.invoke(spider, ["web"])
         assert result.exit_code != 0
         assert "Error" in result.output
 
     def test_connect_mode_calls_client(self):
         from click.testing import CliRunner
         from unittest.mock import patch
-        from lash.plugins.spider.cli import web
+        from lash.plugins.spider.cli import spider
         runner = CliRunner()
         with patch("lash.plugins.spider.cli.run_web_client") as mock_client:
-            result = runner.invoke(web, ["-c", "127.0.0.1", "8080"])
+            result = runner.invoke(spider, ["web", "-c", "127.0.0.1", "8080"])
             mock_client.assert_called_once_with("127.0.0.1", 8080)
             assert result.exit_code == 0
 
     def test_invalid_port_exits(self):
         from click.testing import CliRunner
-        from lash.plugins.spider.cli import web
+        from lash.plugins.spider.cli import spider
         runner = CliRunner()
-        result = runner.invoke(web, ["-c", "127.0.0.1", "notaport"])
+        result = runner.invoke(spider, ["web", "-c", "127.0.0.1", "notaport"])
         assert result.exit_code != 0
 
 
@@ -267,7 +302,7 @@ class TestSeekerScanLoop:
             assert "web" in log_content
             assert "192.168.1.1" in log_content
             assert "8080" in log_content
-            assert "lash web -c 192.168.1.1 8080" in log_content
+            assert "lash spider web -c 192.168.1.1 8080" in log_content
 
 
 class TestSeekerDaemon:
@@ -311,6 +346,7 @@ class TestSeekerDaemon:
             mock_popen.assert_called_once()
             call_args = mock_popen.call_args
             cmd = call_args[0][0]
+            assert "spider" in cmd
             assert "seeker" in cmd
             assert "--_daemon" in cmd
 
@@ -319,37 +355,37 @@ class TestSeekerCli:
     def test_stop_flag_calls_stop_seeker(self):
         from click.testing import CliRunner
         from unittest.mock import patch
-        from lash.plugins.spider.cli import seeker
+        from lash.plugins.spider.cli import spider
         runner = CliRunner()
         with patch("lash.plugins.spider.core.stop_seeker", return_value="Seeker stopped (PID: 123)") as mock_stop:
-            result = runner.invoke(seeker, ["--stop"])
+            result = runner.invoke(spider, ["seeker", "--stop"])
             assert "stopped" in result.output.lower() or mock_stop.called
 
     def test_requires_addresses_and_ports_when_not_stopping(self):
         from click.testing import CliRunner
-        from lash.plugins.spider.cli import seeker
+        from lash.plugins.spider.cli import spider
         runner = CliRunner()
-        result = runner.invoke(seeker, [])
+        result = runner.invoke(spider, ["seeker"])
         assert result.exit_code != 0
 
     def test_already_running_warns_user(self):
         from click.testing import CliRunner
         from unittest.mock import patch
-        from lash.plugins.spider.cli import seeker
+        from lash.plugins.spider.cli import spider
         runner = CliRunner()
         with patch("lash.plugins.spider.core.read_pid", return_value=12345), \
              patch("lash.plugins.spider.core.is_pid_alive", return_value=True):
-            result = runner.invoke(seeker, ["192.168.1.1", "8080"])
+            result = runner.invoke(spider, ["seeker", "192.168.1.1", "8080"])
             assert "already running" in result.output.lower()
             assert result.exit_code != 0
 
     def test_start_calls_spawn_daemon(self):
         from click.testing import CliRunner
         from unittest.mock import patch, MagicMock
-        from lash.plugins.spider.cli import seeker
+        from lash.plugins.spider.cli import spider
         runner = CliRunner()
         with patch("lash.plugins.spider.core.read_pid", return_value=None), \
              patch("lash.plugins.spider.core.spawn_daemon") as mock_spawn:
-            result = runner.invoke(seeker, ["192.168.1.1", "8080"])
+            result = runner.invoke(spider, ["seeker", "192.168.1.1", "8080"])
             mock_spawn.assert_called_once_with("192.168.1.1", "8080", 10)
             assert "started" in result.output.lower()

@@ -90,14 +90,21 @@ def start(task, pomo, work_mins, break_mins):
         for i, t in enumerate(pending, 1):
             click.echo(f"  {i}. {t['name']}")
         query = click.prompt("Enter number or new task name")
-    else:
-        query = task
-    found = find_task(pending, query)
-    if found:
-        task_obj = found
+        found = find_task(pending, query)
+        if found:
+            task_obj = found
+        else:
+            try:
+                task_obj = add_task(state, query)
+            except ValueError as e:
+                raise click.ClickException(str(e))
+    elif task.isdigit():
+        task_obj = find_task(pending, task)
+        if not task_obj:
+            raise click.ClickException(f"No task at position {task}.")
     else:
         try:
-            task_obj = add_task(state, query)
+            task_obj = add_task(state, task)
         except ValueError as e:
             raise click.ClickException(str(e))
     start_task(state, task_obj["id"], pomo=pomo, pomo_work_mins=work_mins,
@@ -111,15 +118,14 @@ def start(task, pomo, work_mins, break_mins):
 
 
 @work_group.command()
-@click.option("--done", is_flag=True, help="Mark task as completed")
-def stop(done):
-    """Stop the current task."""
+def stop():
+    """Stop the current task and mark it as completed."""
     d = data_dir()
     tasks_path = d / "tasks.json"
     sessions_path = d / "sessions.json"
     state = load_state(tasks_path)
     try:
-        session_entry = stop_task(state, done=done)
+        session_entry = stop_task(state, done=True)
     except ValueError as e:
         raise click.ClickException(str(e))
     save_state(tasks_path, state)

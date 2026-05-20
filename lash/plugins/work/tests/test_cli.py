@@ -93,14 +93,6 @@ class TestLsCommand:
 
 
 class TestStartCommand:
-    def test_inicia_por_nome(self, work_dir):
-        from lash.plugins.work.cli import work_group
-        runner = CliRunner()
-        runner.invoke(work_group, ["add", "minha tarefa"])
-        result = runner.invoke(work_group, ["start", "minha tarefa"])
-        assert result.exit_code == 0
-        assert "Started: minha tarefa" in result.output
-
     def test_inicia_por_numero(self, work_dir):
         from lash.plugins.work.cli import work_group
         runner = CliRunner()
@@ -140,14 +132,14 @@ class TestStopCommand:
         runner.invoke(work_group, ["start", "trabalho"])
         result = runner.invoke(work_group, ["stop"])
         assert result.exit_code == 0
-        assert "Stopped" in result.output
+        assert "Done" in result.output
 
     def test_para_e_marca_concluida(self, work_dir):
         import json
         from lash.plugins.work.cli import work_group
         runner = CliRunner()
         runner.invoke(work_group, ["start", "trabalho"])
-        result = runner.invoke(work_group, ["stop", "--done"])
+        result = runner.invoke(work_group, ["stop"])
         assert result.exit_code == 0
         assert "Done" in result.output
         sessions = json.loads((work_dir / "sessions.json").read_text())

@@ -3,6 +3,26 @@ from random import sample
 from string import ascii_letters, digits, punctuation, whitespace
 
 
+def _charset_size(letters, numbers, symbols, spaces):
+    size = 0
+    size += len(ascii_letters) if letters else 0
+    size += len(digits) if numbers else 0
+    size += len(punctuation) if symbols else 0
+    size += len(whitespace) if spaces else 0
+    return size
+
+
+def total_combinations(length, ramp, letters, numbers, symbols, spaces, start_length=1):
+    size = _charset_size(letters, numbers, symbols, spaces)
+    if size == 0:
+        return 0
+    if ramp:
+        if start_length < 1 or start_length > length:
+            start_length = 1
+        return sum(size ** i for i in range(start_length, length + 1))
+    return size ** length
+
+
 def brute(length, ramp, letters, numbers, symbols, spaces, start_length=1):
     choices = ''
     choices += ascii_letters if letters else ''

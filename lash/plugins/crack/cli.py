@@ -1,7 +1,15 @@
 import click
 import zipfile
-from itertools import count
-from lash.plugins.crack.core import brute, _next, path_no_file
+import time
+from lash.plugins.crack.core import brute, _next, path_no_file, total_combinations
+
+
+def _fmt_eta(seconds):
+    if seconds < 60:
+        return f"{int(seconds)}s"
+    if seconds < 3600:
+        return f"{int(seconds // 60)}m {int(seconds % 60)}s"
+    return f"{int(seconds // 3600)}h {int((seconds % 3600) // 60)}m"
 
 
 @click.group('crack', short_help='Use the brute force')
@@ -22,7 +30,9 @@ def crack():
 @click.option('-sp', is_flag=True, default=False, show_default=True, help='Enable spaces')
 def azip(path, ln, r, n, letters, s, sp):
     """Attempt to crack the password of a ZIP archive using brute force."""
-    attempts = count(0, 1)
+    total = total_combinations(ln, r, letters, n, s, sp)
+    attempt_count = 0
+    start_time = time.time()
     permutations = brute(ln, r, letters, n, s, sp)
     zip_arch = zipfile.ZipFile(path)
     while True:
@@ -34,7 +44,14 @@ def azip(path, ln, r, n, letters, s, sp):
                 print(f'\nPassword is: {nx}')
                 break
             except (RuntimeError, zipfile.BadZipFile):
-                print(f'Password attempts: {next(attempts)} Trying: {nx}', end='\r')
+                attempt_count += 1
+                elapsed = time.time() - start_time
+                if elapsed > 0 and attempt_count > 0:
+                    remaining = max(total - attempt_count, 0)
+                    eta = _fmt_eta(remaining * elapsed / attempt_count)
+                else:
+                    eta = "..."
+                print(f'Attempts: {attempt_count} | Trying: {nx} | ETA: {eta}', end='\r')
         except StopIteration:
-            print('Password not found')
+            print('\nPassword not found')
             break

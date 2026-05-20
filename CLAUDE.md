@@ -43,6 +43,9 @@ tests/
 }
 ```
 
+**Plugin data storage**: `~/.lash/data/<plugin>/`  
+Plugins que precisam de armazenamento persistente devem usar `~/.lash/data/<plugin>/` como diretório base. Exemplo: `~/.lash/data/work/tasks.json`. Nunca salvar dados de plugin no CWD ou em `~/.lash/` diretamente.
+
 **LazyGroup**: commands are loaded only when invoked — keeps startup fast.
 
 ## Commands

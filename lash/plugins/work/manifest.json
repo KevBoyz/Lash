@@ -1,12 +1,12 @@
 {
   "name": "work",
   "category": "Work Tracker",
-  "description": "Work time tracker with CSV logging and graph plotting",
+  "description": "Task manager with time tracking and Pomodoro support",
   "commands": {
     "work": {
-      "module": "lash.plugins.work.cli:work",
-      "description": "Track and analyze your work time sessions",
-      "requires": ["pandas>=1.4.3", "matplotlib>=3.5.3"]
+      "module": "lash.plugins.work.cli:work_group",
+      "description": "Manage tasks and track work time",
+      "requires": ["rich>=12.6.0", "plyer>=2.1.0"]
     }
   }
 }

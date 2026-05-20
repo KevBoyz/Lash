@@ -4,19 +4,13 @@ import bs4
 import requests as r
 import pathlib
 import wikipedia as wk
-from pytube import YouTube
 from gnews import GNews
-from tqdm import tqdm
 from rich import print
 from rich.console import Console
 from rich.table import Table
 from rich.text import Text
 from rich.panel import Panel
-from lash.plugins.web.core import (
-    get_video_by_link, get_video_by_search,
-    get_audio_by_link, get_audio_by_search,
-    impress_news,
-)
+from lash.plugins.web.core import download_yt, impress_news
 
 downloads_folder = os.path.join(pathlib.Path.home(), 'Downloads')
 
@@ -36,44 +30,45 @@ def gith(nick, op):
     Activity, followers, repositories and bio.
     """
     try:
-        url = f'https://github.com/{nick}'
-        github = bs4.BeautifulSoup(r.get(url).text, 'html.parser')
-        all = github.find_all('rect', 'ContributionCalendar-day')
-        if len(all) == 0:
+        api_resp = r.get(
+            f'https://api.github.com/users/{nick}',
+            headers={'Accept': 'application/vnd.github.v3+json'}
+        )
+        if api_resp.status_code != 200:
             print('Error, profile not found')
             return
-        del all[-5:-1]
-        del all[:-8]
-        all.pop()
-        data_level = list()
-        data_date = list()
-        for e in all:
-            data_level.append(e['data-level'])
-            data_date.append(e['data-date'])
-        gh = {
-            'nick': github.find('span', 'p-nickname vcard-username d-block').text.strip(),
-            'contributions': github.find('h2', 'f4 text-normal mb-2').text.strip()[0:4].replace('\n', ''),
-            'followers': github.find('span', 'text-bold color-fg-default').text.strip(),
-            'repos': github.find('span', 'Counter').text.strip(),
-            'bio': github.find('div', 'p-note user-profile-bio mb-3 js-user-profile-bio f4').text.strip()
-        }
-        if len(gh['bio']) > 60:
-            gh['bio'] = gh['bio'][:60]
-            gh['bio'] += '...'
+        data = api_resp.json()
+
+        contrib_resp = r.get(
+            f'https://github.com/users/{nick}/contributions',
+            headers={'X-Requested-With': 'XMLHttpRequest'}
+        )
+        contrib_soup = bs4.BeautifulSoup(contrib_resp.text, 'html.parser')
+
+        contrib_h2 = contrib_soup.find('h2', 'f4 text-normal mb-2')
+        contributions = contrib_h2.text.split()[0] if contrib_h2 else 'N/A'
+
+        days = contrib_soup.find_all('td', 'ContributionCalendar-day')
+        recent = days[-7:] if len(days) >= 7 else days
+
+        bio = data.get('bio') or ''
+        if len(bio) > 60:
+            bio = bio[:60] + '...'
+
+        url = f'https://github.com/{nick}'
         print(
-            f"\nUsrInf :: [bold green]{gh['nick']}[/bold green]"
-            f" -> {gh['contributions']} contributions,"
-            f" {gh['followers']} followers, {gh['repos']} repos\n"
-            f"UsrBio :: [italic]{gh['bio']}[/italic]\n"
+            f"\nUsrInf :: [bold green]{data['login']}[/bold green]"
+            f" -> {contributions} contributions,"
+            f" {data['followers']} followers, {data['public_repos']} repos\n"
+            f"UsrBio :: [italic]{bio}[/italic]\n"
         )
         table = Table(title="User activity")
         table.add_column("Date", style="cyan", justify='center')
         table.add_column("Level", style="green", justify='left')
-        for (date, val) in zip(data_date, data_level):
-            val_bar = ''
-            for _ in range(0, int(val)):
-                val_bar += '■ '
-            table.add_row(date, val_bar.strip())
+        for day in recent:
+            date = day.get('data-date', '')
+            level = day.get('data-level', '0')
+            table.add_row(date, ('■ ' * int(level)).strip())
         Console().print(table)
         if op:
             click.launch(url)
@@ -101,23 +96,6 @@ def wiki(t, lang, f):
         article = Text(page.content, justify='left')
         print(Panel(article, title=page.title))
 
-
-@web.command(short_help='Send a simple email')
-@click.option('-email', prompt=True, help='Your email')
-@click.option('-passw', prompt=True, hide_input=True, help='Your email password')
-@click.option('-to', prompt=True, help='Destination')
-@click.option('-subject', prompt=True, help='Tell who you are')
-@click.option('-message', prompt=True, help='Your message')
-def mail(email, passw, to, subject, message):
-    from mailer import Mailer
-    try:
-        mail = Mailer(email=email, password=passw)
-        mail.send(receiver=to, subject=subject, message=message)
-        print('[green]Your email has been sent[/green]')
-    except Exception as e:
-        print(f'{e}')
-
-
 @web.command(short_help='Download Youtube video/audio')
 @click.option('-l', 'link', type=click.STRING, help='Video link')
 @click.option('-s', type=click.STRING, help='Video name (for search)')
@@ -141,73 +119,33 @@ def yt(link, s, a, f, low, file):
     (one for each line). Pass the path of the file using the -file option.
 
     \b
-    For a FAST download you can use -l (low) flag. This will return
+    For a FAST download you can use -low flag. This will return
     the lowest resolution of the video. The default of this command
     is return the highest resolution.
 
     \b
     To download only the AUDIO of the video, use the flag -a.
-    The download will be return a .mp3 file. The load bar are
-    not implemented for this type of download.
-
-    \b
-    * In case of SLOWNESS to GET the video:
-        Reset your ip address: Your IP may have been moved to a blacklist.
+    The download will return a .mp3 file (requires ffmpeg).
     """
     if not file:
-        p_bar_ref = [None]
-
-        def on_progress(vid, chunk, bytes_remaining):
-            totalsz = round((vid.filesize / 1024) / 1024, 1)
-            remain = round((bytes_remaining / 1024) / 1024, 1)
-            if p_bar_ref[0] is not None:
-                p_bar_ref[0].reset()
-                p_bar_ref[0].update(int(totalsz - remain))
-                p_bar_ref[0].refresh()
-        print('Getting video', end='')
-        if link and not a:
-            yt_obj = YouTube(link, on_progress_callback=on_progress)
-            video, totalsz = get_video_by_link(yt_obj, low)
-            p_bar_ref[0] = tqdm(range(int(totalsz)), colour='green')
-            video.download(f)
-        elif a:
-            if link:
-                yt_obj = YouTube(link, on_progress_callback=on_progress)
-                video, totalsz = get_audio_by_link(yt_obj)
-                p_bar_ref[0] = tqdm(range(int(totalsz)), colour='green')
-            elif s:
-                video = get_audio_by_search(s)
-            out_file = video.download(output_path=f)
-            base, ext = os.path.splitext(out_file)
-            new_file = base + '.mp3'
-            os.rename(out_file, new_file)
-        elif s and not link:
-            if low:
-                video = get_video_by_search(s, low)
-            else:
-                video = get_video_by_search(s)
-            video.download(f)
-            print('Download complete')
-    elif file:
+        query = link or s
+        if not query:
+            print('Provide -l (link) or -s (search term)')
+            return
+        title = download_yt(query, f, low=low, audio_only=a)
+        print(f'Download complete: {title}')
+    else:
         c = 0
-        with open(file, 'r') as file:
-            for line in file.readlines():
+        with open(file, 'r') as fh:
+            for line in fh:
+                line = line.strip()
+                if not line:
+                    continue
                 c += 1
-                print(f'{c} Getting video', end='')
-                if a:
-                    video = get_audio_by_search(line)
-                    out_file = video.download(output_path=f)
-                    base, ext = os.path.splitext(out_file)
-                    new_file = base + '.mp3'
-                    os.rename(out_file, new_file)
-                else:
-                    if low:
-                        video = get_video_by_search(line, low)
-                    else:
-                        video = get_video_by_search(line)
-                    video.download(f)
-                print('[Download complete]')
-        print('All downloads complete')
+                print(f'[{c}] Downloading...')
+                title = download_yt(line, f, low=low, audio_only=a)
+                print(f'[{c}] Done: {title}')
+        print(f'All {c} downloads complete')
 
 
 @web.command(short_help='See the last news (Google News)')

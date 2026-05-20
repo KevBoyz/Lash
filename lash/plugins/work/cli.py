@@ -1,5 +1,6 @@
 import signal
 import click
+from datetime import date
 from lash.plugins.work.helpers import data_dir, format_duration, find_task
 from lash.plugins.work.core import (
     load_state, save_state, load_sessions, append_session,
@@ -159,6 +160,41 @@ def status():
     click.echo(f"Elapsed: {format_duration(elapsed)}")
     if active["pomo"]:
         click.echo(f"Pomodoro sessions: {active['pomo_sessions']}")
+
+
+@work_group.command("log")
+@click.option("--today", is_flag=True, help="Show only today's records")
+def log(today):
+    """Show time records."""
+    from rich.table import Table
+    from rich.console import Console
+    d = data_dir()
+    sessions_path = d / "sessions.json"
+    sessions = load_sessions(sessions_path)
+    if not sessions:
+        click.echo("No records yet.")
+        return
+    if today:
+        today_str = date.today().isoformat()
+        sessions = [s for s in sessions if s["date"] == today_str]
+        if not sessions:
+            click.echo("No records for today.")
+            return
+    grouped = format_log(sessions)
+    console = Console()
+    for day in grouped:
+        table = Table(title=day["date"])
+        table.add_column("Task")
+        table.add_column("Time", justify="right")
+        table.add_column("Pomodoros", justify="right")
+        for t in day["tasks"]:
+            table.add_row(t["name"], format_duration(t["minutes"] * 60), str(t["pomo_sessions"]))
+        table.add_row(
+            "[bold]Total[/bold]",
+            f"[bold]{format_duration(day['total_minutes'] * 60)}[/bold]",
+            "",
+        )
+        console.print(table)
 
 
 def _run_pomodoro(tasks_path, task_name, work_mins, break_mins):

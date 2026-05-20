@@ -209,3 +209,45 @@ class TestStatusCommand:
         runner = CliRunner()
         result = runner.invoke(work_group, ["status"])
         assert result.exit_code != 0
+
+
+class TestLogCommand:
+    def _seed_session(self, work_dir, name="tarefa", date="2026-05-20", minutes=30, pomo=0):
+        import json
+        path = work_dir / "sessions.json"
+        sessions = json.loads(path.read_text()) if path.exists() else []
+        sessions.append({
+            "task_id": "x",
+            "task_name": name,
+            "date": date,
+            "total_minutes": minutes,
+            "pomo_sessions": pomo,
+            "done": True,
+        })
+        path.write_text(json.dumps(sessions))
+
+    def test_sem_registros(self, work_dir):
+        from lash.plugins.work.cli import work_group
+        runner = CliRunner()
+        result = runner.invoke(work_group, ["log"])
+        assert "No records" in result.output
+
+    def test_exibe_registros(self, work_dir):
+        from lash.plugins.work.cli import work_group
+        self._seed_session(work_dir, "minha tarefa", minutes=60)
+        runner = CliRunner()
+        result = runner.invoke(work_group, ["log"])
+        assert result.exit_code == 0
+        assert "minha tarefa" in result.output
+
+    def test_filtra_hoje(self, work_dir, monkeypatch):
+        from lash.plugins.work.cli import work_group
+        from datetime import date
+        fake_date = type("D", (), {"today": staticmethod(lambda: date(2026, 5, 20))})
+        monkeypatch.setattr("lash.plugins.work.cli.date", fake_date)
+        self._seed_session(work_dir, "hoje", date="2026-05-20")
+        self._seed_session(work_dir, "ontem", date="2026-05-19")
+        runner = CliRunner()
+        result = runner.invoke(work_group, ["log", "--today"])
+        assert "hoje" in result.output
+        assert "ontem" not in result.output

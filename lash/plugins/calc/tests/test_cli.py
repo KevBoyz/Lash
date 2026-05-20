@@ -1,5 +1,4 @@
 # pytest lash/plugins/calc/tests/test_cli.py
-import pytest
 from click.testing import CliRunner
 from lash.plugins.calc.cli import calc
 

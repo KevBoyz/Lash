@@ -137,7 +137,7 @@ class TestResumeCommand:
         with patch("lash.plugins.video.cli.VideoFileClip", return_value=mock_clip), \
              patch("lash.plugins.video.cli.concatenate_videoclips", return_value=mock_concat):
             runner = CliRunner()
-            result = runner.invoke(resume, [str(dummy)])
+            runner.invoke(resume, [str(dummy)])
 
         expected_name = "my_clip-resume.mp4"
         expected_path = str(tmp_path / expected_name)
@@ -186,7 +186,7 @@ class TestResumeCommand:
         assert mock_clip.subclip.call_count == 12
 
     def test_resume_concatenate_called_with_compose_method(self, tmp_path):
-        from unittest.mock import patch, MagicMock, call
+        from unittest.mock import patch, MagicMock
         from click.testing import CliRunner
         from lash.plugins.video.cli import resume
 
@@ -199,7 +199,7 @@ class TestResumeCommand:
         mock_clip.subclip.return_value = MagicMock()
         mock_concat = MagicMock()
 
-        with patch("lash.plugins.video.cli.VideoFileClip", return_value=mock_clip) as mock_vfc, \
+        with patch("lash.plugins.video.cli.VideoFileClip", return_value=mock_clip), \
              patch("lash.plugins.video.cli.concatenate_videoclips", return_value=mock_concat) as mock_cc:
             runner = CliRunner()
             runner.invoke(resume, [str(dummy)])
@@ -223,7 +223,7 @@ class TestCutCommand:
 
         with patch("lash.plugins.video.cli.VideoFileClip", return_value=mock_video):
             runner = CliRunner()
-            result = runner.invoke(cut, [
+            runner.invoke(cut, [
                 str(dummy),
                 "-i", "0", "0", "10",
                 "-f", "0", "1", "0",
@@ -326,7 +326,7 @@ class TestCutCommand:
 
 class TestIntroCommand:
     def test_intro_concatenates_intro_then_video(self, tmp_path):
-        from unittest.mock import patch, MagicMock, call
+        from unittest.mock import patch, MagicMock
         from click.testing import CliRunner
         from lash.plugins.video.cli import intro
 

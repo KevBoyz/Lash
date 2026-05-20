@@ -47,7 +47,7 @@ def flip(path, all, c, t, lr, tb):
                         elif tb:
                             f_flip(Image.open(os.path.join(root, file)), file, c=c, t=t, tb=True)
                         n_editions += 1
-                    except:
+                    except Exception:
                         pass
                     pbar.update(1)
         print(f'Process Completed, {n_editions} files edited')
@@ -94,7 +94,7 @@ def resize(path, all, c, t, axis, d, r):
                     try:
                         re_size(Image.open(os.path.join(root, file)), file, root, axis, d, r, c, t)
                         n_editions += 1
-                    except:
+                    except Exception:
                         pass
                     pbar.update(1)
         print(f'Process completed, {n_editions} files edited')
@@ -144,7 +144,7 @@ def adjust(path, all, c, t, ct, b, s, sh):
                     try:
                         save(adjust_exec(Image.open(os.path.join(root, file)), ct, b, s, sh), file)
                         n_editions += 1
-                    except:
+                    except Exception:
                         pass
                     pbar.update(1)
         print(f'Process completed, {n_editions} files edited')
@@ -200,7 +200,7 @@ def filter(path, all, c, t, b, co, d, e, k):
                     try:
                         filter_apply(Image.open(os.path.join(root, file)), file, root, t, c, b, co, d, e, k)
                         n_editions += 1
-                    except:
+                    except Exception:
                         pass
                     pbar.update(1)
         print(f'Process completed, {n_editions} images edited')
@@ -254,7 +254,7 @@ def wmark(text, path, all, c, t, tp, ts, tc, tf, axis):
                     try:
                         wmarke(text, file, root, Image.open(file), c, t, tp, ts, tc, tf, axis)
                         n_editions += 1
-                    except:
+                    except Exception:
                         pass
                     pbar.update(1)
         print(f'Process completed, {n_editions} images edited')

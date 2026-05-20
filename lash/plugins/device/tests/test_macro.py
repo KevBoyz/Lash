@@ -1,5 +1,4 @@
 # pytest lash/plugins/device/tests/test_macro.py
-import json
 from pathlib import Path
 
 
@@ -119,7 +118,6 @@ class TestSerializeKey:
 
     def test_special_key(self):
         from lash.plugins.device.helpers import serialize_key
-        from unittest.mock import MagicMock
         import pynput.keyboard as kb
         assert serialize_key(kb.Key.shift) == 'Key.shift'
 
@@ -134,7 +132,6 @@ class TestSerializeKey:
 class TestDeserializeKey:
     def test_regular_char(self):
         from lash.plugins.device.helpers import deserialize_key
-        import pynput.keyboard as kb
         result = deserialize_key('a')
         assert result == 'a'
 
@@ -387,6 +384,7 @@ class TestRecordMacro:
 
         def fake_stop_event():
             e = MagicMock()
+
             def wait():
                 from unittest.mock import MagicMock as MM
                 mock_key = MM()
@@ -410,9 +408,9 @@ class TestRecordMacro:
                 'pynput.keyboard': mock_kb_mod,
                 'pynput.mouse': mock_mouse_mod,
             }), \
-             patch('lash.plugins.device.core.threading') as mock_threading, \
-             patch('lash.plugins.device.core.minimize_terminal'), \
-             patch('lash.plugins.device.core.time', return_value=0.0):
+            patch('lash.plugins.device.core.threading') as mock_threading, \
+            patch('lash.plugins.device.core.minimize_terminal'), \
+            patch('lash.plugins.device.core.time', return_value=0.0):
             mock_threading.Event = fake_stop_event
             record_macro('new_macro')
 
@@ -454,8 +452,8 @@ class TestRecordMacro:
                 'pynput.keyboard': mock_kb_mod,
                 'pynput.mouse': mock_mouse_mod,
             }), \
-             patch('lash.plugins.device.core.threading') as mock_threading, \
-             patch('lash.plugins.device.core.minimize_terminal'):
+            patch('lash.plugins.device.core.threading') as mock_threading, \
+            patch('lash.plugins.device.core.minimize_terminal'):
             mock_threading.Event = fake_stop_event
             result = record_macro('empty_macro')
 
@@ -469,7 +467,8 @@ class TestMacroCommand:
         from unittest.mock import patch
         from click.testing import CliRunner
         monkeypatch.setattr(Path, 'home', lambda: tmp_path)
-        with patch('lash.plugins.device.cli.record_macro', return_value={'name': 'x', 'duration': 1.0, 'events': [1]}) as mock_rec, \
+        mock_ret = {'name': 'x', 'duration': 1.0, 'events': [1]}
+        with patch('lash.plugins.device.cli.record_macro', return_value=mock_ret) as mock_rec, \
              patch('lash.plugins.device.cli.minimize_terminal'):
             from lash.plugins.device.cli import macro
             result = CliRunner().invoke(macro, ['-r', 'x'])

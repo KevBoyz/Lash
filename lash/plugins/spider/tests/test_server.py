@@ -232,12 +232,12 @@ class TestSeekerScanLoop:
             mock_spawn.assert_called_once_with("web", "192.168.1.1", 8080)
 
     def test_scan_once_skips_already_connected(self, tmp_path):
-        from unittest.mock import patch, MagicMock
+        from unittest.mock import patch
         from lash.plugins.spider.core import _scan_once
 
         connected = {("192.168.1.1", 8080)}
 
-        with patch("lash.plugins.spider.core.socket.socket") as mock_sock_cls, \
+        with patch("lash.plugins.spider.core.socket.socket"), \
              patch("lash.plugins.spider.core._spawn_client") as mock_spawn:
 
             _scan_once(["192.168.1.1"], [8080], connected)
@@ -381,7 +381,7 @@ class TestSeekerCli:
 
     def test_start_calls_spawn_daemon(self):
         from click.testing import CliRunner
-        from unittest.mock import patch, MagicMock
+        from unittest.mock import patch
         from lash.plugins.spider.cli import spider
         runner = CliRunner()
         with patch("lash.plugins.spider.core.read_pid", return_value=None), \

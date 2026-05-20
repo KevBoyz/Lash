@@ -1,6 +1,4 @@
 import json
-import pathlib
-import pytest
 
 
 def _make_manifest(tmp_path, name, commands, core=False):

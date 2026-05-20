@@ -1,7 +1,6 @@
 # pytest lash/plugins/file/tests/test_cli.py
 import os
 import zipfile
-from pathlib import Path
 from click.testing import CliRunner
 from lash.plugins.file.cli import organize, zip_group, crypt
 

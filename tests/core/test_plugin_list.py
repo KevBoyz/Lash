@@ -1,12 +1,11 @@
 import json
-import pathlib
-import pytest
 from click.testing import CliRunner
 
 
 def _setup(tmp_path):
     for name, core, category, commands in [
-        ('random', True, 'Random Generators', {'random': {'module': 'x:y', 'description': 'Generate randoms', 'requires': []}}),
+        ('random', True, 'Random Generators',
+            {'random': {'module': 'x:y', 'description': 'Generate randoms', 'requires': []}}),
         ('crack', True, 'Crack Tools', {'crack': {'module': 'x:y', 'description': 'Crack zips', 'requires': []}}),
         ('file', False, 'File Tools', {
             'organize': {'module': 'x:y', 'description': 'Organize files', 'requires': ['rich>=12.6.0']},

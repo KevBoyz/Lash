@@ -1,22 +1,22 @@
 from random import sample, randint
 
 
-def get_size(c, n, l, s):
-    m = sum([n, l, s])
+def get_size(c, n, letters, s):
+    m = sum([n, letters, s])
     if m == 0:
         return c
     return c // m
 
 
-def gen_random(size, n, s, l, ul):
+def gen_random(size, n, s, letters, ul):
     rand_l = []
-    letters = 'qwertyuiopasdfghjklzxcvbnm'
+    letter_chars = 'qwertyuiopasdfghjklzxcvbnm'
     symbols = '!?@#$%&*_+-'
     for _ in range(size):
         if n:
             rand_l.append(str(randint(0, 9)))
-        if l:
-            letter = ''.join(sample(letters, 1))
+        if letters:
+            letter = ''.join(sample(letter_chars, 1))
             rand_l.append(letter.upper() if ul and randint(0, 1) else letter)
         if s:
             rand_l.append(''.join(sample(symbols, 1)))

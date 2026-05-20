@@ -32,7 +32,7 @@ def run(command, s, m, h):
             fh, fm, fs = time_format(h2, m2, s2)
             print(f'Time remaining: {fh}:{fm}:{fs}', end="\r")
             sleep(1)
-        print(f'Time remaining: 00:00:00 ', end="\r")
+        print('Time remaining: 00:00:00 ', end="\r")
         system(command=command)
         print()
 
@@ -55,7 +55,7 @@ def wait(command, h, m, s):
         fh, fm, fs = time_format(h, m, s)
         print(f'Time remaining: {fh}:{fm}:{fs}', end="\r")
         sleep(1)
-    print(f'Time remaining: 00:00:00 ', end="\r")
+    print('Time remaining: 00:00:00 ', end="\r")
     system(command=command)
 
 

@@ -60,12 +60,15 @@ def gith(nick, op):
         if len(gh['bio']) > 60:
             gh['bio'] = gh['bio'][:60]
             gh['bio'] += '...'
-        print(f"""
-UsrInf :: [bold green]{gh['nick']}[/bold green] -> {gh['contributions']} contributions, {gh['followers']} followers, {gh['repos']} repos
-UsrBio :: [italic]{gh['bio']}[/italic]\n""")
+        print(
+            f"\nUsrInf :: [bold green]{gh['nick']}[/bold green]"
+            f" -> {gh['contributions']} contributions,"
+            f" {gh['followers']} followers, {gh['repos']} repos\n"
+            f"UsrBio :: [italic]{gh['bio']}[/italic]\n"
+        )
         table = Table(title="User activity")
-        table.add_column(f"Date", style="cyan", justify='center')
-        table.add_column(f"Level", style="green", justify='left')
+        table.add_column("Date", style="cyan", justify='center')
+        table.add_column("Level", style="green", justify='left')
         for (date, val) in zip(data_date, data_level):
             val_bar = ''
             for _ in range(0, int(val)):
@@ -116,13 +119,13 @@ def mail(email, passw, to, subject, message):
 
 
 @web.command(short_help='Download Youtube video/audio')
-@click.option('-l', type=click.STRING, help='Video link')
+@click.option('-l', 'link', type=click.STRING, help='Video link')
 @click.option('-s', type=click.STRING, help='Video name (for search)')
 @click.option('-a', is_flag=True, help='Audio only')
 @click.option('-f', type=click.Path(), default=downloads_folder, show_default=True, help='output folder')
 @click.option('-low', is_flag=True, help='Low resolution (video only)')
 @click.option('-file', type=click.Path(exists=True), help='Download multiple videos listed on a text file')
-def yt(l, s, a, f, low, file):
+def yt(link, s, a, f, low, file):
     """
     This command allows you download videos/audios from Youtube.
 
@@ -153,6 +156,7 @@ def yt(l, s, a, f, low, file):
     """
     if not file:
         p_bar_ref = [None]
+
         def on_progress(vid, chunk, bytes_remaining):
             totalsz = round((vid.filesize / 1024) / 1024, 1)
             remain = round((bytes_remaining / 1024) / 1024, 1)
@@ -161,14 +165,14 @@ def yt(l, s, a, f, low, file):
                 p_bar_ref[0].update(int(totalsz - remain))
                 p_bar_ref[0].refresh()
         print('Getting video', end='')
-        if l and not a:
-            yt_obj = YouTube(l, on_progress_callback=on_progress)
+        if link and not a:
+            yt_obj = YouTube(link, on_progress_callback=on_progress)
             video, totalsz = get_video_by_link(yt_obj, low)
             p_bar_ref[0] = tqdm(range(int(totalsz)), colour='green')
             video.download(f)
         elif a:
-            if l:
-                yt_obj = YouTube(l, on_progress_callback=on_progress)
+            if link:
+                yt_obj = YouTube(link, on_progress_callback=on_progress)
                 video, totalsz = get_audio_by_link(yt_obj)
                 p_bar_ref[0] = tqdm(range(int(totalsz)), colour='green')
             elif s:
@@ -177,7 +181,7 @@ def yt(l, s, a, f, low, file):
             base, ext = os.path.splitext(out_file)
             new_file = base + '.mp3'
             os.rename(out_file, new_file)
-        elif s and not l:
+        elif s and not link:
             if low:
                 video = get_video_by_search(s, low)
             else:

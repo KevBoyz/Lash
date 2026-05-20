@@ -252,7 +252,7 @@ def play_macro(name: str, speed: float, full_speed: bool, repeat: int, loop: boo
                 return
             wait = (event['t'] - events[i - 1]['t']) * delay_factor if i > 0 else 0
             if wait > 0:
-                interruptible_sleep(wait)
+                sleep(wait)
             if force_stopped.is_set():
                 return
             _dispatch_event(event, kb_ctrl, mouse_ctrl)

@@ -39,7 +39,7 @@ def crypt(p, key, dc, ex, cl, v):
         data = crip.decrypt(file.read())
         crypted = open(fp, 'wb')
         crypted.write(data)
-        print(f'\nFile decrypted successfully') if v else None
+        print('\nFile decrypted successfully') if v else None
     else:
         if cl:
             original_cwd = os.getcwd()

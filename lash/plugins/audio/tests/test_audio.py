@@ -50,7 +50,7 @@ class TestGetCommand:
         mock_clip = MagicMock()
         with patch("lash.plugins.audio.cli.VideoFileClip", return_value=mock_clip):
             runner = CliRunner()
-            result = runner.invoke(get, [str(dummy)])
+            runner.invoke(get, [str(dummy)])
 
         expected = str(dummy).replace(".mp4", ".mp3")
         mock_clip.audio.write_audiofile.assert_called_once_with(expected)
@@ -66,7 +66,7 @@ class TestGetCommand:
         mock_clip = MagicMock()
         with patch("lash.plugins.audio.cli.VideoFileClip", return_value=mock_clip):
             runner = CliRunner()
-            result = runner.invoke(get, [str(dummy), "-o", "custom"])
+            runner.invoke(get, [str(dummy), "-o", "custom"])
 
         from lash.plugins.audio.core import get_last
         filename = get_last(str(dummy))
@@ -86,6 +86,6 @@ class TestCutCommand:
         mock_audio = MagicMock()
         with patch("lash.plugins.audio.cli.AudioFileClip", return_value=mock_audio):
             runner = CliRunner()
-            result = runner.invoke(cut, [str(dummy), "-i", "0", "0", "10", "-f", "0", "1", "0"])
+            runner.invoke(cut, [str(dummy), "-i", "0", "0", "10", "-f", "0", "1", "0"])
 
         mock_audio.subclip.assert_called_once_with(10, 60)

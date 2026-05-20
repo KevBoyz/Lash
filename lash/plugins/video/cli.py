@@ -8,7 +8,7 @@ from time import sleep, time
 from keyboard import is_pressed
 from moviepy import VideoFileClip, concatenate_videoclips
 from lash.plugins.video.core import (
-    get_last, get_ext, path_no_file, tuple_to_seconds,
+    get_last, get_ext, tuple_to_seconds,
     resize_images, alt_build, render_cursor, get_images,
 )
 

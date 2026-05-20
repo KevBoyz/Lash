@@ -114,7 +114,7 @@ def render_cursor(pbar, image_folder, images):
             draw = ImageDraw.Draw(im)
             draw.ellipse((x, y, x + 20, y + 20), fill=(255, 0, 0), outline=(0, 0, 0))
             im.save(f'{image_folder}/{images[i]}')
-        except Exception as e:
+        except Exception:
             pass
         pbar.update(1)
     pbar.update(pbar.total - pbar.n)

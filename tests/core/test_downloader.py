@@ -1,13 +1,13 @@
 import json
-import pathlib
-import pytest
 from unittest import mock
 from click.testing import CliRunner
 
 
 def _setup_plugins(tmp_path):
     for name, commands in [
-        ('crack', {'crack': {'module': 'lash.plugins.crack.cli:crack', 'description': 'd', 'requires': []}}),
+        ('crack', {
+            'crack': {'module': 'lash.plugins.crack.cli:crack', 'description': 'd', 'requires': []},
+        }),
         ('file', {
             'organize': {'module': 'lash.plugins.file.cli:organize', 'description': 'd', 'requires': ['rich>=12.6.0']},
             'zip': {'module': 'lash.plugins.file.cli:zip_group', 'description': 'd', 'requires': ['pyminizip>=0.2.6', 'rich>=12.6.0']},

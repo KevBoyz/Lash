@@ -2,14 +2,14 @@ import ast
 import click
 import matplotlib
 matplotlib.use('Qt5Agg')
-from numpy import linspace
-from matplotlib import pyplot as plt
-from rich import print
-from itertools import product
-from functools import reduce
-from operator import mul
-from lash.plugins.calc.core import get_signal, probability, solve_quadratic, solve_affine
-from lash.plugins.calc.helpers import cartesian_plan
+from numpy import linspace  # noqa: E402
+from matplotlib import pyplot as plt  # noqa: E402
+from rich import print  # noqa: E402
+from itertools import product  # noqa: E402
+from functools import reduce  # noqa: E402
+from operator import mul  # noqa: E402
+from lash.plugins.calc.core import get_signal, probability, solve_quadratic, solve_affine  # noqa: E402
+from lash.plugins.calc.helpers import cartesian_plan  # noqa: E402
 
 
 @click.group('calc', help='Math utilities')

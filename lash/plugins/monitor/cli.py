@@ -1,6 +1,6 @@
 import click
 import psutil as ps
-from dashing import *
+from dashing import HSplit, VSplit, VGauge, HGauge, HChart, Text, Log
 from time import sleep
 from datetime import datetime
 from lash.plugins.monitor.core import getListOfProcessSortedByMemory
@@ -47,12 +47,14 @@ def monitor():
         disk_percent.value = disk.percent
         disk_percent.title = f'Disk Usage - {disk.percent}%'
 
-        machine_config.text = f'Cpu freq: {ps.cpu_freq().current / 1000}Ghz Max({ps.cpu_freq().max / 1000}Ghz)\n' \
-                              f'Cpu nucleus: {ps.cpu_count(logical=False)} Cpu threads: {ps.cpu_count(logical=True)}\n' \
-                              f'Cpu times: User({ps.cpu_times().user / 60 / 60:.2f}h) Sys({ps.cpu_times().system / 60 / 60:.2f}h)\n' \
-                              f'Booted since {datetime.fromtimestamp(ps.boot_time()).strftime("%Y-%m-%d %H:%M:%S")}\n' \
-                              f'Ram: {vmomory.total /1024/1024/1024:.2f}Gb | Using {vmomory.used /1024/1024/1024:.2f}Gb\n' \
-                              f'Disk: {disk.total/1024/1024/1024:.2f}Gb | Using {disk.used/1024/1024/1024:.2f}Gb\n'
+        machine_config.text = (
+            f'Cpu freq: {ps.cpu_freq().current / 1000}Ghz Max({ps.cpu_freq().max / 1000}Ghz)\n'
+            f'Cpu nucleus: {ps.cpu_count(logical=False)} Cpu threads: {ps.cpu_count(logical=True)}\n'
+            f'Cpu times: User({ps.cpu_times().user / 60 / 60:.2f}h) Sys({ps.cpu_times().system / 60 / 60:.2f}h)\n'
+            f'Booted since {datetime.fromtimestamp(ps.boot_time()).strftime("%Y-%m-%d %H:%M:%S")}\n'
+            f'Ram: {vmomory.total /1024/1024/1024:.2f}Gb | Using {vmomory.used /1024/1024/1024:.2f}Gb\n'
+            f'Disk: {disk.total/1024/1024/1024:.2f}Gb | Using {disk.used/1024/1024/1024:.2f}Gb\n'
+        )
         try:
             listOfProcessNames = list()
             for proc in ps.process_iter():
@@ -61,7 +63,7 @@ def monitor():
             listOfRunningProcess = getListOfProcessSortedByMemory()
             for elem in listOfRunningProcess[:11]:
                 processes.append(f'{elem["name"]}|{elem["pid"]}|{elem["vms"]:.2f}mb')
-        except:
+        except Exception:
             pass
         tui.display()
         sleep(.1)

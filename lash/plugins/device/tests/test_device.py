@@ -1,7 +1,7 @@
 # pytest lash/plugins/device/tests/test_device.py
 import os
 import pytest
-from unittest.mock import MagicMock, patch, call
+from unittest.mock import MagicMock, patch
 from click.testing import CliRunner
 
 

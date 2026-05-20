@@ -4,7 +4,6 @@
 class TestGetListOfProcessSortedByMemory:
     def test_returns_list_sorted_by_vms_descending(self):
         from unittest.mock import MagicMock, patch
-        import psutil as ps
         from lash.plugins.monitor.core import getListOfProcessSortedByMemory
 
         def make_proc(pid, name, username, vms_bytes):
@@ -14,7 +13,7 @@ class TestGetListOfProcessSortedByMemory:
             return proc
 
         procs = [
-            make_proc(1, 'low_mem',  'user', 50  * 1024 * 1024),
+            make_proc(1, 'low_mem', 'user', 50 * 1024 * 1024),
             make_proc(2, 'high_mem', 'user', 200 * 1024 * 1024),
             make_proc(3, 'mid_mem',  'user', 100 * 1024 * 1024),
         ]
@@ -53,10 +52,10 @@ class TestGetListOfProcessSortedByMemory:
 
         assert len(result) == 1
         entry = result[0]
-        assert 'pid'      in entry
-        assert 'name'     in entry
+        assert 'pid' in entry
+        assert 'name' in entry
         assert 'username' in entry
-        assert 'vms'      in entry
+        assert 'vms' in entry
 
     def test_returns_empty_list_when_no_processes(self):
         from unittest.mock import patch

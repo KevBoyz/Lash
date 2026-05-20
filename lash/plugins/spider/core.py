@@ -195,7 +195,7 @@ def run_server(host: str, port: int) -> None:
                         elif ev["type"] == "connected":
                             print(f"\n[yellow][new connection][/yellow] {ev['addr']}")
                         elif ev["type"] == "disconnected":
-                            print(f"\n[red][active client disconnected][/red]")
+                            print("\n[red][active client disconnected][/red]")
                             break
                     except queue.Empty:
                         print("[yellow][timeout — no response in 30s][/yellow]")
@@ -232,7 +232,7 @@ def run_server(host: str, port: int) -> None:
                         elif ev["type"] == "connected":
                             print(f"\n[yellow][new connection][/yellow] {ev['addr']}")
                         elif ev["type"] == "disconnected":
-                            print(f"\n[red][active client disconnected][/red]")
+                            print("\n[red][active client disconnected][/red]")
                             break
                     except queue.Empty:
                         print("[yellow][timeout — no response in 30s][/yellow]")
@@ -264,7 +264,7 @@ def run_server(host: str, port: int) -> None:
                     elif ev["type"] == "connected":
                         print(f"\n[yellow][new connection][/yellow] {ev['addr']}")
                     elif ev["type"] == "disconnected":
-                        print(f"\n[red][active client disconnected][/red]")
+                        print("\n[red][active client disconnected][/red]")
                         break
                 except queue.Empty:
                     print("[yellow][timeout — no response in 30s][/yellow]")

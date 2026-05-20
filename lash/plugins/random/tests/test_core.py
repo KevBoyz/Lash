@@ -1,6 +1,5 @@
 # pytest lash/plugins/random/tests/test_core.py
 import os
-import pytest
 from lash.plugins.random.core import get_size, gen_random, file_save
 
 

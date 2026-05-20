@@ -127,7 +127,6 @@ class TestAzipCommand:
         # Requires pyzipper to write encrypted ZIPs.
         # If pyzipper is available, remove the skip and use the helper below.
         pyzipper = pytest.importorskip('pyzipper')
-        import os
         from click.testing import CliRunner
         from lash.plugins.crack.cli import azip
 

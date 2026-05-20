@@ -1,6 +1,5 @@
 from cmath import sqrt as csqrt
 import math
-from typing import Union
 
 
 def get_signal(coefs):

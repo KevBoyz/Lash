@@ -258,6 +258,7 @@ class TestPomodoro:
         from lash.plugins.work.cli import work_group
         import lash.plugins.work.cli as cli_module
         called = {}
+
         def mock_pomo(tasks_path, task_name, work_mins, break_mins):
             called["task_name"] = task_name
             called["work_mins"] = work_mins

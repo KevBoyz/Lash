@@ -54,13 +54,26 @@ def _run_ffmpeg(cmd, label, total):
         raise click.ClickException(proc.stderr.read())
 
 
-@video.command(help='Build a video with multiple images')
+@video.command()
 @click.argument('path', metavar='<path>', type=click.Path(exists=True), required=False, default='.')
-@click.option('-fps', type=click.INT, help='Fps', default=5, show_default=True)
-@click.option('-n', type=click.STRING, help='Video name')
-@click.option('-num', is_flag=True, help='Numeric sequence of images', default=True, show_default=True)
-@click.option('-r', is_flag=True, help='Resize all images before build', default=False, show_default=True)
+@click.option('-fps', type=click.INT, help='Frames per second', default=5, show_default=True)
+@click.option('-n', type=click.STRING, help='Output video name (no extension)')
+@click.option('-num', is_flag=True, help='Sort images numerically (1.jpeg, 2.jpeg, ...)', default=True, show_default=True)
+@click.option('-r', is_flag=True, help='Resize all images to match the first before building', default=False, show_default=True)
 def build(path, fps, n, num, r):
+    """Build a video from a folder of images.
+
+    \b
+    Images in the target folder must be JPEG files.
+    With -num (default), sorted numerically by filename (1.jpeg, 2.jpeg, ...).
+    Without -num, sorted alphabetically.
+    Output is saved as an AVI file in the parent folder.
+
+    \b
+    Example:
+      lash video build ./frames
+      lash video build ./frames -fps 24 -n recording
+    """
     if not n:
         n = 'video'
     os.chdir(path)
@@ -105,14 +118,26 @@ def build(path, fps, n, num, r):
     console.print(f'[green]Saved:[/green] {os.path.join(os.getcwd(), video_name)}')
 
 
-@video.command(help='Record your monitor screen (F3 to stop)')
+@video.command()
 @click.argument('path', metavar='<path>', type=click.Path(exists=True), required=False, default='.')
-@click.option('-w', type=click.INT, help='Wait some seconds before start')
-@click.option('-n', type=click.STRING, default='video', show_default=True, help='Video name')
-@click.option('-c', is_flag=True, default=True, show_default=True, help='Capture cursor (fps reduction)')
-@click.option('-b', is_flag=True, default=True, show_default=True, help='Build video after record')
-@click.option('-f', is_flag=True, default=True, show_default=True, help='Delete frames after build')
+@click.option('-w', type=click.INT, help='Countdown in seconds before recording starts')
+@click.option('-n', type=click.STRING, default='video', show_default=True, help='Output video name')
+@click.option('-c', is_flag=True, default=True, show_default=True, help='Overlay cursor on frames (slight fps cost)')
+@click.option('-b', is_flag=True, default=True, show_default=True, help='Build video automatically after recording')
+@click.option('-f', is_flag=True, default=True, show_default=True, help='Delete frames after building the video')
 def rec(path, w, n, c, b, f):
+    """Record your monitor screen (F3 to stop).
+
+    \b
+    Captures frames at maximum speed and assembles them into an AVI.
+    Cursor overlay is included by default; disable with --no-c.
+    Video is built automatically after stopping; disable with --no-b.
+
+    \b
+    Example:
+      lash video rec
+      lash video rec -w 3 -n my_recording ./output_folder
+    """
     from keyboard import is_pressed
     from mss import mss
     from pyautogui import position
@@ -228,12 +253,24 @@ def end(video_path, video_end, s):
         os.unlink(list_file)
 
 
-@video.command(help='Cut a segment from a video')
+@video.command()
 @click.argument('path', metavar='<path>', type=click.Path(exists=True))
-@click.option('-s', is_flag=True, help='overwrite original file')
-@click.option('-i', type=(int, int, int), help='initial time for cut. Put in format (hh mm ss)')
-@click.option('-f', type=(int, int, int), help='final time for cut. Put in format (hh mm ss)')
+@click.option('-s', is_flag=True, help='Overwrite the original file')
+@click.option('-i', type=(int, int, int), help='Start time as h m s (e.g. -i 0 1 30)')
+@click.option('-f', type=(int, int, int), help='End time as h m s (e.g. -f 0 3 0)')
 def cut(path, s, i, f):
+    """Cut a segment from a video.
+
+    \b
+    Output is saved as <name>_cutted.<ext> by default.
+    Use -s to overwrite the original file.
+    Omitting -i starts from the beginning; omitting -f goes to the end.
+
+    \b
+    Example:
+      lash video cut clip.mp4 -i 0 0 30 -f 0 2 0
+      lash video cut clip.mp4 -s -f 0 1 0
+    """
     p = Path(path)
     out = path if s else str(p.with_stem(p.stem + '_cutted'))
     ffmpeg = imageio_ffmpeg.get_ffmpeg_exe()

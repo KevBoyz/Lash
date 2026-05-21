@@ -1,6 +1,12 @@
+import re
+import subprocess
+from pathlib import Path
+
 import click
-from moviepy import VideoFileClip, AudioFileClip
-from lash.plugins.audio.core import get_last, tuple_to_seconds
+import imageio_ffmpeg
+from rich.progress import BarColumn, Progress, TextColumn, TimeElapsedColumn
+
+from lash.plugins.audio.core import tuple_to_seconds
 
 
 @click.group('audio', help='Audio tools')
@@ -10,28 +16,81 @@ def audio_group():
 
 @audio_group.command(help='convert a mp4 video on an mp3 file')
 @click.argument('path', metavar='<path>', type=click.Path(exists=True))
-@click.option('-o', type=click.STRING, help='output video name, default=original_name')
+@click.option('-o', type=click.STRING, help='output file name without extension')
 def get(path, o):
-    video = VideoFileClip(path)
-    filename = get_last(path)
-    if o:
-        video.audio.write_audiofile(f'{path.replace(filename, o)}.mp3')
-    else:
-        video.audio.write_audiofile(path.replace(".mp4", ".mp3"))
+    p = Path(path)
+    out = str(p.with_name(o + '.mp3') if o else p.with_suffix('.mp3'))
+    ffmpeg = imageio_ffmpeg.get_ffmpeg_exe()
+
+    info = subprocess.run([ffmpeg, '-hide_banner', '-i', path], capture_output=True, text=True)
+    match = re.search(r'Duration: (\d+):(\d+):(\d+\.\d+)', info.stderr)
+    total = int(match.group(1)) * 3600 + int(match.group(2)) * 60 + float(match.group(3)) if match else 0
+
+    cmd = [ffmpeg, '-y', '-hide_banner', '-loglevel', 'error', '-i', path,
+           '-vn', '-q:a', '0', '-progress', 'pipe:1', out]
+
+    proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+
+    with Progress(
+        TextColumn("[bold cyan]Extracting"),
+        BarColumn(),
+        "[progress.percentage]{task.percentage:>3.0f}%",
+        TimeElapsedColumn(),
+    ) as progress:
+        task = progress.add_task("", total=total)
+        for line in proc.stdout:
+            if line.startswith('out_time_ms='):
+                try:
+                    ms = int(line.strip().split('=')[1])
+                    progress.update(task, completed=min(ms / 1_000_000, total))
+                except ValueError:
+                    pass
+
+    proc.wait()
+    if proc.returncode != 0:
+        raise click.ClickException(proc.stderr.read())
 
 
 @audio_group.command(help='cut a audio')
 @click.argument('path', metavar='<path>', type=click.Path(exists=True))
-@click.option('-o', type=click.STRING, help='output video name, default=original_name')
+@click.option('-s', is_flag=True, help='overwrite original file')
 @click.option('-i', type=(int, int, int), help='initial time for cut. Put in format (hh mm ss)')
 @click.option('-f', type=(int, int, int), help='final time for cut. Put in format (hh mm ss)')
-def cut(path, o, i, f):
-    audio = AudioFileClip(path)
-    filename = get_last(path)
-    initial_time = tuple_to_seconds(i)
-    final_time = tuple_to_seconds(f)
-    clip = audio.subclip(initial_time, final_time)
-    if o:
-        clip.write_audiofile(f'{path.replace(filename, o)}.mp3')
-    else:
-        clip.write_audiofile(path)
+def cut(path, s, i, f):
+    p = Path(path)
+    out = path if s else str(p.with_stem(p.stem + '_cutted'))
+    ffmpeg = imageio_ffmpeg.get_ffmpeg_exe()
+    info = subprocess.run([ffmpeg, '-hide_banner', '-i', path], capture_output=True, text=True)
+    match = re.search(r'Duration: (\d+):(\d+):(\d+\.\d+)', info.stderr)
+    total = int(match.group(1)) * 3600 + int(match.group(2)) * 60 + float(match.group(3)) if match else 0
+    start_t = tuple_to_seconds(i) if i else 0
+    end_t = tuple_to_seconds(f) if f else total
+    cut_duration = end_t - start_t
+
+    cmd = [ffmpeg, '-y', '-hide_banner', '-loglevel', 'error', '-i', path]
+    if i:
+        cmd += ['-ss', str(start_t)]
+    if f:
+        cmd += ['-to', str(end_t)]
+    cmd += ['-c', 'copy', '-progress', 'pipe:1', out]
+
+    proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+
+    with Progress(
+        TextColumn("[bold cyan]Cutting"),
+        BarColumn(),
+        "[progress.percentage]{task.percentage:>3.0f}%",
+        TimeElapsedColumn(),
+    ) as progress:
+        task = progress.add_task("", total=cut_duration)
+        for line in proc.stdout:
+            if line.startswith('out_time_ms='):
+                try:
+                    ms = int(line.strip().split('=')[1])
+                    progress.update(task, completed=min(ms / 1_000_000, cut_duration))
+                except ValueError:
+                    pass
+
+    proc.wait()
+    if proc.returncode != 0:
+        raise click.ClickException(proc.stderr.read())

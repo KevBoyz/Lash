@@ -23,7 +23,7 @@ def crypt(p, key, dc, ex, cl, v):
     Encrypt/Decrypt files with AES algorithm
 
     \b
-    Save the <key> you need her to decode
+    Save the <key> you need here to decode
     The key NEED have 16 characters (128bits)
     \b
     Ex: crypt -ex ...\text.txt $kvzis1@7y602qsx
@@ -160,7 +160,7 @@ def zip_group():
     ...
 
 
-@zip_group.command(help='See the files on a zip')
+@zip_group.command(help='List files inside a ZIP archive')
 @click.argument('path', metavar='<path>', type=click.Path(exists=True))
 def view(path):
     fn = get_file(path)

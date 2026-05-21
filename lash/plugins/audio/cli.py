@@ -14,7 +14,7 @@ def audio_group():
     ...
 
 
-@audio_group.command(help='convert a mp4 video on an mp3 file')
+@audio_group.command(help='Extract audio from a video file and save as MP3')
 @click.argument('path', metavar='<path>', type=click.Path(exists=True))
 @click.option('-o', type=click.STRING, help='output file name without extension')
 def get(path, o):
@@ -51,11 +51,11 @@ def get(path, o):
         raise click.ClickException(proc.stderr.read())
 
 
-@audio_group.command(help='cut a audio')
+@audio_group.command(help='Cut a segment from an audio file')
 @click.argument('path', metavar='<path>', type=click.Path(exists=True))
-@click.option('-s', is_flag=True, help='overwrite original file')
-@click.option('-i', type=(int, int, int), help='initial time for cut. Put in format (hh mm ss)')
-@click.option('-f', type=(int, int, int), help='final time for cut. Put in format (hh mm ss)')
+@click.option('-s', is_flag=True, help='Overwrite the original file')
+@click.option('-i', type=(int, int, int), help='Start time as h m s (e.g. -i 0 1 30)')
+@click.option('-f', type=(int, int, int), help='End time as h m s (e.g. -f 0 3 0)')
 def cut(path, s, i, f):
     p = Path(path)
     out = path if s else str(p.with_stem(p.stem + '_cutted'))

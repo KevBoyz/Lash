@@ -12,7 +12,7 @@ def _fmt_eta(seconds):
     return f"{int(seconds // 3600)}h {int((seconds % 3600) // 60)}m"
 
 
-@click.group('crack', short_help='Use the brute force')
+@click.group('crack', short_help='Brute-force password cracking')
 def crack():
     """
     Set of commands to crack passwords

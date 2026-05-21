@@ -14,10 +14,21 @@ def audio_group():
     ...
 
 
-@audio_group.command(help='Extract audio from a video file and save as MP3')
+@audio_group.command()
 @click.argument('path', metavar='<path>', type=click.Path(exists=True))
-@click.option('-o', type=click.STRING, help='output file name without extension')
+@click.option('-o', type=click.STRING, help='Output file name without extension')
 def get(path, o):
+    """Extract audio from a video file and save as MP3.
+
+    \b
+    Output is saved in the same folder as the input file.
+    Use -o to set a custom output name (no extension needed).
+
+    \b
+    Example:
+      lash audio get video.mp4
+      lash audio get video.mp4 -o my_audio
+    """
     p = Path(path)
     out = str(p.with_name(o + '.mp3') if o else p.with_suffix('.mp3'))
     ffmpeg = imageio_ffmpeg.get_ffmpeg_exe()
@@ -51,12 +62,24 @@ def get(path, o):
         raise click.ClickException(proc.stderr.read())
 
 
-@audio_group.command(help='Cut a segment from an audio file')
+@audio_group.command()
 @click.argument('path', metavar='<path>', type=click.Path(exists=True))
 @click.option('-s', is_flag=True, help='Overwrite the original file')
 @click.option('-i', type=(int, int, int), help='Start time as h m s (e.g. -i 0 1 30)')
 @click.option('-f', type=(int, int, int), help='End time as h m s (e.g. -f 0 3 0)')
 def cut(path, s, i, f):
+    """Cut a segment from an audio file.
+
+    \b
+    Output is saved as <name>_cutted.<ext> by default.
+    Use -s to overwrite the original file.
+    Omitting -i starts from the beginning; omitting -f goes to the end.
+
+    \b
+    Example:
+      lash audio cut song.mp3 -i 0 0 30 -f 0 2 0
+      lash audio cut song.mp3 -s -f 0 1 30
+    """
     p = Path(path)
     out = path if s else str(p.with_stem(p.stem + '_cutted'))
     ffmpeg = imageio_ffmpeg.get_ffmpeg_exe()

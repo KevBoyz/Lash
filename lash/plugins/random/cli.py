@@ -2,7 +2,7 @@ import click
 from lash.plugins.random.core import get_size, gen_random, file_save
 
 
-@click.command(help='Generate random sequences')
+@click.command()
 @click.option('-c', type=click.INT, default=5, show_default=True, help='Number of characters')
 @click.option('-n', is_flag=True, help='Enable numbers', default=True, show_default=True)
 @click.option('-l', 'letters', is_flag=True, help='Enable letters', default=False, show_default=True)
@@ -10,6 +10,18 @@ from lash.plugins.random.core import get_size, gen_random, file_save
 @click.option('-ul', is_flag=True, help='Enable Uppers and lowers for letters', default=False, show_default=True)
 @click.option('-f', help='Write output on txt file', is_flag=True, default=False, show_default=True)
 def random(c, n, letters, s, ul, f):
+    """Generate a random sequence of characters.
+
+    \b
+    Defaults to numbers only. Add flags to include other character sets.
+    -ul enables uppercase and lowercase (only useful with -l).
+
+    \b
+    Example:
+      lash random                      # 5 digits
+      lash random -c 16 -l -s          # 16 chars: letters + symbols
+      lash random -c 8 -l -ul -f       # 8 alphanumeric chars, save to file
+    """
     size = get_size(c, n, letters, s)
     random_seq = gen_random(size, n, s, letters, ul)
     if len(random_seq) < c:

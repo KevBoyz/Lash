@@ -6,8 +6,19 @@ from datetime import datetime
 from lash.plugins.monitor.core import getListOfProcessSortedByMemory
 
 
-@click.command(help='Real-time TUI dashboard for CPU, RAM, disk, and processes')
+@click.command()
 def monitor():
+    """Real-time TUI dashboard for CPU, RAM, disk, and processes.
+
+    \b
+    Displays:
+      - CPU usage percentage and historical graph
+      - RAM and disk usage
+      - Machine info: cores, threads, frequency, boot time
+      - Top processes by memory usage
+
+    Press Ctrl+C to exit.
+    """
     tui = HSplit(
         VSplit(
             VGauge(val=100, title='Ram Usage', border_color=2),

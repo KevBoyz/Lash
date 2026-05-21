@@ -36,12 +36,30 @@ def keyhold(key):
         click.echo(f'Error: {e}', err=True)
 
 
-@click.command(help='Auto clicker')
-@click.option('-cd', type=click.FLOAT, default=0.0, help='Click delay (seconds)')
-@click.option('-ch', is_flag=True, default=False, show_default=True, help='Enable click and hold')
-@click.option('-sg', is_flag=True, default=False, show_default=True, help='Do a single click')
-@click.option('-db', is_flag=True, default=False, show_default=True, help='Do a double click')
+@click.command()
+@click.option('-cd', type=click.FLOAT, default=0.0, help='Interval between clicks in seconds')
+@click.option('-ch', is_flag=True, default=False, show_default=True, help='Click and hold mode (click to release)')
+@click.option('-sg', is_flag=True, default=False, show_default=True, help='Single click and exit')
+@click.option('-db', is_flag=True, default=False, show_default=True, help='Double click and exit')
 def autoclick(cd, ch, sg, db):
+    """Auto clicker — simulates mouse clicks repeatedly.
+
+    \b
+    Default mode: repeats clicks at the given interval.
+      F4 to start, F3 to stop.
+
+    \b
+    Modes:
+      -ch   Click and hold. F4 to start, click to release.
+      -sg   Single click immediately and exit.
+      -db   Double click immediately and exit.
+
+    \b
+    Example:
+      lash autoclick -cd 0.5     # click every 0.5 seconds
+      lash autoclick -ch         # hold left mouse button
+      lash autoclick -sg         # one click and done
+    """
     if sg:
         run_autoclick_single()
     elif db:

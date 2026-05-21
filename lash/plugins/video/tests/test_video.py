@@ -47,7 +47,6 @@ class TestGetExt:
 
     def test_path_arg_returns_segment_after_last_backslash(self):
         from lash.plugins.video.core import get_ext
-        # when `path` is provided, returns everything after the last backslash
         result = get_ext(path="C:\\Users\\kevin\\video.mp4")
         assert result == "video.mp4"
 
@@ -58,7 +57,6 @@ class TestGetExt:
 
     def test_file_extension_with_multiple_dots(self):
         from lash.plugins.video.core import get_ext
-        # rfind('.') picks the last dot
         assert get_ext(file="my.video.clip.mp4") == ".mp4"
 
 
@@ -75,7 +73,6 @@ class TestPathNoFile:
 
     def test_filename_only_returns_empty_string(self):
         from lash.plugins.video.core import path_no_file
-        # get_last returns the whole string; replacing it leaves ''
         result = path_no_file("video.mp4")
         assert result == ""
 
@@ -117,6 +114,21 @@ class TestTupleToSeconds:
         assert isinstance(result, int)
 
 
+def _make_proc(returncode=0):
+    from unittest.mock import MagicMock
+    proc = MagicMock()
+    proc.stdout = iter([])
+    proc.returncode = returncode
+    return proc
+
+
+def _make_run(duration_str='Duration: 00:01:00.00'):
+    from unittest.mock import MagicMock
+    run = MagicMock()
+    run.stderr = duration_str
+    return run
+
+
 class TestResumeCommand:
     def test_resume_calls_write_videofile_with_correct_path(self, tmp_path):
         from unittest.mock import patch, MagicMock
@@ -128,20 +140,16 @@ class TestResumeCommand:
 
         mock_clip = MagicMock()
         mock_clip.duration = 130.0
-        mock_sub = MagicMock()
-        mock_clip.subclip.return_value = mock_sub
+        mock_clip.subclipped.return_value = MagicMock()
         mock_clip.without_audio.return_value = mock_clip
-
         mock_concat = MagicMock()
 
         with patch("lash.plugins.video.cli.VideoFileClip", return_value=mock_clip), \
              patch("lash.plugins.video.cli.concatenate_videoclips", return_value=mock_concat):
-            runner = CliRunner()
-            runner.invoke(resume, [str(dummy)])
+            CliRunner().invoke(resume, [str(dummy)])
 
-        expected_name = "my_clip-resume.mp4"
-        expected_path = str(tmp_path / expected_name)
-        mock_concat.write_videofile.assert_called_once_with(expected_path)
+        expected_path = str(tmp_path / "my_clip-resume.mp4")
+        mock_concat.write_videofile.assert_called_once_with(expected_path, logger=None)
 
     def test_resume_uses_without_audio(self, tmp_path):
         from unittest.mock import patch, MagicMock
@@ -154,17 +162,16 @@ class TestResumeCommand:
         mock_clip = MagicMock()
         mock_clip.duration = 26.0
         mock_clip.without_audio.return_value = mock_clip
-        mock_clip.subclip.return_value = MagicMock()
+        mock_clip.subclipped.return_value = MagicMock()
         mock_concat = MagicMock()
 
         with patch("lash.plugins.video.cli.VideoFileClip", return_value=mock_clip), \
              patch("lash.plugins.video.cli.concatenate_videoclips", return_value=mock_concat):
-            runner = CliRunner()
-            runner.invoke(resume, [str(dummy)])
+            CliRunner().invoke(resume, [str(dummy)])
 
         mock_clip.without_audio.assert_called_once()
 
-    def test_resume_subclip_called_twelve_times(self, tmp_path):
+    def test_resume_subclipped_called_twelve_times(self, tmp_path):
         from unittest.mock import patch, MagicMock
         from click.testing import CliRunner
         from lash.plugins.video.cli import resume
@@ -175,15 +182,14 @@ class TestResumeCommand:
         mock_clip = MagicMock()
         mock_clip.duration = 120.0
         mock_clip.without_audio.return_value = mock_clip
-        mock_clip.subclip.return_value = MagicMock()
+        mock_clip.subclipped.return_value = MagicMock()
         mock_concat = MagicMock()
 
         with patch("lash.plugins.video.cli.VideoFileClip", return_value=mock_clip), \
              patch("lash.plugins.video.cli.concatenate_videoclips", return_value=mock_concat):
-            runner = CliRunner()
-            runner.invoke(resume, [str(dummy)])
+            CliRunner().invoke(resume, [str(dummy)])
 
-        assert mock_clip.subclip.call_count == 12
+        assert mock_clip.subclipped.call_count == 12
 
     def test_resume_concatenate_called_with_compose_method(self, tmp_path):
         from unittest.mock import patch, MagicMock
@@ -196,272 +202,176 @@ class TestResumeCommand:
         mock_clip = MagicMock()
         mock_clip.duration = 60.0
         mock_clip.without_audio.return_value = mock_clip
-        mock_clip.subclip.return_value = MagicMock()
+        mock_clip.subclipped.return_value = MagicMock()
         mock_concat = MagicMock()
 
         with patch("lash.plugins.video.cli.VideoFileClip", return_value=mock_clip), \
              patch("lash.plugins.video.cli.concatenate_videoclips", return_value=mock_concat) as mock_cc:
-            runner = CliRunner()
-            runner.invoke(resume, [str(dummy)])
+            CliRunner().invoke(resume, [str(dummy)])
 
         _, kwargs = mock_cc.call_args
         assert kwargs.get("method") == "compose"
 
 
 class TestCutCommand:
-    def test_cut_calls_subclip_with_correct_seconds(self, tmp_path):
-        from unittest.mock import patch, MagicMock
+    def test_cut_with_both_times(self, tmp_path):
+        from unittest.mock import patch
         from click.testing import CliRunner
         from lash.plugins.video.cli import cut
 
         dummy = tmp_path / "clip.mp4"
-        dummy.write_bytes(b"")
+        dummy.write_bytes(b"fake")
 
-        mock_video = MagicMock()
-        mock_subclip = MagicMock()
-        mock_video.subclip.return_value = mock_subclip
+        with patch("subprocess.run", return_value=_make_run()), \
+             patch("subprocess.Popen", return_value=_make_proc()) as mock_popen, \
+             patch("imageio_ffmpeg.get_ffmpeg_exe", return_value="ffmpeg"):
+            CliRunner().invoke(cut, [str(dummy), "-i", "0", "0", "10", "-f", "0", "1", "0"])
 
-        with patch("lash.plugins.video.cli.VideoFileClip", return_value=mock_video):
-            runner = CliRunner()
-            runner.invoke(cut, [
-                str(dummy),
-                "-i", "0", "0", "10",
-                "-f", "0", "1", "0",
-            ])
+        args = mock_popen.call_args[0][0]
+        assert "-ss" in args and args[args.index("-ss") + 1] == "10"
+        assert "-to" in args and args[args.index("-to") + 1] == "60"
 
-        # initial=10s, final=60s
-        mock_video.subclip.assert_called_once_with(10, 60)
-
-    def test_cut_with_hours_minutes_seconds(self, tmp_path):
-        from unittest.mock import patch, MagicMock
+    def test_cut_only_i(self, tmp_path):
+        from unittest.mock import patch
         from click.testing import CliRunner
         from lash.plugins.video.cli import cut
 
-        dummy = tmp_path / "long.mp4"
-        dummy.write_bytes(b"")
+        dummy = tmp_path / "clip.mp4"
+        dummy.write_bytes(b"fake")
 
-        mock_video = MagicMock()
-        mock_video.subclip.return_value = MagicMock()
+        with patch("subprocess.run", return_value=_make_run()), \
+             patch("subprocess.Popen", return_value=_make_proc()) as mock_popen, \
+             patch("imageio_ffmpeg.get_ffmpeg_exe", return_value="ffmpeg"):
+            CliRunner().invoke(cut, [str(dummy), "-i", "0", "0", "30"])
 
-        with patch("lash.plugins.video.cli.VideoFileClip", return_value=mock_video):
-            runner = CliRunner()
-            runner.invoke(cut, [
-                str(dummy),
-                "-i", "1", "0", "0",
-                "-f", "1", "30", "0",
-            ])
+        args = mock_popen.call_args[0][0]
+        assert "-ss" in args
+        assert "-to" not in args
 
-        # initial=3600s, final=5400s
-        mock_video.subclip.assert_called_once_with(3600, 5400)
-
-    def test_cut_with_o_writes_to_custom_output(self, tmp_path):
-        from unittest.mock import patch, MagicMock
+    def test_cut_only_f(self, tmp_path):
+        from unittest.mock import patch
         from click.testing import CliRunner
         from lash.plugins.video.cli import cut
 
-        dummy = tmp_path / "video.mp4"
-        dummy.write_bytes(b"")
+        dummy = tmp_path / "clip.mp4"
+        dummy.write_bytes(b"fake")
 
-        mock_video = MagicMock()
-        mock_subclip = MagicMock()
-        mock_video.subclip.return_value = mock_subclip
+        with patch("subprocess.run", return_value=_make_run()), \
+             patch("subprocess.Popen", return_value=_make_proc()) as mock_popen, \
+             patch("imageio_ffmpeg.get_ffmpeg_exe", return_value="ffmpeg"):
+            CliRunner().invoke(cut, [str(dummy), "-f", "0", "0", "30"])
 
-        with patch("lash.plugins.video.cli.VideoFileClip", return_value=mock_video):
-            runner = CliRunner()
-            runner.invoke(cut, [
-                str(dummy),
-                "-o", "output",
-                "-i", "0", "0", "0",
-                "-f", "0", "0", "30",
-            ])
+        args = mock_popen.call_args[0][0]
+        assert "-to" in args
+        assert "-ss" not in args
 
-        from lash.plugins.video.core import get_last
-        filename = get_last(str(dummy))
-        expected = f'{str(dummy).replace(filename, "output")}.mp4'
-        mock_subclip.write_videofile.assert_called_once_with(expected)
-
-    def test_cut_without_o_writes_to_original_path(self, tmp_path):
-        from unittest.mock import patch, MagicMock
+    def test_cut_default_output_name(self, tmp_path):
+        from unittest.mock import patch
         from click.testing import CliRunner
         from lash.plugins.video.cli import cut
 
-        dummy = tmp_path / "video.mp4"
-        dummy.write_bytes(b"")
+        dummy = tmp_path / "clip.mp4"
+        dummy.write_bytes(b"fake")
 
-        mock_video = MagicMock()
-        mock_subclip = MagicMock()
-        mock_video.subclip.return_value = mock_subclip
+        with patch("subprocess.run", return_value=_make_run()), \
+             patch("subprocess.Popen", return_value=_make_proc()) as mock_popen, \
+             patch("imageio_ffmpeg.get_ffmpeg_exe", return_value="ffmpeg"):
+            CliRunner().invoke(cut, [str(dummy), "-f", "0", "0", "30"])
 
-        with patch("lash.plugins.video.cli.VideoFileClip", return_value=mock_video):
-            runner = CliRunner()
-            runner.invoke(cut, [
-                str(dummy),
-                "-i", "0", "0", "0",
-                "-f", "0", "0", "10",
-            ])
+        args = mock_popen.call_args[0][0]
+        assert args[-1] == str(tmp_path / "clip_cutted.mp4")
 
-        mock_subclip.write_videofile.assert_called_once_with(str(dummy))
-
-    def test_cut_zero_to_zero_calls_subclip(self, tmp_path):
-        from unittest.mock import patch, MagicMock
+    def test_cut_s_flag_keeps_original_name(self, tmp_path):
+        from unittest.mock import patch
         from click.testing import CliRunner
         from lash.plugins.video.cli import cut
 
-        dummy = tmp_path / "video.mp4"
-        dummy.write_bytes(b"")
+        dummy = tmp_path / "clip.mp4"
+        dummy.write_bytes(b"fake")
 
-        mock_video = MagicMock()
-        mock_video.subclip.return_value = MagicMock()
+        with patch("subprocess.run", return_value=_make_run()), \
+             patch("subprocess.Popen", return_value=_make_proc()) as mock_popen, \
+             patch("imageio_ffmpeg.get_ffmpeg_exe", return_value="ffmpeg"):
+            CliRunner().invoke(cut, [str(dummy), "-s", "-f", "0", "0", "30"])
 
-        with patch("lash.plugins.video.cli.VideoFileClip", return_value=mock_video):
-            runner = CliRunner()
-            runner.invoke(cut, [
-                str(dummy),
-                "-i", "0", "0", "0",
-                "-f", "0", "0", "0",
-            ])
-
-        mock_video.subclip.assert_called_once_with(0, 0)
+        args = mock_popen.call_args[0][0]
+        assert args[-1] == str(dummy)
 
 
 class TestIntroCommand:
-    def test_intro_concatenates_intro_then_video(self, tmp_path):
-        from unittest.mock import patch, MagicMock
+    def test_intro_default_output(self, tmp_path):
+        from unittest.mock import patch
         from click.testing import CliRunner
         from lash.plugins.video.cli import intro
 
         video_file = tmp_path / "main.mp4"
         intro_file = tmp_path / "intro.mp4"
-        video_file.write_bytes(b"")
-        intro_file.write_bytes(b"")
+        video_file.write_bytes(b"fake")
+        intro_file.write_bytes(b"fake")
 
-        mock_video = MagicMock()
-        mock_intro = MagicMock()
-        mock_composed = MagicMock()
+        with patch("subprocess.run", return_value=_make_run()), \
+             patch("subprocess.Popen", return_value=_make_proc()) as mock_popen, \
+             patch("imageio_ffmpeg.get_ffmpeg_exe", return_value="ffmpeg"):
+            CliRunner().invoke(intro, [str(video_file), str(intro_file)])
 
-        def fake_vfc(path):
-            if path == str(video_file):
-                return mock_video
-            return mock_intro
+        args = mock_popen.call_args[0][0]
+        assert args[-1] == str(tmp_path / "main_with_intro.mp4")
 
-        with patch("lash.plugins.video.cli.VideoFileClip", side_effect=fake_vfc), \
-             patch("lash.plugins.video.cli.concatenate_videoclips", return_value=mock_composed) as mock_cc:
-            runner = CliRunner()
-            runner.invoke(intro, [str(video_file), str(intro_file)])
-
-        args, _ = mock_cc.call_args
-        assert args[0] == [mock_intro, mock_video]
-
-    def test_intro_without_o_writes_to_original_path(self, tmp_path):
-        from unittest.mock import patch, MagicMock
+    def test_intro_s_flag_overwrites_original(self, tmp_path):
+        from unittest.mock import patch
         from click.testing import CliRunner
         from lash.plugins.video.cli import intro
 
         video_file = tmp_path / "main.mp4"
         intro_file = tmp_path / "intro.mp4"
-        video_file.write_bytes(b"")
-        intro_file.write_bytes(b"")
+        video_file.write_bytes(b"fake")
+        intro_file.write_bytes(b"fake")
 
-        mock_composed = MagicMock()
+        with patch("subprocess.run", return_value=_make_run()), \
+             patch("subprocess.Popen", return_value=_make_proc()) as mock_popen, \
+             patch("imageio_ffmpeg.get_ffmpeg_exe", return_value="ffmpeg"):
+            CliRunner().invoke(intro, [str(video_file), str(intro_file), "-s"])
 
-        with patch("lash.plugins.video.cli.VideoFileClip", return_value=MagicMock()), \
-             patch("lash.plugins.video.cli.concatenate_videoclips", return_value=mock_composed):
-            runner = CliRunner()
-            runner.invoke(intro, [str(video_file), str(intro_file)])
-
-        mock_composed.write_videofile.assert_called_once_with(str(video_file))
-
-    def test_intro_with_o_writes_to_custom_output(self, tmp_path):
-        from unittest.mock import patch, MagicMock
-        from click.testing import CliRunner
-        from lash.plugins.video.cli import intro
-
-        video_file = tmp_path / "main.mp4"
-        intro_file = tmp_path / "intro.mp4"
-        video_file.write_bytes(b"")
-        intro_file.write_bytes(b"")
-
-        mock_composed = MagicMock()
-
-        with patch("lash.plugins.video.cli.VideoFileClip", return_value=MagicMock()), \
-             patch("lash.plugins.video.cli.concatenate_videoclips", return_value=mock_composed):
-            runner = CliRunner()
-            runner.invoke(intro, [str(video_file), str(intro_file), "-o", "final"])
-
-        from lash.plugins.video.core import get_last
-        filename = get_last(str(video_file))
-        expected = f'{str(video_file).replace(filename, "final")}.mp4'
-        mock_composed.write_videofile.assert_called_once_with(expected)
+        args = mock_popen.call_args[0][0]
+        assert args[-1] == str(video_file)
 
 
 class TestEndCommand:
-    def test_end_concatenates_video_then_end(self, tmp_path):
-        from unittest.mock import patch, MagicMock
+    def test_end_default_output(self, tmp_path):
+        from unittest.mock import patch
         from click.testing import CliRunner
         from lash.plugins.video.cli import end
 
         video_file = tmp_path / "main.mp4"
         end_file = tmp_path / "credits.mp4"
-        video_file.write_bytes(b"")
-        end_file.write_bytes(b"")
+        video_file.write_bytes(b"fake")
+        end_file.write_bytes(b"fake")
 
-        mock_video = MagicMock()
-        mock_end = MagicMock()
-        mock_composed = MagicMock()
+        with patch("subprocess.run", return_value=_make_run()), \
+             patch("subprocess.Popen", return_value=_make_proc()) as mock_popen, \
+             patch("imageio_ffmpeg.get_ffmpeg_exe", return_value="ffmpeg"):
+            CliRunner().invoke(end, [str(video_file), str(end_file)])
 
-        def fake_vfc(path):
-            if path == str(video_file):
-                return mock_video
-            return mock_end
+        args = mock_popen.call_args[0][0]
+        assert args[-1] == str(tmp_path / "main_with_end.mp4")
 
-        with patch("lash.plugins.video.cli.VideoFileClip", side_effect=fake_vfc), \
-             patch("lash.plugins.video.cli.concatenate_videoclips", return_value=mock_composed) as mock_cc:
-            runner = CliRunner()
-            runner.invoke(end, [str(video_file), str(end_file)])
-
-        args, _ = mock_cc.call_args
-        assert args[0] == [mock_video, mock_end]
-
-    def test_end_without_o_writes_to_original_path(self, tmp_path):
-        from unittest.mock import patch, MagicMock
+    def test_end_s_flag_overwrites_original(self, tmp_path):
+        from unittest.mock import patch
         from click.testing import CliRunner
         from lash.plugins.video.cli import end
 
         video_file = tmp_path / "main.mp4"
         end_file = tmp_path / "credits.mp4"
-        video_file.write_bytes(b"")
-        end_file.write_bytes(b"")
+        video_file.write_bytes(b"fake")
+        end_file.write_bytes(b"fake")
 
-        mock_composed = MagicMock()
+        with patch("subprocess.run", return_value=_make_run()), \
+             patch("subprocess.Popen", return_value=_make_proc()) as mock_popen, \
+             patch("imageio_ffmpeg.get_ffmpeg_exe", return_value="ffmpeg"):
+            CliRunner().invoke(end, [str(video_file), str(end_file), "-s"])
 
-        with patch("lash.plugins.video.cli.VideoFileClip", return_value=MagicMock()), \
-             patch("lash.plugins.video.cli.concatenate_videoclips", return_value=mock_composed):
-            runner = CliRunner()
-            runner.invoke(end, [str(video_file), str(end_file)])
-
-        mock_composed.write_videofile.assert_called_once_with(str(video_file))
-
-    def test_end_with_o_writes_to_custom_output(self, tmp_path):
-        from unittest.mock import patch, MagicMock
-        from click.testing import CliRunner
-        from lash.plugins.video.cli import end
-
-        video_file = tmp_path / "main.mp4"
-        end_file = tmp_path / "credits.mp4"
-        video_file.write_bytes(b"")
-        end_file.write_bytes(b"")
-
-        mock_composed = MagicMock()
-
-        with patch("lash.plugins.video.cli.VideoFileClip", return_value=MagicMock()), \
-             patch("lash.plugins.video.cli.concatenate_videoclips", return_value=mock_composed):
-            runner = CliRunner()
-            runner.invoke(end, [str(video_file), str(end_file), "-o", "with_credits"])
-
-        from lash.plugins.video.core import get_last
-        filename = get_last(str(video_file))
-        expected = f'{str(video_file).replace(filename, "with_credits")}.mp4'
-        mock_composed.write_videofile.assert_called_once_with(expected)
+        args = mock_popen.call_args[0][0]
+        assert args[-1] == str(video_file)
 
 
 class TestBuildCommand:

@@ -176,12 +176,24 @@ def view(path):
             print(file)
 
 
-@zip_group.command(help='Compress a folder in zip archive')
+@zip_group.command()
 @click.argument('path', metavar='<path>', type=click.Path(exists=True))
-@click.option('-fn', type=click.STRING, help='Output file name')
-@click.option('-v', is_flag=True, default=True, show_default=True, help='Verbose mode ')
-@click.option('-fo', is_flag=True, default=False, show_default=True, help='Files only mode')
+@click.option('-fn', type=click.STRING, help='Output archive name (no extension needed)')
+@click.option('-v', is_flag=True, default=True, show_default=True, help='Verbose mode')
+@click.option('-fo', is_flag=True, default=False, show_default=True, help='Flatten: include files only, no subdirectory structure')
 def compress(path, fn, v, fo):
+    """Compress a folder into a ZIP archive.
+
+    \b
+    Output is saved in the parent folder of the target directory.
+    Use -fn to set a custom archive name.
+    With -fo, only files are included (directory structure is flattened).
+
+    \b
+    Example:
+      lash zip compress ./my_folder
+      lash zip compress ./my_folder -fn backup -fo
+    """
     if not fn:
         fn = get_last(path=path) + '.zip'
     else:
@@ -237,11 +249,23 @@ def compress(path, fn, v, fo):
     print(f'[bright_green]Saved in[/bright_green] [bright_blue]{os.path.join(os.getcwd(), fn)}[/bright_blue]\n')
 
 
-@zip_group.command(help='Extract zipfile')
+@zip_group.command()
 @click.argument('path', metavar='<file_path>', type=click.Path(exists=True))
-@click.option('-to', type=click.Path(exists=True), help='Extract to')
-@click.option('-v', is_flag=True, default=False, show_default=True, help='Verbose mode ')
+@click.option('-to', type=click.Path(exists=True), help='Destination folder (default: current directory)')
+@click.option('-v', is_flag=True, default=False, show_default=True, help='Verbose mode')
 def extract(path, to, v, ex=0):
+    """Extract a ZIP archive.
+
+    \b
+    Extracts to the current directory by default.
+    Use -to to specify a destination folder.
+    Use -v to see each file as it is extracted.
+
+    \b
+    Example:
+      lash zip extract archive.zip
+      lash zip extract archive.zip -to ./output -v
+    """
     fn = get_file(path)
     if not fn.endswith('.zip'):
         fn += '.zip'
@@ -268,10 +292,20 @@ def extract(path, to, v, ex=0):
     print(f'[green]Process completed: {ex} files extracted[/green]')
 
 
-@zip_group.command(help='Encode a zipfile')
+@zip_group.command()
 @click.argument('path', metavar='<file_path>', type=click.Path(exists=True))
 @click.argument('password', type=click.STRING)
 def encode(path, password):
+    """Encrypt a ZIP file with a password.
+
+    \b
+    Creates a new file prefixed with 'enc-' alongside the original.
+    The original file is not modified or deleted.
+
+    \b
+    Example:
+      lash zip encode archive.zip mysecretpassword
+    """
     try:
         os.chdir(path_no_file(path))
         file = get_file(path)

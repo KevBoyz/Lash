@@ -171,9 +171,9 @@ def adjust(path, all, c, t, ct, b, s, sh):
 @click.option('-c', '-compare', is_flag=True, help='Compare the original image with the edited')
 @click.option('-t', '-test', is_flag=True, help='Just test the editor, don\'t save the edition')
 @click.option('-b', '-blur', is_flag=True, help='Apply blur filter')
-@click.option('-co', '-blur', is_flag=True, help='Apply contour filter')
-@click.option('-d', '-blur', is_flag=True, help='Apply detail filter')
-@click.option('-e', '-blur', is_flag=True, help='Apply emboss filter')
+@click.option('-co', '-contour', is_flag=True, help='Apply contour filter')
+@click.option('-d', '-detail', is_flag=True, help='Apply detail filter')
+@click.option('-e', '-emboss', is_flag=True, help='Apply emboss filter')
 @click.option('-k', '-kbzup', is_flag=True, help='Apply kbzup filter')
 def filter(path, all, c, t, b, co, d, e, k):
     """

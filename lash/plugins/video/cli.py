@@ -22,7 +22,7 @@ from lash.plugins.video.core import (
 console = Console()
 
 
-@click.group('video', help='Video tools')
+@click.group('video', help='Record, edit, and assemble videos')
 def video():
     ...
 

@@ -155,7 +155,7 @@ def organize(path, t, m, d, o, s, v):
         click.echo(f'Error: {e}', err=True)
 
 
-@click.group('zip', help='Zip tools')
+@click.group('zip', help='Compress, extract, and inspect ZIP archives')
 def zip_group():
     ...
 

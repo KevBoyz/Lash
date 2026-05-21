@@ -8,7 +8,7 @@ from lash.plugins.image.core import (
 )
 
 
-@click.group('image', help='Massive Image Handler')
+@click.group('image', help='Batch image editor: flip, resize, filter, watermark')
 def image():
     ...
 

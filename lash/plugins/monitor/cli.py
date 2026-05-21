@@ -6,7 +6,7 @@ from datetime import datetime
 from lash.plugins.monitor.core import getListOfProcessSortedByMemory
 
 
-@click.command(help='System panel')
+@click.command(help='Real-time TUI dashboard for CPU, RAM, disk, and processes')
 def monitor():
     tui = HSplit(
         VSplit(

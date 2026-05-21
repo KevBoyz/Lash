@@ -9,7 +9,7 @@ from rich.progress import BarColumn, Progress, TextColumn, TimeElapsedColumn
 from lash.plugins.audio.core import tuple_to_seconds
 
 
-@click.group('audio', help='Audio tools')
+@click.group('audio', help='Extract and cut audio from media files')
 def audio_group():
     ...
 

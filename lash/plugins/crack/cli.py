@@ -20,16 +20,31 @@ def crack():
     ...
 
 
-@crack.command(short_help='Crack a zipfile')
+@crack.command(short_help='Crack a ZIP archive password')
 @click.argument('path', metavar='<path>', type=click.Path(exists=True))
-@click.option('-ln', type=click.INT, default=10, show_default=True, help='Maximum length')
-@click.option('-r', 'r', flag_value=False, default=True, show_default=True, help='Disable ramp')
-@click.option('-n', is_flag=True, default=False, show_default=True, help='Enable numbers')
+@click.option('-ln', type=click.INT, default=10, show_default=True, help='Max password length to try')
+@click.option('-r', 'r', flag_value=False, default=True, show_default=True,
+              help='Disable ramp (by default tries lengths 1 through -ln)')
+@click.option('-n', is_flag=True, default=False, show_default=True, help='Include numbers')
 @click.option('-l', 'letters', flag_value=False, default=True, show_default=True, help='Disable letters')
-@click.option('-s', is_flag=True, default=False, show_default=True, help='Enable symbols')
-@click.option('-sp', is_flag=True, default=False, show_default=True, help='Enable spaces')
+@click.option('-s', is_flag=True, default=False, show_default=True, help='Include symbols')
+@click.option('-sp', is_flag=True, default=False, show_default=True, help='Include spaces')
 def azip(path, ln, r, n, letters, s, sp):
-    """Attempt to crack the password of a ZIP archive using brute force."""
+    """Crack the password of a ZIP archive using brute force.
+
+    \b
+    By default tries letter-only combinations, ramping from 1 to -ln characters.
+    Ramp off (-r): tries only combinations of exactly -ln characters.
+
+    \b
+    Enable more character sets to expand the search space:
+      -n  numbers    -s  symbols    -sp spaces
+
+    \b
+    Example:
+      lash crack azip secrets.zip
+      lash crack azip secrets.zip -ln 6 -n -s
+    """
     total = total_combinations(ln, r, letters, n, s, sp)
     attempt_count = 0
     start_time = time.time()

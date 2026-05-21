@@ -38,14 +38,30 @@ def web(h, c):
         sys.exit(1)
 
 
-@spider.command("seeker", help="Background daemon that auto-discovers and connects to Spider servers")
+@spider.command("seeker")
 @click.argument("addresses", required=False)
 @click.argument("ports", required=False)
-@click.option("-s", "--stop", "do_stop", is_flag=True, help="Stop the running seeker")
+@click.option("-s", "--stop", "do_stop", is_flag=True, help="Stop the running seeker daemon")
 @click.option("-p", "--ping", "ping_interval", default=10, type=int,
-              help="Scan interval in seconds (default: 10)")
+              help="Scan interval in seconds")
 @click.option("--_daemon", "is_daemon", is_flag=True, hidden=True)
 def seeker(addresses, ports, do_stop, ping_interval, is_daemon):
+    """Background daemon — auto-discovers and connects to Spider servers.
+
+    \b
+    Scans the given addresses and ports for active Spider hosts.
+    When a server is found, connects automatically as a passive client.
+    Runs in the background; use --stop to terminate it.
+
+    \b
+    ADDRESSES  Comma-separated IPs (e.g. "192.168.1.1,192.168.1.2")
+    PORTS      Comma-separated ports (e.g. "8080,9090")
+
+    \b
+    Example:
+      lash spider seeker 192.168.1.1,192.168.1.2 8080,9090
+      lash spider seeker --stop
+    """
     from lash.plugins.spider.core import (
         read_pid, write_pid, is_pid_alive, spawn_daemon,
         stop_seeker as _stop_seeker, seeker_scan_loop,

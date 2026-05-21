@@ -47,7 +47,7 @@ def rm(task):
 @work_group.command("ls")
 @click.option("--done", is_flag=True, help="Show completed tasks")
 def ls(done):
-    """List tasks."""
+    """List pending tasks. An asterisk (*) marks the currently active task."""
     d = data_dir()
     tasks_path = d / "tasks.json"
     state = load_state(tasks_path)

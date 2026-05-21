@@ -17,10 +17,10 @@ def sched():
 @click.argument('s', metavar='<seconds>', type=click.INT, required=False, default=0)
 def run(command, s, m, h):
     """\b
-       Run the command repetitively at a given interval.
+       Run a command repeatedly at a given interval.
 
        \b
-       Example: run "help" 0 0 5 """
+       Example: sched run "python sync.py" 0 0 30 """
     if h <= 0 and m <= 0 and s <= 0:
         print('Error: Time delay is not defined')
         return
@@ -44,10 +44,10 @@ def run(command, s, m, h):
 @click.argument('s', metavar='<seconds>', type=click.INT, required=False, default=0)
 def wait(command, h, m, s):
     """
-        Wait x time, run a command once and exit.
+        Wait a given time, run a command once and exit.
 
         \b
-        Example: wait "help" 0 0 10
+        Example: sched wait "python backup.py" 0 0 10
     """
     t = h * 3600 + m * 60 + s
     for i in range(0, t):

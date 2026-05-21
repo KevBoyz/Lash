@@ -83,7 +83,7 @@ def resize(path, all, c, t, axis, d, r):
 
     \b
     $~ lash image resize -axis 400 300 C:\\Users\\User\\Folder\\image.png
-    $~ lash image adjust -all -s 1.1 C:\\Users\\User\\Folder
+    $~ lash image resize -all -r C:\\Users\\User\\Folder
     """
     if all:
         n_editions = 0

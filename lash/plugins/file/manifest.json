@@ -1,22 +1,12 @@
 {
   "name": "file",
   "category": "File Tools",
-  "description": "File organization and ZIP compression tools",
+  "description": "File organization, ZIP compression, and encryption tools",
   "commands": {
-    "crypt": {
-      "module": "lash.plugins.file.cli:crypt",
-      "description": "Encrypt/Decrypt files with AES algorithm",
-      "requires": ["pyaes>=1.6.1", "rich>=12.6.0"]
-    },
-    "organize": {
-      "module": "lash.plugins.file.cli:organize",
-      "description": "Organize files in a directory by type",
-      "requires": ["rich>=12.6.0"]
-    },
-    "zip": {
-      "module": "lash.plugins.file.cli:zip_group",
-      "description": "ZIP compression, extraction, encoding",
-      "requires": ["pyminizip>=0.2.6", "rich>=12.6.0"]
+    "file": {
+      "module": "lash.plugins.file.cli:file",
+      "description": "File organization, ZIP compression, and encryption tools",
+      "requires": ["pyaes>=1.6.1", "rich>=12.6.0", "pyminizip>=0.2.6"]
     }
   }
 }

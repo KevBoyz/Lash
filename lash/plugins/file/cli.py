@@ -11,6 +11,11 @@ from lash.plugins.file.core import (
 )
 
 
+@click.group()
+def file():
+    """File organization, ZIP compression, and encryption tools."""
+
+
 @click.command()
 @click.argument('p', metavar='path', type=click.Path(exists=True), required=False, default='.')
 @click.argument('key', metavar='<key>', type=click.STRING)
@@ -314,3 +319,8 @@ def encode(path, password):
         print('File encoded')
     except FileNotFoundError:
         print('File not found')
+
+
+file.add_command(crypt)
+file.add_command(organize)
+file.add_command(zip_group)

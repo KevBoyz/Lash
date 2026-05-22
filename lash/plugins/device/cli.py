@@ -9,6 +9,11 @@ from lash.plugins.device.core import (
 )
 
 
+@click.group()
+def device():
+    """Keyboard hold, mouse auto-click, and macro automation."""
+
+
 @click.command(help='Keylogger — logs keystrokes to Keylogger.txt, F3 to stop')
 @click.option('-p', type=click.Path(exists=True), default='.', help='Path to write output file')
 def keylogger(p):
@@ -158,3 +163,9 @@ def macro(action, name, newname, n, loop, speed, full_speed):
             raise click.ClickException(str(e))
         click.echo(f"Macro '{name}' deleted")
         return
+
+
+device.add_command(keylogger)
+device.add_command(keyhold)
+device.add_command(autoclick)
+device.add_command(macro)

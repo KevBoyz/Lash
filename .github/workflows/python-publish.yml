@@ -1,5 +1,6 @@
 name: Publish to PyPI
 
+
 on:
   push:
     tags:
@@ -56,3 +57,5 @@ jobs:
 
       - name: Publish to PyPI
         uses: pypa/gh-action-pypi-publish@v1.12.4
+        with:
+          verbose: true

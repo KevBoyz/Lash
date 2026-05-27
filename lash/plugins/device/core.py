@@ -221,6 +221,9 @@ def record_macro(name: str) -> dict | None:
     return data
 
 
+_MIN_EVENT_DELAY = 0.001  # 1ms floor — prevents event loss when OS/app can't drain queue fast enough
+
+
 def play_macro(name: str, speed: float, full_speed: bool, repeat: int, loop: bool) -> bool:
     try:
         data = load_macro(name)
@@ -259,15 +262,21 @@ def play_macro(name: str, speed: float, full_speed: bool, repeat: int, loop: boo
 
     def run_once():
         run_start = time()
+        last_dispatch = time()
         for event in events:
             if force_stopped.is_set():
                 return
             remaining = run_start + event['t'] * delay_factor - time()
-            if remaining > 0:
+            if remaining > _MIN_EVENT_DELAY:
                 interruptible_sleep(remaining)
+            else:
+                gap = _MIN_EVENT_DELAY - (time() - last_dispatch)
+                if gap > 0:
+                    sleep(gap)
             if force_stopped.is_set():
-                return
+                return 
             _dispatch_event(event, kb_ctrl, mouse_ctrl)
+            last_dispatch = time()
 
     if loop:
         while not force_stopped.is_set():

@@ -408,14 +408,16 @@ class TestRecordMacro:
         mock_mouse_mod = MagicMock()
         mock_mouse_mod.Listener = fake_mouse_listener
 
-        with patch.dict('sys.modules', {
+        with (
+            patch.dict('sys.modules', {
                 'pynput': MagicMock(),
                 'pynput.keyboard': mock_kb_mod,
                 'pynput.mouse': mock_mouse_mod,
-            }), \
-            patch('lash.plugins.device.core.threading') as mock_threading, \
-            patch('lash.plugins.device.core.minimize_terminal'), \
-            patch('lash.plugins.device.core.time', return_value=0.0):
+            }),
+            patch('lash.plugins.device.core.threading') as mock_threading,
+            patch('lash.plugins.device.core.minimize_terminal'),
+            patch('lash.plugins.device.core.time', return_value=0.0),
+        ):
             mock_threading.Event = fake_stop_event
             record_macro('new_macro')
 
@@ -452,13 +454,15 @@ class TestRecordMacro:
         mock_mouse_mod = MagicMock()
         mock_mouse_mod.Listener = fake_mouse_listener
 
-        with patch.dict('sys.modules', {
+        with (
+            patch.dict('sys.modules', {
                 'pynput': MagicMock(),
                 'pynput.keyboard': mock_kb_mod,
                 'pynput.mouse': mock_mouse_mod,
-            }), \
-            patch('lash.plugins.device.core.threading') as mock_threading, \
-            patch('lash.plugins.device.core.minimize_terminal'):
+            }),
+            patch('lash.plugins.device.core.threading') as mock_threading,
+            patch('lash.plugins.device.core.minimize_terminal'),
+        ):
             mock_threading.Event = fake_stop_event
             result = record_macro('empty_macro')
 

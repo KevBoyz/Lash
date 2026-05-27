@@ -20,7 +20,7 @@ def image():
 @click.option('-t', '-test', is_flag=True, help='Just test the editor, don\'t save the edition')
 @click.option('-lr', is_flag=True, help='Mirror left to right')
 @click.option('-tb', is_flag=True, help='Mirror top to bottom')
-def flip(path, all, c, t, lr, tb):
+def flip(path, all, c, t, lr, tb):  # noqa: C901
     """
     Flip Image(s)
 
@@ -275,7 +275,7 @@ def wmark(text, path, all, c, t, tp, ts, tc, tf, axis):
 @click.option('-t', '-test', is_flag=True, help='Just test the editor, don\'t save the edition')
 @click.option('-axis', nargs=2, type=click.INT, default=(0, 0), help='Set new values for x, y dimensions')
 @click.option('-rs', is_flag=True, help='Resize the copied image to be pasted')
-def paste(path, ps, axis, rs, all, c, t):
+def paste(path, ps, axis, rs, all, c, t):  # noqa: C901
     """
     Paste one image in other image(s)
 
@@ -306,7 +306,7 @@ def paste(path, ps, axis, rs, all, c, t):
                                 n_editions += 1
                                 compare(im, im2) if c else None
                                 save(im2, os.path.join(root, file)) if not t else None
-                            except:
+                            except Exception:
                                 pass
                             pbar.update(1)
                 print(f'Process completed, {n_editions} images edited')

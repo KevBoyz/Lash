@@ -59,7 +59,8 @@ def _run_ffmpeg(cmd, label, total):
 @click.option('-fps', type=click.INT, help='Frames per second', default=5, show_default=True)
 @click.option('-n', type=click.STRING, help='Output video name (no extension)')
 @click.option('-num', is_flag=True, help='Sort images numerically (1.jpeg, 2.jpeg, ...)', default=True, show_default=True)
-@click.option('-r', is_flag=True, help='Resize all images to match the first before building', default=False, show_default=True)
+@click.option('-r', is_flag=True, help='Resize all images to match the first before building',
+              default=False, show_default=True)
 def build(path, fps, n, num, r):
     """Build a video from a folder of images.
 

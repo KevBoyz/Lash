@@ -96,6 +96,7 @@ def wiki(t, lang, f):
         article = Text(page.content, justify='left')
         print(Panel(article, title=page.title))
 
+
 @web.command(short_help='Download Youtube video/audio')
 @click.option('-l', 'link', type=click.STRING, help='Video link')
 @click.option('-s', type=click.STRING, help='Video name (for search)')

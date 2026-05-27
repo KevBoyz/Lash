@@ -135,7 +135,7 @@ def _dispatch_event(event, kb_ctrl, mouse_ctrl):
         mouse_ctrl.scroll(event['dx'], event['dy'])
 
 
-def record_macro(name: str) -> dict | None:
+def record_macro(name: str) -> dict | None:  # noqa: C901
     if macro_path(name).exists():
         raise ValueError(f"macro '{name}' already exists. Delete it first.")
 
@@ -235,7 +235,7 @@ def _interruptible_sleep(seconds: float, stop: threading.Event) -> None:
         sleep(min(0.01, remaining))
 
 
-def play_macro(name: str, speed: float, full_speed: bool, repeat: int, loop: bool) -> bool:
+def play_macro(name: str, speed: float, full_speed: bool, repeat: int, loop: bool) -> bool:  # noqa: C901
     try:
         data = load_macro(name)
     except FileNotFoundError:

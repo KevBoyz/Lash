@@ -10,7 +10,8 @@ def _setup_plugins(tmp_path):
         }),
         ('file', {
             'organize': {'module': 'lash.plugins.file.cli:organize', 'description': 'd', 'requires': ['rich>=12.6.0']},
-            'zip': {'module': 'lash.plugins.file.cli:zip_group', 'description': 'd', 'requires': ['pyminizip>=0.2.6', 'rich>=12.6.0']},
+            'zip': {'module': 'lash.plugins.file.cli:zip_group', 'description': 'd',
+                    'requires': ['pyminizip>=0.2.6', 'rich>=12.6.0']},
         }),
         ('device', {
             'autoclick': {'module': 'lash.plugins.device.cli:autoclick', 'description': 'd', 'requires': ['pynput>=1.7.6']},

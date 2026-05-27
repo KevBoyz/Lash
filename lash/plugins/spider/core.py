@@ -23,7 +23,7 @@ def port_verify(port: str) -> int:
         raise ValueError(f"Invalid port [{port}], must be an integer like 8080")
 
 
-def run_server(host: str, port: int) -> None:
+def run_server(host: str, port: int) -> None:  # noqa: C901
     clients: dict[str, socket.socket] = {}
     client_paths: dict[str, str] = {}
     lock = threading.Lock()
@@ -271,7 +271,7 @@ def run_server(host: str, port: int) -> None:
                     break
 
 
-def run_web_client(host: str, port: int) -> None:
+def run_web_client(host: str, port: int) -> None:  # noqa: C901
     local_ip = socket.gethostbyname(socket.gethostname())
     cwd = os.getcwd()
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:

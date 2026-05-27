@@ -76,7 +76,7 @@ def ls(done):
               help="Work interval (minutes)")
 @click.option("--break", "break_mins", default=5, show_default=True, type=int,
               help="Break interval (minutes)")
-def start(task, pomo, work_mins, break_mins):
+def start(task, pomo, work_mins, break_mins):  # noqa: C901
     """Start a task. Prompts for selection if no task given."""
     d = data_dir()
     tasks_path = d / "tasks.json"

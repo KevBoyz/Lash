@@ -23,7 +23,7 @@ def file():
 @click.option('-ex', is_flag=True, default=False, help='Export key to text file')
 @click.option('-cl', is_flag=True, default=False, help='Crypt all files in a folder')
 @click.option('-v', is_flag=True, default=False, help='Verbose mode')
-def crypt(p, key, dc, ex, cl, v):
+def crypt(p, key, dc, ex, cl, v):  # noqa: C901
     """\b
     Encrypt/Decrypt files with AES algorithm
 
@@ -93,7 +93,7 @@ def crypt(p, key, dc, ex, cl, v):
 @click.option('-o', is_flag=True, default=True, show_default=True, help='Create ~Others~ folder')
 @click.option('-s', is_flag=True, default=False, show_default=True, help='Organize sub-folders')
 @click.option('-v', is_flag=True, default=True, show_default=True, help='Verbose mode')
-def organize(path, t, m, d, o, s, v):
+def organize(path, t, m, d, o, s, v):  # noqa: C901
     """
     Organize your files
 
@@ -185,8 +185,9 @@ def view(path):
 @click.argument('path', metavar='<path>', type=click.Path(exists=True))
 @click.option('-fn', type=click.STRING, help='Output archive name (no extension needed)')
 @click.option('-v', is_flag=True, default=True, show_default=True, help='Verbose mode')
-@click.option('-fo', is_flag=True, default=False, show_default=True, help='Flatten: include files only, no subdirectory structure')
-def compress(path, fn, v, fo):
+@click.option('-fo', is_flag=True, default=False, show_default=True,
+              help='Flatten: include files only, no subdirectory structure')
+def compress(path, fn, v, fo):  # noqa: C901
     """Compress a folder into a ZIP archive.
 
     \b

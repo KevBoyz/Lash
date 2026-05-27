@@ -13,7 +13,7 @@ def _package_name(requirement):
     return re.split(r'[><=!]', requirement)[0].strip()
 
 
-def make_download_command(*, plugins_dir=None, state_file=None):
+def make_download_command(*, plugins_dir=None, state_file=None):  # noqa: C901
     @click.command('add')
     @click.argument('plugins', nargs=-1, required=True)
     def add(plugins):
@@ -133,7 +133,7 @@ def make_remove_command(*, plugins_dir=None, state_file=None):
 remove = make_remove_command()
 
 
-def make_plugin_list_command(*, plugins_dir=None, state_file=None):
+def make_plugin_list_command(*, plugins_dir=None, state_file=None):  # noqa: C901
     @click.command('list')
     @click.option('--installed', '-i', is_flag=True, help='Show only installed plugins.')
     @click.option('--not-installed', '-ni', 'not_installed', is_flag=True, help='Show only uninstalled plugins.')

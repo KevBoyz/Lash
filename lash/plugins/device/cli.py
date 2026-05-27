@@ -92,7 +92,7 @@ def autoclick(cd, ch, sg, db):
 @click.option('--loop',       is_flag=True,             help='Loop indefinitely (with -p), F3 to stop between runs')
 @click.option('--speed',      type=float, default=1.0,  help='Playback speed multiplier (with -p)')
 @click.option('--full-speed', is_flag=True,             help='No delays between events (with -p)')
-def macro(action, name, newname, n, loop, speed, full_speed):
+def macro(action, name, newname, n, loop, speed, full_speed):  # noqa: C901
     if action is None:
         raise click.UsageError("Specify an action: -r, -p, -l, -d, or --rename")
 

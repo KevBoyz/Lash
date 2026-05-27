@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "lash"
-version = "1.3.0"
+version = "1.3.1"
 description = "CLI tools package to desktop"
 readme = "README.md"
 license = { file = "LICENSE" }
@@ -47,15 +47,14 @@ all = [
     "requests>=2.28.0",
     "wikipedia>=1.4.0",
     "yt-dlp>=2024.1.0",
-    "gnews>=0.2.7",
-    "quick-mailer>=2022.2.22",
+    "gnews>=0.3.0",
     "pyaes>=1.6.1",
     "pynput>=1.7.6",
     "matplotlib>=3.6.1",
+    "PyQt5>=5.15.0",
     "psutil>=5.9.3",
-    "py-dashing>=0.3.dev0",
-    "pandas>=1.5.1",
-    "schedule>=1.1.0",
+    "dashing>=0.1.0",
+    "plyer>=2.1.0",
 ]
 
 [project.urls]

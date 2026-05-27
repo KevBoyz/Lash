@@ -1,5 +1,20 @@
 # Lash — Release Notes
 
+## v1.3.1 — Testes, refactors e novos plugins
+
+- **spider**: reestruturação (renomeado de `spy`/`server`) com seeker daemon, file transfer, shell remoto e injection client/server
+- **work**: reestruturação start/stop/pause/status, Pomodoro com notificações OS, log com rich table, CRUD de tasks
+- **device/macro**: new plugin - record e play de macros com pynput, speed control, repeat, list/rename/delete
+- **crack**: ETA adicionado ao progresso de brute force do azip
+- `device` e `file`: comandos agrupados sob Click group próprio
+- `image`, `video`, `web`, `audio`: `helpers.py` consolidado em `core.py`
+- `audio`: `cut` e `get` reescritos com ffmpeg direto (sem pytube)
+- `web`/CI: pytube substituído por yt-dlp em todos os plugins
+- Help texts multi-linha adicionados em todos os plugins
+- Fixes: image filter aliases, device path traversal, pynput leak, calc Qt5Agg backend, plugin install spinner
+
+---
+
 ## v1.3.0 — Plugin architecture & Performace improvements
 
 * Plugin system: command groups are now optional (instalation) and managed with `plugin` command.

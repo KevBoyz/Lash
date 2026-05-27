@@ -11,7 +11,7 @@ from lash.core.plugin_manager import plugin
 )
 def Global():
     """\b
-        - Lash 1.3.0 by KevBoyz ~ https://github.com/KevBoyz/Lash
+        - Lash 1.3.1 by KevBoyz ~ https://github.com/KevBoyz/Lash
     """
 
 

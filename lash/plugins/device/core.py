@@ -125,6 +125,8 @@ def _dispatch_event(event, kb_ctrl, mouse_ctrl):
     elif t in ('mouse_down', 'mouse_up'):
         from pynput.mouse import Button
         btn = getattr(Button, event['button'])
+        if 'x' in event:
+            mouse_ctrl.position = (event['x'], event['y'])
         if t == 'mouse_down':
             mouse_ctrl.press(btn)
         else:
@@ -146,6 +148,10 @@ def record_macro(name: str) -> dict | None:
     start_time = [None]
     last_move_time = [0.0]
     stop_event = threading.Event()
+    # Controller.position getter uses GetCursorPos (logical/DPI-scaled coords).
+    # WH_MOUSE_LL callbacks give physical coords — mismatches SetCursorPos on scaled displays.
+    # Reading via controller ensures record and playback share the same coordinate space.
+    _read_ctrl = _mouse_controller()
 
     def elapsed():
         return time() - start_time[0] if start_time[0] is not None else 0.0
@@ -175,17 +181,19 @@ def record_macro(name: str) -> dict | None:
         if start_time[0] is None:
             start_time[0] = time()
         t = elapsed()
-        if t - last_move_time[0] < 0.05:
+        if last_move_time[0] > 0 and t - last_move_time[0] < 0.016:
             return
         last_move_time[0] = t
-        events.append({'t': t, 'type': 'mouse_move', 'x': x, 'y': y})
+        lx, ly = _read_ctrl.position
+        events.append({'t': t, 'type': 'mouse_move', 'x': lx, 'y': ly})
 
     def on_click(x, y, button, pressed):
         if start_time[0] is None:
             start_time[0] = time()
         btn_name = button.name
         etype = 'mouse_down' if pressed else 'mouse_up'
-        events.append({'t': elapsed(), 'type': etype, 'button': btn_name})
+        lx, ly = _read_ctrl.position
+        events.append({'t': elapsed(), 'type': etype, 'button': btn_name, 'x': lx, 'y': ly})
 
     def on_scroll(x, y, dx, dy):
         if start_time[0] is None:
@@ -241,18 +249,22 @@ def play_macro(name: str, speed: float, full_speed: bool, repeat: int, loop: boo
 
     def interruptible_sleep(seconds):
         end = time() + seconds
-        while time() < end:
+        while True:
+            remaining = end - time()
+            if remaining <= 0:
+                break
             if force_stopped.is_set():
                 return
-            sleep(min(0.05, end - time()))
+            sleep(min(0.01, remaining))
 
     def run_once():
-        for i, event in enumerate(events):
+        run_start = time()
+        for event in events:
             if force_stopped.is_set():
                 return
-            wait = (event['t'] - events[i - 1]['t']) * delay_factor if i > 0 else 0
-            if wait > 0:
-                sleep(wait)
+            remaining = run_start + event['t'] * delay_factor - time()
+            if remaining > 0:
+                interruptible_sleep(remaining)
             if force_stopped.is_set():
                 return
             _dispatch_event(event, kb_ctrl, mouse_ctrl)

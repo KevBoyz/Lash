@@ -297,7 +297,7 @@ class TestPlayMacro:
 
     def test_full_speed_skips_sleep(self, tmp_path, monkeypatch):
         from unittest.mock import MagicMock, patch
-        from lash.plugins.device.core import play_macro
+        from lash.plugins.device.core import play_macro, _MIN_EVENT_DELAY
         self._make_macro(tmp_path, monkeypatch, [
             {'t': 0.0, 'type': 'key_down', 'key': 'a'},
             {'t': 1.0, 'type': 'key_up',   'key': 'a'},
@@ -307,10 +307,13 @@ class TestPlayMacro:
         mock_sleep = MagicMock()
         with patch('lash.plugins.device.core._kb_controller', return_value=mock_kb_ctrl), \
              patch('lash.plugins.device.core._mouse_controller', return_value=mock_mouse_ctrl), \
+             patch('lash.plugins.device.core._interruptible_sleep'), \
              patch('lash.plugins.device.core.sleep', mock_sleep):
             play_macro('test', speed=1.0, full_speed=True, repeat=1, loop=False)
+        # full_speed: no interruptible_sleep, only min-delay gap sleeps (≤ _MIN_EVENT_DELAY)
+        # watcher thread may also contribute sleep(0.05) — exclude it
         for c in mock_sleep.call_args_list:
-            assert c.args[0] == 0
+            assert c.args[0] <= _MIN_EVENT_DELAY or abs(c.args[0] - 0.05) < 0.001
 
     def test_speed_multiplier_scales_delays(self, tmp_path, monkeypatch):
         from unittest.mock import MagicMock, patch
@@ -321,12 +324,14 @@ class TestPlayMacro:
         ])
         mock_kb_ctrl = MagicMock()
         mock_mouse_ctrl = MagicMock()
-        sleep_calls = []
         with patch('lash.plugins.device.core._kb_controller', return_value=mock_kb_ctrl), \
              patch('lash.plugins.device.core._mouse_controller', return_value=mock_mouse_ctrl), \
-             patch('lash.plugins.device.core.sleep', side_effect=lambda x: sleep_calls.append(x)):
+             patch('lash.plugins.device.core.sleep'), \
+             patch('lash.plugins.device.core._interruptible_sleep') as mock_is:
             play_macro('test', speed=2.0, full_speed=False, repeat=1, loop=False)
-        assert any(abs(v - 0.5) < 0.001 for v in sleep_calls)
+        # event at t=1.0, delay_factor=0.5 → interruptible_sleep called with ≈0.5s
+        delays = [c.args[0] for c in mock_is.call_args_list]
+        assert any(abs(v - 0.5) < 0.05 for v in delays)
 
     def test_repeat_n_times(self, tmp_path, monkeypatch):
         from unittest.mock import MagicMock, patch

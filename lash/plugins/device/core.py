@@ -224,6 +224,17 @@ def record_macro(name: str) -> dict | None:
 _MIN_EVENT_DELAY = 0.001  # 1ms floor — prevents event loss when OS/app can't drain queue fast enough
 
 
+def _interruptible_sleep(seconds: float, stop: threading.Event) -> None:
+    end = time() + seconds
+    while True:
+        remaining = end - time()
+        if remaining <= 0:
+            break
+        if stop.is_set():
+            return
+        sleep(min(0.01, remaining))
+
+
 def play_macro(name: str, speed: float, full_speed: bool, repeat: int, loop: bool) -> bool:
     try:
         data = load_macro(name)
@@ -250,16 +261,6 @@ def play_macro(name: str, speed: float, full_speed: bool, repeat: int, loop: boo
     watcher = threading.Thread(target=_watch_f3, daemon=True)
     watcher.start()
 
-    def interruptible_sleep(seconds):
-        end = time() + seconds
-        while True:
-            remaining = end - time()
-            if remaining <= 0:
-                break
-            if force_stopped.is_set():
-                return
-            sleep(min(0.01, remaining))
-
     def run_once():
         run_start = time()
         last_dispatch = time()
@@ -268,13 +269,13 @@ def play_macro(name: str, speed: float, full_speed: bool, repeat: int, loop: boo
                 return
             remaining = run_start + event['t'] * delay_factor - time()
             if remaining > _MIN_EVENT_DELAY:
-                interruptible_sleep(remaining)
+                _interruptible_sleep(remaining, force_stopped)
             else:
                 gap = _MIN_EVENT_DELAY - (time() - last_dispatch)
                 if gap > 0:
                     sleep(gap)
             if force_stopped.is_set():
-                return 
+                return
             _dispatch_event(event, kb_ctrl, mouse_ctrl)
             last_dispatch = time()
 

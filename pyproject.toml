@@ -66,3 +66,6 @@ lash = "lash:Global"
 
 [tool.setuptools.packages.find]
 where = ["."]
+
+[tool.setuptools.package-data]
+"*" = ["manifest.json"]

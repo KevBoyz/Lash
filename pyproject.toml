@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "lash"
-version = "1.3.1"
+version = "1.3.1.1"
 description = "CLI tools package to desktop"
 readme = "README.md"
 license = { file = "LICENSE" }

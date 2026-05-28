@@ -2,6 +2,9 @@ from cmath import sqrt as csqrt
 import math
 
 
+# ── shared ────────────────────────────────────────────────────────────────────
+
+
 def get_signal(coefs):
     letters = []
     for c in range(len(coefs)):
@@ -12,8 +15,14 @@ def get_signal(coefs):
     return letters
 
 
+# ── prob ──────────────────────────────────────────────────────────────────────
+
+
 def probability(fc: float, pc: float) -> float:
     return fc / pc
+
+
+# ── trinomial ─────────────────────────────────────────────────────────────────
 
 
 def solve_quadratic(a: float, b: float, c: float) -> dict:
@@ -27,6 +36,9 @@ def solve_quadratic(a: float, b: float, c: float) -> dict:
     xv = -b / (2 * a)
     yv = -delta / (4 * a)
     return {'x1': x1, 'x2': x2, 'xv': xv, 'yv': yv, 'delta': delta}
+
+
+# ── binomial ──────────────────────────────────────────────────────────────────
 
 
 def solve_affine(a: float, b: float) -> dict:

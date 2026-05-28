@@ -3,6 +3,9 @@ import platform
 from pathlib import Path
 
 
+# ── macro ─────────────────────────────────────────────────────────────────────
+
+
 def get_data_dir() -> Path:
     d = Path.home() / '.lash' / 'data' / 'device'
     d.mkdir(parents=True, exist_ok=True)

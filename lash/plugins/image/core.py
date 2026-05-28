@@ -3,6 +3,9 @@ import matplotlib.pyplot as plt
 from PIL import Image, ImageEnhance, ImageFilter, ImageFont, ImageDraw
 
 
+# ── shared ────────────────────────────────────────────────────────────────────
+
+
 def files_range():
     total = 0
     for root, dirs, files in os.walk('.'):
@@ -65,6 +68,9 @@ def compare(im, mod_im):
     plt.show()
 
 
+# ── flip ──────────────────────────────────────────────────────────────────────
+
+
 def f_flip(im, file, c, t, lr=False, tb=False):
     if not c:
         c = True if t else None
@@ -76,6 +82,9 @@ def f_flip(im, file, c, t, lr=False, tb=False):
     elif tb:
         im_flipped = im.transpose(Image.FLIP_TOP_BOTTOM)
         save(im_flipped, file) if not t else None
+
+
+# ── resize ────────────────────────────────────────────────────────────────────
 
 
 def re_size(im, file, root, axis, d, r, c, t):
@@ -99,12 +108,18 @@ def re_size(im, file, root, axis, d, r, c, t):
             save(im_rszd, os.path.join(root, file)) if not t else None
 
 
+# ── adjust ────────────────────────────────────────────────────────────────────
+
+
 def adjust_exec(im, contrast_v, brightness_v, color_v, sharpness_v):
     im = contrast(im, contrast_v)
     im = brightness(im, brightness_v)
     im = color(im, color_v)
     im = sharp(im, sharpness_v)
     return color(im, 1)
+
+
+# ── filter ────────────────────────────────────────────────────────────────────
 
 
 def filter_apply(im, file, root, t, c, b, co, d, e, k):
@@ -128,6 +143,9 @@ def filter_apply(im, file, root, t, c, b, co, d, e, k):
     if not k:
         compare(im, mod_im) if c else None
     save(mod_im, os.path.join(root, file)) if not t else None
+
+
+# ── wmark ─────────────────────────────────────────────────────────────────────
 
 
 def wmarke(text, file, root, im, c, t, tp, ts, tc, tf, axis):

@@ -4,6 +4,9 @@ from pathlib import Path
 from lash.plugins.work.helpers import now_iso, generate_id, find_task
 
 
+# ── shared ────────────────────────────────────────────────────────────────────
+
+
 def load_state(path: Path) -> dict:
     if not path.exists():
         return {"tasks": [], "active": None}
@@ -46,6 +49,9 @@ def add_task(state: dict, name: str) -> dict:
     return task
 
 
+# ── rm ────────────────────────────────────────────────────────────────────────
+
+
 def remove_task(state: dict, query: str) -> dict:
     pending = [t for t in state["tasks"] if not t["done"]]
     task = find_task(pending, query)
@@ -55,6 +61,9 @@ def remove_task(state: dict, query: str) -> dict:
         raise ValueError("Cannot remove active task. Stop it first.")
     state["tasks"] = [t for t in state["tasks"] if t["id"] != task["id"]]
     return task
+
+
+# ── start ─────────────────────────────────────────────────────────────────────
 
 
 def start_task(state: dict, task_id: str, pomo: bool = False,
@@ -74,6 +83,9 @@ def start_task(state: dict, task_id: str, pomo: bool = False,
     }
 
 
+# ── pause ─────────────────────────────────────────────────────────────────────
+
+
 def pause_task(state: dict) -> str:
     active = state["active"]
     if not active:
@@ -88,6 +100,9 @@ def pause_task(state: dict) -> str:
     return "paused"
 
 
+# ── status ────────────────────────────────────────────────────────────────────
+
+
 def calc_elapsed(active: dict) -> int:
     total = 0
     for seg in active["segments"]:
@@ -98,6 +113,9 @@ def calc_elapsed(active: dict) -> int:
         start = datetime.fromisoformat(active["current_start"])
         total += int((datetime.now() - start).total_seconds())
     return total
+
+
+# ── stop ──────────────────────────────────────────────────────────────────────
 
 
 def stop_task(state: dict, done: bool) -> dict | None:
@@ -128,6 +146,9 @@ def stop_task(state: dict, done: bool) -> dict | None:
         task["accumulated_segments"] = active["segments"]
     state["active"] = None
     return session_entry
+
+
+# ── log ───────────────────────────────────────────────────────────────────────
 
 
 def format_log(sessions: list) -> list:

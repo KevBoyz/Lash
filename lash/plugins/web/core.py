@@ -2,6 +2,9 @@ import yt_dlp
 from rich import print
 
 
+# ── yt ────────────────────────────────────────────────────────────────────────
+
+
 def download_yt(url_or_query, output_path, low=False, audio_only=False):
     is_search = not url_or_query.startswith(('http://', 'https://'))
     url = f'ytsearch1:{url_or_query}' if is_search else url_or_query
@@ -23,6 +26,9 @@ def download_yt(url_or_query, output_path, low=False, audio_only=False):
             info = info['entries'][0]
 
     return info.get('title', 'Unknown')
+
+
+# ── news ──────────────────────────────────────────────────────────────────────
 
 
 def impress_news(all_news):

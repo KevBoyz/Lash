@@ -6,6 +6,9 @@ from lash.plugins.device.helpers import (
 )
 
 
+# ── keylogger ─────────────────────────────────────────────────────────────────
+
+
 def key_down(key):
     from pynput.keyboard import Key
     log = open('Keylogger.txt', mode='a')
@@ -32,12 +35,18 @@ def key_up(key):
         return False
 
 
+# ── keyhold ───────────────────────────────────────────────────────────────────
+
+
 def run_keyhold(key):
     import pynput.keyboard as kb
     from keyboard import is_pressed
     k = kb.Controller()
     while not is_pressed('f3'):
         k.press(key)
+
+
+# ── autoclick ─────────────────────────────────────────────────────────────────
 
 
 def run_autoclick_single():
@@ -82,6 +91,9 @@ def run_autoclick_repeat(cd):
                 mouse.release(Button.left)
         else:
             continue
+
+
+# ── macro ─────────────────────────────────────────────────────────────────────
 
 
 def list_macros() -> list:

@@ -16,6 +16,9 @@ from rich import print
 from lash.plugins.spider.helpers import send_msg, recv_msg
 
 
+# ── web ───────────────────────────────────────────────────────────────────────
+
+
 def port_verify(port: str) -> int:
     try:
         return int(port)
@@ -316,6 +319,9 @@ def run_web_client(host: str, port: int) -> None:  # noqa: C901
                 )
                 output = result.stdout + result.stderr
             send_msg(s, {"type": "result", "data": output, "path": cwd, "addr": local_ip})
+
+
+# ── seeker ────────────────────────────────────────────────────────────────────
 
 
 def seeker_pid_path() -> Path:

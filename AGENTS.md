@@ -63,7 +63,14 @@ try):
 4. Create `core.py` for business logic (if needed)
 5. Create `helpers.py` for utilities (if core.py needs it)
 
-## Testing
+## Quality Pipeline
+
+Before finishing any work, run the full pipeline in order:
+
+1. **Tests**: `python -m pytest tests/`
+2. **Lint**: `flake8 lash/ tests/ --max-complexity=10 --max-line-length=127`
+
+Both must pass with zero errors. If either fails, fix before proceeding.
 
 **Test Structure**:
 - `pytest tests/` - Tests for lash/core/ modules
@@ -75,11 +82,6 @@ try):
 - Method names describe scenarios (`test_retorna_erro_quando_fc_maior_que_pc`)
 - Imports inside test methods (no module-level imports)
 - `tmp_path` fixture for filesystem operations — never touch real `~/.lash/`
-
-**Test Execution**:
-- Windows: `py -m pytest` 
-- Linux/macOS: `python -m pytest`
-- Run only when explicitly requested (no automatic test execution)
 
 **Test Usage Examples**:
 ```bash
@@ -185,7 +187,7 @@ lash plugin remove calc
 **Things agents commonly miss**:
 
 1. **Command execution**: Always use Windows PowerShell commands, never use bash-style pipes
-2. **Tests**: Never run tests automatically during development
+2. **Git**: Never commit, push, branch, or interact with git unless explicitly asked
 3. **Plugin hierarchy**: `helpers.py` only exists if `core.py` needs it — check before using
 4. **Data storage**: Use `~/.lash/data/<plugin>/` not CWD or `~/.lash/` directly
 5. **Plugin registration**: Plugins always-on if `core: true` in manifest, regardless of install status

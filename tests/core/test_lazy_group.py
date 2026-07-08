@@ -26,7 +26,8 @@ class TestLazyGroupImportError:
         runner = CliRunner()
         result = runner.invoke(cmd, [])
         assert result.exit_code == 0
-        assert 'missing dependencies' in result.output.lower()
+        assert 'missing dependency' in result.output.lower()
+        assert 'completely' in result.output
         assert 'lash plugin fix' in result.output
 
     def test_real_command_still_works(self):

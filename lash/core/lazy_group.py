@@ -26,13 +26,15 @@ class LazyGroup(click.Group):
             try:
                 module = importlib.import_module(module_path)
                 return getattr(module, attr)
-            except ModuleNotFoundError:
+            except ModuleNotFoundError as e:
                 if module_path in sys.modules:
                     del sys.modules[module_path]
 
+                missing_name = e.name
+
                 def _broken_cb():
                     click.echo(
-                        f"Error: Command '{cmd_name}' requires missing dependencies.\n"
+                        f"Error: Command '{cmd_name}' requires missing dependency: {missing_name}.\n"
                         f"Run 'lash plugin fix' to automatically install required packages.",
                         err=True
                     )

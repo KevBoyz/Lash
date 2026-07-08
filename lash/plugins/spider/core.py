@@ -373,7 +373,7 @@ def _scan_once(
             continue
         try:
             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-                s.settimeout(2)
+                s.settimeout(0.5)
                 s.connect((ip, port))
                 s.settimeout(None)
                 msg = recv_msg(s)

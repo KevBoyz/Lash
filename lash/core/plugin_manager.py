@@ -184,14 +184,55 @@ def make_plugin_list_command(*, plugins_dir=None, state_file=None):  # noqa: C90
 make_plugins_command = make_plugin_list_command
 
 
+def make_fix_command(*, plugins_dir=None, state_file=None):
+    @click.command('fix')
+    def fix():
+        """Fix missing dependencies for installed plugins."""
+        state = plugin_registry._load_state(state_file)
+        installed_commands = state.get('installed_commands', {})
+        
+        if not installed_commands:
+            click.echo("No plugins installed. Run 'lash plugin add <plugin>' first.")
+            return
+        
+        all_requires = []
+        for cmd_name, cmd_info in installed_commands.items():
+            all_requires.extend(cmd_info.get('requires', []))
+        
+        if not all_requires:
+            click.echo("All dependencies are already installed.")
+            return
+        
+        click.echo(f"Checking dependencies: {', '.join(all_requires)}")
+        
+        with _console.status(f"Installing missing dependencies...", spinner="dots"):
+            result = subprocess.run(
+                [sys.executable, '-m', 'pip', 'install'] + all_requires,
+                capture_output=True,
+                text=True,
+            )
+        
+        if result.returncode != 0:
+            _console.print(f"[red]Dependency install failed:[/red]\n{result.stderr}")
+            raise SystemExit(1)
+        
+        click.echo("Done. All plugin dependencies are now installed.")
+    
+    return fix
+
+
+fix = make_fix_command()
+
+
 def make_plugin_group(*, plugins_dir=None, state_file=None):
     @click.group('plugin')
     def plugin_group():
-        """Manage lash plugins: add, remove, list."""
+        """Manage lash plugins: add, remove, list, fix."""
 
     plugin_group.add_command(make_download_command(plugins_dir=plugins_dir, state_file=state_file))
     plugin_group.add_command(make_remove_command(plugins_dir=plugins_dir, state_file=state_file))
     plugin_group.add_command(make_plugin_list_command(plugins_dir=plugins_dir, state_file=state_file))
+    plugin_group.add_command(fix)
     return plugin_group
 
 

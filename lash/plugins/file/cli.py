@@ -119,8 +119,8 @@ def organize(path, t, m, d, o, s, v):  # noqa: C901
         else:
             ft = file_types()
             if m:
-                os.mkdir('Midia') if 'Midia' not in files else files.remove('Midia')
-                os.chdir('Midia')
+                os.mkdir('Media') if 'Media' not in files else files.remove('Media')
+                os.chdir('Media')
                 if not os.listdir('..'):
                     os.mkdir('Images')
                     os.mkdir('Videos')
@@ -142,11 +142,11 @@ def organize(path, t, m, d, o, s, v):  # noqa: C901
 
                     if not os.path.isdir(files[c]):
                         if get_ext(files[c]) in ft['midia']['images']:
-                            sh.move(os.path.join(path, files[c]), os.path.join('Midia', 'Images', files[c]))
+                            sh.move(os.path.join(path, files[c]), os.path.join('Media', 'Images', files[c]))
                         elif get_ext(files[c]) in ft['midia']['videos']:
-                            sh.move(os.path.join(path, files[c]), os.path.join('Midia', 'Videos', files[c]))
+                            sh.move(os.path.join(path, files[c]), os.path.join('Media', 'Videos', files[c]))
                         elif get_ext(files[c]) in ft['midia']['musics']:
-                            sh.move(os.path.join(path, files[c]), os.path.join('Midia', 'Musics', files[c]))
+                            sh.move(os.path.join(path, files[c]), os.path.join('Media', 'Musics', files[c]))
                         elif get_ext(files[c]) in ft['docs']:
                             sh.move(os.path.join(path, files[c]), os.path.join('Docs', files[c]))
                         else:

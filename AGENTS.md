@@ -103,7 +103,7 @@ python -m pytest lash/plugins/work/tests/
 **Environment Quirks**:
 - Windows commands use PowerShell syntax, Linux/macOS use bash
 - All Python commands must run in the project's `.venv` directory
-- Never install packages globally when tests fail
+- Never use `pip install` outside the project's `.venv`. If a dependency is needed for tests or development, use the venv's pip or ask the user for permission.
 - `lick` module must be up to date
 
 ## CI/CD & Build

@@ -29,6 +29,7 @@ class LazyGroup(click.Group):
             except ModuleNotFoundError:
                 if module_path in sys.modules:
                     del sys.modules[module_path]
+
                 def _broken_cb():
                     click.echo(
                         f"Error: Command '{cmd_name}' requires missing dependencies.\n"

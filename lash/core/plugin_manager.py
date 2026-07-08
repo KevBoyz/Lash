@@ -209,6 +209,30 @@ def make_plugin_list_command(*, plugins_dir=None, state_file=None):  # noqa: C90
 make_plugins_command = make_plugin_list_command
 
 
+def _collect_active_requires(available, installed_cmds, removed_cmds):
+    active_requires = set()
+    for manifest in available.values():
+        is_core = manifest.get('core', False)
+        for cmd_name, cmd_info in manifest['commands'].items():
+            if cmd_name in removed_cmds:
+                continue
+            if is_core or cmd_name in installed_cmds:
+                active_requires.update(cmd_info.get('requires', []))
+    return active_requires
+
+
+def _sync_installed_requires(available, installed_cmds, state_file):
+    for manifest in available.values():
+        for cmd_name, cmd_info in manifest['commands'].items():
+            if cmd_name not in installed_cmds:
+                continue
+            plugin_registry.mark_command_installed(
+                cmd_name, manifest['name'],
+                cmd_info.get('requires', []),
+                state_file=state_file,
+            )
+
+
 def make_fix_command(*, plugins_dir=None, state_file=None):
     @click.command('fix')
     def fix():
@@ -218,14 +242,7 @@ def make_fix_command(*, plugins_dir=None, state_file=None):
         removed_cmds = set(state.get('removed_commands', []))
         available = plugin_registry.get_available_plugins(plugins_dir=plugins_dir)
 
-        active_requires = set()
-        for manifest in available.values():
-            is_core = manifest.get('core', False)
-            for cmd_name, cmd_info in manifest['commands'].items():
-                if cmd_name in removed_cmds:
-                    continue
-                if is_core or cmd_name in installed_cmds:
-                    active_requires.update(cmd_info.get('requires', []))
+        active_requires = _collect_active_requires(available, installed_cmds, removed_cmds)
 
         if not active_requires:
             click.echo("No dependencies to install.")
@@ -235,7 +252,7 @@ def make_fix_command(*, plugins_dir=None, state_file=None):
 
         click.echo(f"Checking dependencies: {', '.join(sorted(active_requires))}")
 
-        with _console.status(f"Installing missing dependencies...", spinner="dots"):
+        with _console.status("Installing missing dependencies...", spinner="dots"):
             result = subprocess.run(
                 [sys.executable, '-m', 'pip', 'install'] + list(active_requires),
                 capture_output=True,
@@ -246,15 +263,7 @@ def make_fix_command(*, plugins_dir=None, state_file=None):
             _console.print(f"[red]Dependency install failed:[/red]\n{result.stderr}")
             raise SystemExit(1)
 
-        for manifest in available.values():
-            for cmd_name, cmd_info in manifest['commands'].items():
-                if cmd_name not in installed_cmds:
-                    continue
-                plugin_registry.mark_command_installed(
-                    cmd_name, manifest['name'],
-                    cmd_info.get('requires', []),
-                    state_file=state_file,
-                )
+        _sync_installed_requires(available, installed_cmds, state_file)
 
         click.echo("Done. All plugin dependencies are now installed.")
 

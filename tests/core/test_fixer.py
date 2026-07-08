@@ -33,6 +33,7 @@ class TestFixCommand:
                 'zip': {'module': 'x:y', 'description': 'd', 'requires': ['pyminizip>=0.2.6', 'rich>=12.6.0']},
             }),
         ]
+
     def test_no_plugins_installed(self, tmp_path):
         state_file = tmp_path / 'installed.json'
         plugins_dir = tmp_path / 'plugins'
@@ -106,7 +107,8 @@ class TestFixCommand:
         state_file = tmp_path / 'installed.json'
         plugins_dir = tmp_path / 'plugins'
         plugins_dir.mkdir()
-        _setup_plugins(plugins_dir,
+        _setup_plugins(
+            plugins_dir,
             ('file', {
                 'organize': {'module': 'x:y', 'description': 'd', 'requires': ['rich>=12.6.0']},
             }),

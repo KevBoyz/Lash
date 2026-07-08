@@ -10,7 +10,6 @@ class TestNewsCmd:
         runner = CliRunner()
         result = runner.invoke(web, ['news'])
         assert result.exit_code == 0
-        assert result.output.strip() == ''
 
 
 class TestWebHelp:

@@ -26,49 +26,62 @@ def make_download_command(*, plugins_dir=None, state_file=None):  # noqa: C901
         elif not plugins:
             raise click.UsageError("Missing argument 'PLUGIN' or use -a to install all.")
 
-        already_installed = set(
-            plugin_registry._load_state(state_file).get('installed_commands', {}).keys()
-        )
-
-        commands_to_install = {}
         for plugin_name in plugins:
             if plugin_name not in available:
                 click.echo(f"Unknown plugin: {plugin_name}")
                 click.echo(f"Available: {', '.join(sorted(available.keys()))}")
                 raise SystemExit(1)
-            for cmd_name, cmd_info in available[plugin_name]['commands'].items():
-                if cmd_name not in already_installed:
-                    commands_to_install[cmd_name] = (plugin_name, cmd_info)
 
-        if not commands_to_install:
-            click.echo("All selected commands already installed.")
-            return
+        installed_count = 0
+        for plugin_name in plugins:
+            try:
+                _install_plugin(plugin_name, available, state_file)
+                installed_count += 1
+            except Exception as e:
+                click.echo(f"Failed to install {plugin_name}: {e}")
 
-        all_requires = list({
-            req
-            for _, cmd_info in commands_to_install.values()
-            for req in cmd_info.get('requires', [])
-        })
-
-        if all_requires:
-            with _console.status(f"Installing dependencies: {', '.join(all_requires)}", spinner="dots"):
-                result = subprocess.run(
-                    [sys.executable, '-m', 'pip', 'install'] + all_requires,
-                    capture_output=True,
-                    text=True,
-                )
-            if result.returncode != 0:
-                _console.print(f"[red]Dependency install failed:[/red]\n{result.stderr}")
-                raise SystemExit(1)
-
-        for cmd_name, (plugin_name, cmd_info) in commands_to_install.items():
-            plugin_registry.mark_command_installed(
-                cmd_name, plugin_name, cmd_info.get('requires', []), state_file=state_file
-            )
-
-        click.echo("Done. Try: lash <command> --help")
+        if installed_count:
+            click.echo("Done. Try: lash <command> --help")
+        else:
+            click.echo("No plugins were installed.")
 
     return add
+
+
+def _install_plugin(plugin_name, available, state_file):  # noqa: C901
+    already_installed = set(
+        plugin_registry._load_state(state_file).get('installed_commands', {}).keys()
+    )
+    commands_to_install = {
+        cmd_name: cmd_info
+        for cmd_name, cmd_info in available[plugin_name]['commands'].items()
+        if cmd_name not in already_installed
+    }
+    if not commands_to_install:
+        click.echo(f"Plugin '{plugin_name}' already installed.")
+        return
+
+    requires = list({
+        req
+        for cmd_info in commands_to_install.values()
+        for req in cmd_info.get('requires', [])
+    })
+
+    if requires:
+        with _console.status(f"Installing dependencies for {plugin_name}: {', '.join(requires)}", spinner="dots"):
+            result = subprocess.run(
+                [sys.executable, '-m', 'pip', 'install'] + requires,
+                capture_output=True,
+                text=True,
+            )
+        if result.returncode != 0:
+            raise RuntimeError(f"Dependency install failed:\n{result.stderr}")
+
+    for cmd_name, cmd_info in commands_to_install.items():
+        plugin_registry.mark_command_installed(
+            cmd_name, plugin_name, cmd_info.get('requires', []), state_file=state_file
+        )
+    click.echo(f"Installed: {plugin_name}")
 
 
 download = make_download_command()

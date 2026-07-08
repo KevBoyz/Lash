@@ -96,9 +96,18 @@ class TestDownloadErrors:
         result, _ = _invoke(['bogus'], plugins_dir, state_file)
         assert 'file' in result.output or 'crack' in result.output
 
-    def test_pip_failure_aborts_and_does_not_mark_installed(self, tmp_path):
+    def test_pip_failure_skips_plugin_and_does_not_mark_installed(self, tmp_path):
         plugins_dir = _setup_plugins(tmp_path)
         state_file = tmp_path / 'installed.json'
         result, _ = _invoke(['file'], plugins_dir, state_file, pip_returncode=1)
-        assert result.exit_code != 0
+        assert result.exit_code == 0
         assert not state_file.exists() or 'organize' not in json.loads(state_file.read_text()).get('installed_commands', {})
+
+    def test_pip_failure_does_not_break_other_plugins(self, tmp_path):
+        plugins_dir = _setup_plugins(tmp_path)
+        state_file = tmp_path / 'installed.json'
+        result, _ = _invoke(['crack', 'file'], plugins_dir, state_file, pip_returncode=1)
+        assert result.exit_code == 0
+        state = json.loads(state_file.read_text())
+        assert 'crack' in state['installed_commands']
+        assert 'organize' not in state['installed_commands']

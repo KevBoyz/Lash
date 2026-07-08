@@ -150,7 +150,7 @@ def yt(link, s, a, f, low, file):
 
 
 @web.command(short_help='See the last news (Google News)')
-@click.option('-t', is_flag=True, help='Main news (Top)')
+@click.option('-t', is_flag=True, default=True, show_default=True, help='Main news')
 @click.option('-c', type=click.STRING, help='Main news of a country')
 @click.option('-s', type=click.STRING, help='Search news')
 @click.option('-tp', type=click.STRING, help='News per topic')

@@ -15,16 +15,16 @@ def _package_name(requirement):
 
 def make_download_command(*, plugins_dir=None, state_file=None):  # noqa: C901
     @click.command('add')
-    @click.argument('plugins', nargs=-1, required=True)
-    def add(plugins):
+    @click.argument('plugins', nargs=-1, required=False)
+    @click.option('-a', '--all', 'install_all', is_flag=True, help='Install all missing plugins')
+    def add(plugins, install_all):
         """Add one or more plugins."""
         available = plugin_registry.get_available_plugins(plugins_dir=plugins_dir)
 
-        for plugin_name in plugins:
-            if plugin_name not in available:
-                click.echo(f"Unknown plugin: {plugin_name}")
-                click.echo(f"Available: {', '.join(sorted(available.keys()))}")
-                raise SystemExit(1)
+        if install_all:
+            plugins = list(available.keys())
+        elif not plugins:
+            raise click.UsageError("Missing argument 'PLUGIN' or use -a to install all.")
 
         already_installed = set(
             plugin_registry._load_state(state_file).get('installed_commands', {}).keys()
@@ -32,6 +32,10 @@ def make_download_command(*, plugins_dir=None, state_file=None):  # noqa: C901
 
         commands_to_install = {}
         for plugin_name in plugins:
+            if plugin_name not in available:
+                click.echo(f"Unknown plugin: {plugin_name}")
+                click.echo(f"Available: {', '.join(sorted(available.keys()))}")
+                raise SystemExit(1)
             for cmd_name, cmd_info in available[plugin_name]['commands'].items():
                 if cmd_name not in already_installed:
                     commands_to_install[cmd_name] = (plugin_name, cmd_info)
@@ -97,62 +101,69 @@ def _list_installed_plugins(available, state_file):
 
 def make_remove_command(*, plugins_dir=None, state_file=None):
     @click.command('remove')
-    @click.argument('plugins', nargs=-1, required=True)
-    def remove(plugins):
+    @click.argument('plugins', nargs=-1, required=False)
+    @click.option('-a', '--all', 'remove_all', is_flag=True, help='Remove all installed plugins')
+    def remove(plugins, remove_all):
         """Remove one or more plugins."""
         available = plugin_registry.get_available_plugins(plugins_dir=plugins_dir)
 
-        for plugin_name in plugins:
-            if plugin_name not in available:
-                click.echo(f"Unknown plugin: {plugin_name}")
-                _list_installed_plugins(available, state_file)
-                raise SystemExit(1)
+        if remove_all:
+            plugins = list(available.keys())
+        elif not plugins:
+            raise click.UsageError("Missing argument 'PLUGIN' or use -a to remove all.")
 
-        state = plugin_registry._load_state(state_file)
-        installed_cmds = state.get('installed_commands', {})
-        removed_cmds = set(state.get('removed_commands', []))
-
-        commands_to_remove = set()
-        for plugin_name in plugins:
-            manifest = available[plugin_name]
-            is_core = manifest.get('core', False)
-
-            if is_core:
-                plugin_installed = {
-                    c for c in manifest['commands'].keys()
-                    if c not in removed_cmds
-                }
-            else:
-                plugin_installed = {k for k, v in installed_cmds.items() if v['plugin'] == plugin_name}
-
-            commands_to_remove.update(plugin_installed)
+        commands_to_remove = _collect_remove_commands(available, plugins, state_file)
 
         if not commands_to_remove:
             click.echo("Nothing to remove — no commands are installed.")
             return
 
-        all_orphaned = set()
-        for cmd_name in commands_to_remove:
-            orphaned = plugin_registry.remove_command(
-                cmd_name, state_file=state_file, plugins_dir=plugins_dir
-            )
-            all_orphaned.update(orphaned)
-            click.echo(f"  - {cmd_name}")
-
-        if all_orphaned:
-            pkg_names = [_package_name(r) for r in all_orphaned]
-            click.echo(f"Uninstalling orphaned dependencies: {', '.join(pkg_names)}")
-            result = subprocess.run(
-                [sys.executable, '-m', 'pip', 'uninstall', '-y'] + pkg_names,
-                capture_output=True,
-                text=True,
-            )
-            if result.returncode != 0:
-                click.echo(f"Warning: dependency uninstall failed:\n{result.stderr}")
-
+        _execute_remove(commands_to_remove, state_file, plugins_dir)
         click.echo("Done.")
 
     return remove
+
+
+def _collect_remove_commands(available, plugins, state_file):
+    state = plugin_registry._load_state(state_file)
+    installed_cmds = state.get('installed_commands', {})
+    removed_cmds = set(state.get('removed_commands', []))
+    commands_to_remove = set()
+    for plugin_name in plugins:
+        if plugin_name not in available:
+            click.echo(f"Unknown plugin: {plugin_name}")
+            _list_installed_plugins(available, state_file)
+            raise SystemExit(1)
+        manifest = available[plugin_name]
+        if manifest.get('core', False):
+            plugin_installed = {
+                c for c in manifest['commands'].keys()
+                if c not in removed_cmds
+            }
+        else:
+            plugin_installed = {k for k, v in installed_cmds.items() if v['plugin'] == plugin_name}
+        commands_to_remove.update(plugin_installed)
+    return commands_to_remove
+
+
+def _execute_remove(commands_to_remove, state_file, plugins_dir):
+    all_orphaned = set()
+    for cmd_name in commands_to_remove:
+        orphaned = plugin_registry.remove_command(
+            cmd_name, state_file=state_file, plugins_dir=plugins_dir
+        )
+        all_orphaned.update(orphaned)
+        click.echo(f"  - {cmd_name}")
+    if all_orphaned:
+        pkg_names = [_package_name(r) for r in all_orphaned]
+        click.echo(f"Uninstalling orphaned dependencies: {', '.join(pkg_names)}")
+        result = subprocess.run(
+            [sys.executable, '-m', 'pip', 'uninstall', '-y'] + pkg_names,
+            capture_output=True,
+            text=True,
+        )
+        if result.returncode != 0:
+            click.echo(f"Warning: dependency uninstall failed:\n{result.stderr}")
 
 
 remove = make_remove_command()

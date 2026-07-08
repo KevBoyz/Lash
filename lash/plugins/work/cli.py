@@ -4,7 +4,7 @@ from datetime import date
 from lash.plugins.work.helpers import data_dir, format_duration, find_task
 from lash.plugins.work.core import (
     load_state, save_state, load_sessions, append_session,
-    add_task, remove_task, start_task, pause_task, stop_task,
+    add_task, remove_task, remove_all_tasks, start_task, pause_task, stop_task,
     calc_elapsed, format_log,
 )
 
@@ -30,18 +30,27 @@ def add(name):
 
 
 @work_group.command()
-@click.argument("task")
-def rm(task):
-    """Remove a task by name or number."""
+@click.argument("task", required=False)
+@click.option("-a", "--all", "remove_all", is_flag=True, help="Remove all pending tasks")
+def rm(task, remove_all):
+    """Remove a task by name or number. Use -a to remove all."""
     d = data_dir()
     tasks_path = d / "tasks.json"
     state = load_state(tasks_path)
     try:
-        removed = remove_task(state, task)
+        if remove_all:
+            removed = remove_all_tasks(state)
+            save_state(tasks_path, state)
+            for t in removed:
+                click.echo(f"Removed: {t['name']}")
+        else:
+            if not task:
+                raise click.UsageError("Missing argument 'TASK' or use -a to remove all.")
+            removed = remove_task(state, task)
+            save_state(tasks_path, state)
+            click.echo(f"Removed: {removed['name']}")
     except ValueError as e:
         raise click.ClickException(str(e))
-    save_state(tasks_path, state)
-    click.echo(f"Removed: {removed['name']}")
 
 
 @work_group.command("ls")
@@ -234,7 +243,7 @@ def _run_pomodoro(tasks_path, task_name, work_mins, break_mins):
         save_state(tasks_path, state)
         notification.notify(
             title="Lash Work",
-            message=f"Pomodoro encerrado! Pausa de {break_mins}min.",
+            message=f"Pomodoro finished! Break for {break_mins}min.",
             timeout=10,
         )
         click.echo(f"\n  Break: {break_mins}min")
@@ -247,6 +256,6 @@ def _run_pomodoro(tasks_path, task_name, work_mins, break_mins):
                 return
         notification.notify(
             title="Lash Work",
-            message="Pausa encerrada! Próxima sessão.",
+            message="Break ended! Next session.",
             timeout=10,
         )

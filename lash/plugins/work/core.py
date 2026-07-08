@@ -63,6 +63,16 @@ def remove_task(state: dict, query: str) -> dict:
     return task
 
 
+def remove_all_tasks(state: dict) -> list:
+    pending = [t for t in state["tasks"] if not t["done"]]
+    if not pending:
+        raise ValueError("No pending tasks to remove.")
+    if state["active"]:
+        raise ValueError("Cannot remove all: stop the active task first.")
+    state["tasks"] = [t for t in state["tasks"] if t["done"]]
+    return pending
+
+
 # ── start ─────────────────────────────────────────────────────────────────────
 
 
@@ -161,4 +171,4 @@ def format_log(sessions: list) -> list:
             "minutes": s["total_minutes"],
             "pomo_sessions": s["pomo_sessions"],
         })
-    return [{"date": d, **v} for d, v in sorted(grouped.items(), reverse=True)]
+    return [{"date": d, **v} for d, v in sorted(grouped.items())]

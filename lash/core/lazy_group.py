@@ -1,4 +1,5 @@
 import importlib
+import sys
 import click
 
 
@@ -22,8 +23,19 @@ class LazyGroup(click.Group):
     def get_command(self, ctx, cmd_name):
         if cmd_name in self._lazy:
             module_path, attr = self._module_path(cmd_name).rsplit(':', 1)
-            module = importlib.import_module(module_path)
-            return getattr(module, attr)
+            try:
+                module = importlib.import_module(module_path)
+                return getattr(module, attr)
+            except ModuleNotFoundError:
+                if module_path in sys.modules:
+                    del sys.modules[module_path]
+                def _broken_cb():
+                    click.echo(
+                        f"Error: Command '{cmd_name}' requires missing dependencies.\n"
+                        f"Run 'lash plugin fix' to automatically install required packages.",
+                        err=True
+                    )
+                return click.Command(cmd_name, callback=_broken_cb)
         return super().get_command(ctx, cmd_name)
 
     def format_commands(self, ctx, formatter):

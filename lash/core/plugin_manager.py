@@ -70,6 +70,31 @@ def make_download_command(*, plugins_dir=None, state_file=None):  # noqa: C901
 download = make_download_command()
 
 
+def _list_installed_plugins(available, state_file):
+    state = plugin_registry._load_state(state_file)
+    installed_cmds = state.get('installed_commands', {})
+    removed_cmds = set(state.get('removed_commands', []))
+    installed = []
+    for name, manifest in available.items():
+        is_core = manifest.get('core', False)
+        if is_core:
+            any_installed = any(
+                cmd not in removed_cmds for cmd in manifest['commands']
+            )
+            if any_installed:
+                installed.append(name)
+        else:
+            any_installed = any(
+                cmd in installed_cmds for cmd in manifest['commands']
+            )
+            if any_installed:
+                installed.append(name)
+    if installed:
+        click.echo(f"Installed: {', '.join(sorted(installed))}")
+    else:
+        click.echo("No plugins installed.")
+
+
 def make_remove_command(*, plugins_dir=None, state_file=None):
     @click.command('remove')
     @click.argument('plugins', nargs=-1, required=True)
@@ -80,7 +105,7 @@ def make_remove_command(*, plugins_dir=None, state_file=None):
         for plugin_name in plugins:
             if plugin_name not in available:
                 click.echo(f"Unknown plugin: {plugin_name}")
-                click.echo(f"Available: {', '.join(sorted(available.keys()))}")
+                _list_installed_plugins(available, state_file)
                 raise SystemExit(1)
 
         state = plugin_registry._load_state(state_file)
@@ -189,35 +214,50 @@ def make_fix_command(*, plugins_dir=None, state_file=None):
     def fix():
         """Fix missing dependencies for installed plugins."""
         state = plugin_registry._load_state(state_file)
-        installed_commands = state.get('installed_commands', {})
-        
-        if not installed_commands:
-            click.echo("No plugins installed. Run 'lash plugin add <plugin>' first.")
+        installed_cmds = set(state.get('installed_commands', {}).keys())
+        removed_cmds = set(state.get('removed_commands', []))
+        available = plugin_registry.get_available_plugins(plugins_dir=plugins_dir)
+
+        active_requires = set()
+        for manifest in available.values():
+            is_core = manifest.get('core', False)
+            for cmd_name, cmd_info in manifest['commands'].items():
+                if cmd_name in removed_cmds:
+                    continue
+                if is_core or cmd_name in installed_cmds:
+                    active_requires.update(cmd_info.get('requires', []))
+
+        if not active_requires:
+            click.echo("No dependencies to install.")
+            if not installed_cmds:
+                click.echo("Run 'lash plugin add <plugin>' first.")
             return
-        
-        all_requires = []
-        for cmd_name, cmd_info in installed_commands.items():
-            all_requires.extend(cmd_info.get('requires', []))
-        
-        if not all_requires:
-            click.echo("All dependencies are already installed.")
-            return
-        
-        click.echo(f"Checking dependencies: {', '.join(all_requires)}")
-        
+
+        click.echo(f"Checking dependencies: {', '.join(sorted(active_requires))}")
+
         with _console.status(f"Installing missing dependencies...", spinner="dots"):
             result = subprocess.run(
-                [sys.executable, '-m', 'pip', 'install'] + all_requires,
+                [sys.executable, '-m', 'pip', 'install'] + list(active_requires),
                 capture_output=True,
                 text=True,
             )
-        
+
         if result.returncode != 0:
             _console.print(f"[red]Dependency install failed:[/red]\n{result.stderr}")
             raise SystemExit(1)
-        
+
+        for manifest in available.values():
+            for cmd_name, cmd_info in manifest['commands'].items():
+                if cmd_name not in installed_cmds:
+                    continue
+                plugin_registry.mark_command_installed(
+                    cmd_name, manifest['name'],
+                    cmd_info.get('requires', []),
+                    state_file=state_file,
+                )
+
         click.echo("Done. All plugin dependencies are now installed.")
-    
+
     return fix
 
 

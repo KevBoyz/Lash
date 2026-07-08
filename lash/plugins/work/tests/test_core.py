@@ -300,20 +300,22 @@ class TestFormatLog:
             {"task_name": "c", "date": "2026-05-19", "total_minutes": 60, "pomo_sessions": 1},
         ]
         result = format_log(sessions)
-        assert result[0]["date"] == "2026-05-20"
-        assert result[0]["total_minutes"] == 50
-        assert len(result[0]["tasks"]) == 2
-        assert result[1]["date"] == "2026-05-19"
-        assert result[1]["total_minutes"] == 60
+        assert result[0]["date"] == "2026-05-19"
+        assert result[0]["total_minutes"] == 60
+        assert len(result[0]["tasks"]) == 1
+        assert result[1]["date"] == "2026-05-20"
+        assert result[1]["total_minutes"] == 50
+        assert len(result[1]["tasks"]) == 2
 
-    def test_ordena_mais_recente_primeiro(self):
+    def test_ordena_mais_antigo_primeiro(self):
         from lash.plugins.work.core import format_log
         sessions = [
             {"task_name": "old", "date": "2026-05-01", "total_minutes": 10, "pomo_sessions": 0},
             {"task_name": "new", "date": "2026-05-20", "total_minutes": 20, "pomo_sessions": 0},
         ]
         result = format_log(sessions)
-        assert result[0]["date"] == "2026-05-20"
+        assert result[0]["date"] == "2026-05-01"
+        assert result[-1]["date"] == "2026-05-20"
 
     def test_lista_vazia(self):
         from lash.plugins.work.core import format_log

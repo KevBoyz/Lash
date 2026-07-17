@@ -1,14 +1,28 @@
 # Lash — Release Notes
 
-## v1.3.1 — Testes, refactors e novos plugins
+## v1.3.1.2 — Bugfixes, refactors and plugin manager improvements
 
-- **spider**: reestruturação (renomeado de `spy`/`server`) com seeker daemon, file transfer, shell remoto e injection client/server
-- **work**: reestruturação start/stop/pause/status, Pomodoro com notificações OS, log com rich table, CRUD de tasks
-- **device/macro**: new plugin - record e play de macros com pynput, speed control, repeat, list/rename/delete
-- **crack**: ETA adicionado ao progresso de brute force do azip
-- `device` e `file`: comandos agrupados sob Click group próprio
-- `image`, `video`, `web`, `audio`: `helpers.py` consolidado em `core.py`
-- `audio`: `cut` e `get` reescritos com ffmpeg direto (sem pytube)
+- **plugin**: new `plugin fix` command — fixes broken imports by installing missing deps
+- **plugin**: `plugin add` and `plugin remove` now support `-a`/`--all` to install/remove all
+- **plugin**: `plugin add` installs one by one, continuing on failure
+- **plugin**: shows the missing module name in the error message
+- **work**: `work rm` got `-a`/`--all` flag; commands and texts translated from PT to EN
+- **file**: `organize` translated — "Midia" → "Media"
+- **web**: `news` now defaults `-t` to `True`
+- **spider**: reduced timeout for faster connection scanning
+- **chore**: `rich` dependency resolved
+
+---
+
+## v1.3.1 — Tests, refactors and new plugins
+
+- **spider**: restructured (renamed from `spy`/`server`) with seeker daemon, file transfer, remote shell and injection client/server
+- **work**: restructured start/stop/pause/status, Pomodoro with OS notifications, log with rich table, task CRUD
+- **device/macro**: new plugin - record and play macros with pynput, speed control, repeat, list/rename/delete
+- **crack**: ETA added to azip brute force progress
+- `device` and `file`: commands grouped under their own Click group
+- `image`, `video`, `web`, `audio`: `helpers.py` consolidated into `core.py`
+- `audio`: `cut` and `get` rewritten with direct ffmpeg (no pytube)
 - `web`/CI: pytube substituído por yt-dlp em todos os plugins
 - Help texts multi-linha adicionados em todos os plugins
 - Fixes: image filter aliases, device path traversal, pynput leak, calc Qt5Agg backend, plugin install spinner

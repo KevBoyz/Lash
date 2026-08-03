@@ -1,6 +1,5 @@
 import click
 from gnews import GNews
-from rich import print
 from lash.plugins.gnews.core import impress_news
 
 

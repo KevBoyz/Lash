@@ -176,20 +176,35 @@ def _interruptible_sleep(seconds: float, stop: threading.Event) -> None:
         sleep(min(0.01, remaining))
 
 
-def play_macro(
-    name: str, speed: float, full_speed: bool, repeat: int, loop: bool
-) -> bool:  # noqa: C901
+def _load_macro_data(name: str) -> dict:
     try:
-        data = load_macro(name)
+        return load_macro(name)
     except FileNotFoundError:
         raise ValueError(f"macro '{name}' not found")
 
+
+def play_macro(
+    name: str, speed: float, full_speed: bool, repeat: int, loop: bool
+) -> bool:  # noqa: C901
+    data = _load_macro_data(name)
+
     events = data["events"]
-    delay_factor = 0 if full_speed else (1 / speed if speed else 1.0)
 
-    kb_ctrl = _kb_controller()
-    mouse_ctrl = _mouse_controller()
 
+def _calculate_delay_factor(speed: float, full_speed: bool) -> float:
+    return 0 if full_speed else (1 / speed if speed else 1.0)
+
+
+def play_macro(
+    name: str, speed: float, full_speed: bool, repeat: int, loop: bool
+) -> bool:
+    data = _load_macro_data(name)
+
+    events = data["events"]
+    delay_factor = _calculate_delay_factor(speed, full_speed)
+
+
+def _setup_f3_watcher() -> tuple[threading.Event, threading.Event, threading.Thread]:
     force_stopped = threading.Event()
     done = threading.Event()
 
@@ -204,6 +219,21 @@ def play_macro(
 
     watcher = threading.Thread(target=_watch_f3, daemon=True)
     watcher.start()
+    return force_stopped, done, watcher
+
+
+def play_macro(
+    name: str, speed: float, full_speed: bool, repeat: int, loop: bool
+) -> bool:
+    data = _load_macro_data(name)
+
+    events = data["events"]
+    delay_factor = _calculate_delay_factor(speed, full_speed)
+
+    kb_ctrl = _kb_controller()
+    mouse_ctrl = _mouse_controller()
+
+    force_stopped, done, watcher = _setup_f3_watcher()
 
     def run_once():
         run_start = time()

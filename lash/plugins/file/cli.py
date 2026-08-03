@@ -315,13 +315,13 @@ def compress(path, fn, v, fo):  # noqa: C901
     print("[cyan]Moving zipfile to parent folder...[/cyan]")
     if fn == "..zip":
         try:
-            dir_name = os.getcwd()[os.getcwd().rfind("\\") + 1 :] + ".zip"
+            dir_name = os.getcwd()[os.getcwd().rfind("\\") + 1:] + ".zip"
             os.rename(fn, dir_name)
         except FileExistsError:
             rlist = [7, 5, 6, 2]
             shuffle(rlist)
             rand = "".join(str(e) for e in rlist)
-            dir_name = os.getcwd()[os.getcwd().rfind("\\") + 1 :] + f"_{rand}" + ".zip"
+            dir_name = os.getcwd()[os.getcwd().rfind("\\") + 1:] + f"_{rand}" + ".zip"
             os.rename(fn, dir_name)
         fn = dir_name
     else:

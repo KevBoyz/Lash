@@ -15,15 +15,12 @@ def files_range():
 
 
 def get_file(path):
-    if "\\" not in path:
+    if "\\" not in path and "/" not in path:
         return path
-    if os.name == "nt":
-        os.chdir(path[: path.rfind("\\")])
-        fn = path[path.rfind("\\") + 1 :]
-    else:
-        os.chdir(path[: path.rfind("/")])
-        fn = path[path.rfind("/") + 1 :]
-    return fn
+    d = os.path.dirname(path)
+    if d:
+        os.chdir(d)
+    return os.path.basename(path)
 
 
 def sharp(im, v):
@@ -142,10 +139,39 @@ def filter_apply(im, file, root, t, c, b, co, d, e, k):
 # ── wmark ─────────────────────────────────────────────────────────────────────
 
 
-def wmarke(text, file, root, im, c, t, tp, ts, tc, tf, axis):
-    if tf[-4:] != ".ttf":
+def font_search_dirs():
+    if os.name == "nt":
+        windir = os.environ.get("WINDIR", "C:\\Windows")
+        return [os.path.join(windir, "Fonts")]
+    return [
+        "/usr/share/fonts/truetype/msttcorefonts",
+        "/usr/share/fonts/truetype/dejavu",
+        "/usr/share/fonts",
+        "/System/Library/Fonts/Supplemental",
+        "/Library/Fonts",
+    ]
+
+
+def resolve_font(tf, size):
+    if not tf.lower().endswith(".ttf"):
         tf = tf + ".ttf"
-    font = ImageFont.truetype(os.path.join("C:\\", "Windows", "Fonts", tf), size=ts)
+    if os.path.isabs(tf):
+        if os.path.isfile(tf):
+            return ImageFont.truetype(tf, size=size)
+        return ImageFont.load_default()
+    for name in (tf, "DejaVuSans.ttf", "Arial.ttf"):
+        for d in font_search_dirs():
+            p = os.path.join(d, name)
+            if os.path.isfile(p):
+                try:
+                    return ImageFont.truetype(p, size=size)
+                except OSError:
+                    continue
+    return ImageFont.load_default()
+
+
+def wmarke(text, file, root, im, c, t, tp, ts, tc, tf, axis):
+    font = resolve_font(tf, ts)
     mod_im = im.copy()
     draw = ImageDraw.Draw(mod_im)
     if not axis:

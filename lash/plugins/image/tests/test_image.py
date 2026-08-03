@@ -51,23 +51,14 @@ class TestFilesRange:
 
 
 class TestGetFile:
-    def test_no_backslash_returns_path_unchanged(self):
+    def test_no_separator_returns_path_unchanged(self):
         from lash.plugins.image.core import get_file
 
-        result = get_file("image.png")
-        assert result == "image.png"
+        assert get_file("image.png") == "image.png"
 
-    def test_no_backslash_with_extension_variants(self):
+    def test_image_path_returns_filename(self, tmp_path):
         from lash.plugins.image.core import get_file
 
-        assert get_file("photo.jpg") == "photo.jpg"
-        assert get_file("archive.zip") == "archive.zip"
-
-    @pytest.mark.skipif(os.name != "nt", reason="Windows backslash path handling only")
-    def test_windows_path_returns_filename(self, tmp_path):
-        from lash.plugins.image.core import get_file
-
-        # Create an actual file so os.chdir target exists
         img_file = tmp_path / "myimage.png"
         img_file.write_bytes(b"x")
 
@@ -252,12 +243,57 @@ class TestAdjustExec:
         assert isinstance(result, Image.Image)
 
 
+class TestResolveFont:
+    def test_returns_default_when_font_not_found(self, tmp_path):
+        orig_dirs = None
+        import lash.plugins.image.core as core
+
+        orig_dirs = core.font_search_dirs
+        core.font_search_dirs = lambda: [str(tmp_path)]
+        try:
+            from lash.plugins.image.core import resolve_font
+
+            font = resolve_font("nonexistent.ttf", 12)
+            assert font is not None
+        finally:
+            core.font_search_dirs = orig_dirs
+
+    def test_missing_absolute_path_returns_default(self, tmp_path):
+        from lash.plugins.image.core import resolve_font
+
+        nonexistent = str(tmp_path / "nope.ttf")
+        font = resolve_font(nonexistent, 12)
+        assert font is not None
+
+
 class TestWmarke:
-    @pytest.mark.skip(
-        reason="Windows fonts required — depends on C:\\Windows\\Fonts which may not exist in CI"
-    )
-    def test_wmarke_applies_text(self, tmp_path):
-        pass
+    def test_wmarke_creates_output_with_default_font(self, tmp_path):
+        from PIL import Image
+        from lash.plugins.image.core import wmarke
+        import lash.plugins.image.core as core
+
+        im = Image.new("RGB", (40, 40), color=(255, 255, 255))
+        out = str(tmp_path / "wm.png")
+
+        orig_dirs = core.font_search_dirs
+        core.font_search_dirs = lambda: [str(tmp_path)]
+        try:
+            wmarke(
+                "test",
+                out,
+                ".",
+                im,
+                False,
+                False,
+                0,
+                12,
+                "#000000",
+                "missing.ttf",
+                None,
+            )
+            assert os.path.isfile(out)
+        finally:
+            core.font_search_dirs = orig_dirs
 
 
 class TestFlipCommand:

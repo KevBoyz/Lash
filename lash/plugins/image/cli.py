@@ -348,9 +348,10 @@ def wmark(text, path, all, c, t, tp, ts, tc, tf, axis):
 
     You can configure the text size, text color and axis values for the
     watermark, you can use a custom font to, but it needs be installed on
-    your machine and be .ttf (true type font), to work. This command are only
-    available on Windows because the script only check the folder Win\\fonts
-    for fonts. To discover your machine fonts access the font on control panel.
+    your machine and be .ttf (true type font), to work. On Windows the script
+    looks for fonts on the Win\\fonts folder, on Linux/macOS it looks on the
+    system fonts folders. If the font is not found, a default font is used.
+    You can also pass an absolute path to a .ttf file with -tf.
     \b
 
     See the execution examples below:
@@ -362,11 +363,6 @@ def wmark(text, path, all, c, t, tp, ts, tc, tf, axis):
     \b
     $~ lash image wmark -all -axis 10 30 -tc #000000 KevBz C:\\Users\\User\\Folder
     """
-    if os.name != "nt":
-        print(
-            "[red]Error:[/red] this command is not available for your operational system"
-        )
-        return
     if all:
         n_editions = 0
         os.chdir(path)

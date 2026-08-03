@@ -1,0 +1,14 @@
+{
+  "name": "wikip",
+  "category": "web tools",
+  "description": "Read articles of Wikipedia",
+  "commands": {
+    "wikip": {
+      "module": "lash.plugins.wikip.cli:wikip",
+      "description": "Read Wikipedia article summaries or full pages",
+      "requires": [
+        "wikipedia>=1.4.0"
+      ]
+    }
+  }
+}

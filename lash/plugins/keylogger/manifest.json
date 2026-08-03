@@ -1,0 +1,14 @@
+{
+  "name": "keylogger",
+  "category": "hacking",
+  "description": "Keystroke logger",
+  "commands": {
+    "keylogger": {
+      "module": "lash.plugins.keylogger.cli:keylogger",
+      "description": "Log keystrokes to Keylogger.txt (F3 to stop)",
+      "requires": [
+        "pynput>=1.7.6"
+      ]
+    }
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "name": "macro",
+  "category": "recording",
+  "description": "Record and play keyboard/mouse macros",
+  "commands": {
+    "macro": {
+      "module": "lash.plugins.macro.cli:macro",
+      "description": "Record, play, list, rename and delete keyboard/mouse macros",
+      "requires": [
+        "pynput>=1.7.6",
+        "keyboard"
+      ]
+    }
+  }
+}

@@ -7,7 +7,7 @@ from pathlib import Path
 
 
 def get_data_dir() -> Path:
-    d = Path.home() / ".lash" / "data" / "device"
+    d = Path.home() / ".lash" / "data" / "macro"
     d.mkdir(parents=True, exist_ok=True)
     return d
 

@@ -1,0 +1,14 @@
+{
+  "name": "gnews",
+  "category": "web tools",
+  "description": "See the latest news from Google News",
+  "commands": {
+    "gnews": {
+      "module": "lash.plugins.gnews.cli:gnews",
+      "description": "Scrape news from Google News: top, country, search or topic",
+      "requires": [
+        "gnews>=0.3.0"
+      ]
+    }
+  }
+}

@@ -1,30 +1,29 @@
 import os
-import cv2
-from PIL import Image, ImageDraw
+from PIL import Image
 
 
 def get_last(path):
-    if path.rfind('\\') != -1:
-        last = path[1 + path.rfind('\\'):]
+    if path.rfind("\\") != -1:
+        last = path[1 + path.rfind("\\") :]
     else:
-        last = path[1 + path.rfind('/'):]
+        last = path[1 + path.rfind("/") :]
     if last.rfind('"'):
-        last = last.replace('"', '')
+        last = last.replace('"', "")
     return last
 
 
-def get_ext(file='', path=''):
+def get_ext(file="", path=""):
     if path:
-        index = path.rfind('\\')
-        return path[index + 1:]
+        index = path.rfind("\\")
+        return path[index + 1 :]
     else:
-        index = file.rfind('.')
+        index = file.rfind(".")
         return file[index:].lower()
 
 
 def path_no_file(path):
     filename = get_last(path)
-    return path.replace(filename, '')
+    return path.replace(filename, "")
 
 
 def tuple_to_seconds(times):
@@ -41,8 +40,8 @@ def resize_images(r=False):
         mean_height = 0
         mean_width = 0
         num_of_images = 0
-        for file in os.listdir('.'):
-            if file.endswith(('.jpg', '.jpeg', '.png')):
+        for file in os.listdir("."):
+            if file.endswith((".jpg", ".jpeg", ".png")):
                 num_of_images += 1
                 im = Image.open(os.path.join(path, file))
                 width, height = im.size
@@ -51,58 +50,16 @@ def resize_images(r=False):
         if num_of_images:
             mean_width = int(mean_width / num_of_images)
             mean_height = int(mean_height / num_of_images)
-        for file in os.listdir('.'):
-            if file.endswith(('.jpg', '.jpeg', '.png')):
+        for file in os.listdir("."):
+            if file.endswith((".jpg", ".jpeg", ".png")):
                 im = Image.open(os.path.join(path, file))
                 imResize = im.resize((mean_width, mean_height), Image.LANCZOS)
-                new_name = file[:file.find('.')] + '.jpeg'
-                imResize.save(new_name, 'JPEG', quality=95)
+                new_name = file[: file.find(".")] + ".jpeg"
+                imResize.save(new_name, "JPEG", quality=95)
                 if file != new_name:
                     os.remove(file)
     else:
-        for file in os.listdir('.'):
-            if file.endswith(('.jpg', '.png')):
-                os.rename(file, file[:file.find('.')] + '.jpeg')
-    return [f for f in os.listdir('.') if f.endswith('.jpeg')]
-
-
-def alt_build(image_folder, n, fps, path, f, images):
-    os.chdir('..')
-    video_name = f'{n}.avi'
-    frame = cv2.imread(os.path.join(image_folder, images[0]))
-    height, width, layers = frame.shape
-    video = cv2.VideoWriter(video_name, 0, fps, (width, height))
-    for image in images:
-        video.write(cv2.imread(os.path.join(image_folder, image)))
-    if f:
-        os.chdir(path)
-        for img in os.listdir('.'):
-            if img.endswith('.jpeg') or img.endswith('.txt'):
-                os.remove(img)
-    os.chdir('..')
-    return os.path.join(os.getcwd(), video_name)
-
-
-def render_cursor(image_folder, images):
-    conf = open(f'{image_folder}/conf.txt', 'r')
-    for i, c in enumerate(conf.readlines()):
-        try:
-            cord = c[:-1].split()
-            x = int(cord[0])
-            y = int(cord[1])
-            im = Image.open(f'{image_folder}/{images[i]}')
-            draw = ImageDraw.Draw(im)
-            draw.ellipse((x, y, x + 20, y + 20), fill=(255, 0, 0), outline=(0, 0, 0))
-            im.save(f'{image_folder}/{images[i]}')
-        except Exception:
-            pass
-    conf.close()
-
-
-def get_images(image_folder):
-    images_list = [img for img in os.listdir(image_folder) if img.endswith('.jpeg')]
-    intnumbs = []
-    for file in images_list:
-        intnumbs.append(file[:file.find('.')])
-    intnumbs.sort(key=int)
-    return [i + '.jpeg' for i in intnumbs]
+        for file in os.listdir("."):
+            if file.endswith((".jpg", ".png")):
+                os.rename(file, file[: file.find(".")] + ".jpeg")
+    return [f for f in os.listdir(".") if f.endswith(".jpeg")]

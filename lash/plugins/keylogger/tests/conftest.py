@@ -30,6 +30,6 @@ def mock_pynput(monkeypatch):
     mock_pynput_mod.keyboard = mock_keyboard
     mock_pynput_mod.mouse = mock_mouse
 
-    monkeypatch.setitem(sys.modules, 'pynput', mock_pynput_mod)
-    monkeypatch.setitem(sys.modules, 'pynput.keyboard', mock_keyboard)
-    monkeypatch.setitem(sys.modules, 'pynput.mouse', mock_mouse)
+    monkeypatch.setitem(sys.modules, "pynput", mock_pynput_mod)
+    monkeypatch.setitem(sys.modules, "pynput.keyboard", mock_keyboard)
+    monkeypatch.setitem(sys.modules, "pynput.mouse", mock_mouse)

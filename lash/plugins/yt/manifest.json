@@ -1,0 +1,14 @@
+{
+  "name": "yt",
+  "category": "web tools",
+  "description": "Download YouTube videos and audio",
+  "commands": {
+    "yt": {
+      "module": "lash.plugins.yt.cli:yt",
+      "description": "Download YouTube videos/audio by link or search",
+      "requires": [
+        "yt-dlp>=2024.1.0"
+      ]
+    }
+  }
+}

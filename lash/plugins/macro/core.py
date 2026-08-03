@@ -1,0 +1,237 @@
+from time import sleep, time
+import threading
+from lash.plugins.macro.helpers import (
+    list_macro_files,
+    rename_macro_file,
+    delete_macro_file,
+    load_macro,
+    deserialize_key,
+    macro_path,
+    save_macro,
+    serialize_key,
+    minimize_terminal,
+)
+
+
+# ── macro ─────────────────────────────────────────────────────────────────────
+
+
+def list_macros() -> list:
+    return list_macro_files()
+
+
+def rename_macro(old: str, new: str) -> None:
+    try:
+        rename_macro_file(old, new)
+    except FileNotFoundError:
+        raise ValueError(f"macro '{old}' not found")
+    except FileExistsError:
+        raise ValueError(f"macro '{new}' already exists")
+
+
+def delete_macro(name: str) -> None:
+    try:
+        delete_macro_file(name)
+    except FileNotFoundError:
+        raise ValueError(f"macro '{name}' not found")
+
+
+def _kb_controller():
+    import pynput.keyboard as kb
+
+    return kb.Controller()
+
+
+def _mouse_controller():
+    from pynput.mouse import Controller
+
+    return Controller()
+
+
+def _dispatch_event(event, kb_ctrl, mouse_ctrl):
+    t = event["type"]
+    if t == "key_down":
+        kb_ctrl.press(deserialize_key(event["key"]))
+    elif t == "key_up":
+        kb_ctrl.release(deserialize_key(event["key"]))
+    elif t == "mouse_move":
+        mouse_ctrl.position = (event["x"], event["y"])
+    elif t in ("mouse_down", "mouse_up"):
+        from pynput.mouse import Button
+
+        btn = getattr(Button, event["button"])
+        if "x" in event:
+            mouse_ctrl.position = (event["x"], event["y"])
+        if t == "mouse_down":
+            mouse_ctrl.press(btn)
+        else:
+            mouse_ctrl.release(btn)
+    elif t == "mouse_scroll":
+        mouse_ctrl.scroll(event["dx"], event["dy"])
+
+
+def record_macro(name: str) -> dict | None:  # noqa: C901
+    if macro_path(name).exists():
+        raise ValueError(f"macro '{name}' already exists. Delete it first.")
+
+    import importlib
+
+    kb = importlib.import_module("pynput.keyboard")
+    mouse_mod = importlib.import_module("pynput.mouse")
+    MouseListener = mouse_mod.Listener
+
+    events = []
+    start_time = [None]
+    last_move_time = [0.0]
+    stop_event = threading.Event()
+    # Controller.position getter uses GetCursorPos (logical/DPI-scaled coords).
+    # WH_MOUSE_LL callbacks give physical coords — mismatches SetCursorPos on scaled displays.
+    # Reading via controller ensures record and playback share the same coordinate space.
+    _read_ctrl = _mouse_controller()
+
+    def elapsed():
+        return time() - start_time[0] if start_time[0] is not None else 0.0
+
+    def on_press(key):
+        if start_time[0] is None:
+            start_time[0] = time()
+        if hasattr(key, "_value_") and key == kb.Key.f3:
+            stop_event.set()
+            return
+        serialized = serialize_key(key)
+        if serialized is None:
+            return
+        events.append({"t": elapsed(), "type": "key_down", "key": serialized})
+
+    def on_release(key):
+        if start_time[0] is None:
+            return
+        if hasattr(key, "_value_") and key == kb.Key.f3:
+            return
+        serialized = serialize_key(key)
+        if serialized is None:
+            return
+        events.append({"t": elapsed(), "type": "key_up", "key": serialized})
+
+    def on_move(x, y):
+        if start_time[0] is None:
+            start_time[0] = time()
+        t = elapsed()
+        if last_move_time[0] > 0 and t - last_move_time[0] < 0.016:
+            return
+        last_move_time[0] = t
+        lx, ly = _read_ctrl.position
+        events.append({"t": t, "type": "mouse_move", "x": lx, "y": ly})
+
+    def on_click(x, y, button, pressed):
+        if start_time[0] is None:
+            start_time[0] = time()
+        btn_name = button.name
+        etype = "mouse_down" if pressed else "mouse_up"
+        lx, ly = _read_ctrl.position
+        events.append(
+            {"t": elapsed(), "type": etype, "button": btn_name, "x": lx, "y": ly}
+        )
+
+    def on_scroll(x, y, dx, dy):
+        if start_time[0] is None:
+            start_time[0] = time()
+        events.append({"t": elapsed(), "type": "mouse_scroll", "dx": dx, "dy": dy})
+
+    minimize_terminal()
+
+    with kb.Listener(on_press=on_press, on_release=on_release):
+        with MouseListener(on_move=on_move, on_click=on_click, on_scroll=on_scroll):
+            stop_event.wait()
+
+    if not events:
+        return None
+
+    from datetime import datetime
+
+    duration = events[-1]["t"]
+    data = {
+        "name": name,
+        "created_at": datetime.now().strftime("%Y-%m-%dT%H:%M:%S"),
+        "duration": round(duration, 3),
+        "events": events,
+    }
+    save_macro(name, data)
+    return data
+
+
+_MIN_EVENT_DELAY = (
+    0.001  # 1ms floor — prevents event loss when OS/app can't drain queue fast enough
+)
+
+
+def _interruptible_sleep(seconds: float, stop: threading.Event) -> None:
+    end = time() + seconds
+    while True:
+        remaining = end - time()
+        if remaining <= 0:
+            break
+        if stop.is_set():
+            return
+        sleep(min(0.01, remaining))
+
+
+def play_macro(
+    name: str, speed: float, full_speed: bool, repeat: int, loop: bool
+) -> bool:  # noqa: C901
+    try:
+        data = load_macro(name)
+    except FileNotFoundError:
+        raise ValueError(f"macro '{name}' not found")
+
+    events = data["events"]
+    delay_factor = 0 if full_speed else (1 / speed if speed else 1.0)
+
+    kb_ctrl = _kb_controller()
+    mouse_ctrl = _mouse_controller()
+
+    force_stopped = threading.Event()
+    done = threading.Event()
+
+    def _watch_f3():
+        from keyboard import is_pressed
+
+        while not done.is_set():
+            if is_pressed("f3"):
+                force_stopped.set()
+                break
+            sleep(0.05)
+
+    watcher = threading.Thread(target=_watch_f3, daemon=True)
+    watcher.start()
+
+    def run_once():
+        run_start = time()
+        last_dispatch = time()
+        for event in events:
+            if force_stopped.is_set():
+                return
+            remaining = run_start + event["t"] * delay_factor - time()
+            if remaining > _MIN_EVENT_DELAY:
+                _interruptible_sleep(remaining, force_stopped)
+            else:
+                gap = _MIN_EVENT_DELAY - (time() - last_dispatch)
+                if gap > 0:
+                    sleep(gap)
+            if force_stopped.is_set():
+                return
+            _dispatch_event(event, kb_ctrl, mouse_ctrl)
+            last_dispatch = time()
+
+    if loop:
+        while not force_stopped.is_set():
+            run_once()
+    else:
+        for _ in range(repeat):
+            if force_stopped.is_set():
+                break
+            run_once()
+
+    done.set()
+    watcher.join(timeout=0.2)
+    return force_stopped.is_set()

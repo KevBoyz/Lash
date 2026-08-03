@@ -7,7 +7,9 @@ class TestLazyGroupImportError:
         group = LazyGroup(
             name='test',
             lazy_subcommands={
-                'broken': {'module': 'fully.fake.module.nonexistent:cmd', 'description': 'A broken command'},
+                'broken': {
+                    'module': 'fully.fake.module.nonexistent:cmd',
+                    'description': 'A broken command'},
             },
         )
         cmd = group.get_command(None, 'broken')
@@ -19,7 +21,9 @@ class TestLazyGroupImportError:
         group = LazyGroup(
             name='test',
             lazy_subcommands={
-                'broken': {'module': 'completely.missing.package:cmd', 'description': 'A broken command'},
+                'broken': {
+                    'module': 'completely.missing.package:cmd',
+                    'description': 'A broken command'},
             },
         )
         cmd = group.get_command(None, 'broken')
@@ -35,7 +39,9 @@ class TestLazyGroupImportError:
         group = LazyGroup(
             name='test',
             lazy_subcommands={
-                'crack': {'module': 'lash.plugins.crack.cli:crack', 'description': 'Crack zips'},
+                'crack': {
+                    'module': 'lash.plugins.crack.cli:crack',
+                    'description': 'Crack zips'},
             },
         )
         cmd = group.get_command(None, 'crack')
@@ -58,7 +64,9 @@ class TestLazyGroupImportError:
         group = LazyGroup(
             name='test',
             lazy_subcommands={
-                'broken': {'module': 'does.not.exist:cmd', 'description': 'A broken command'},
+                'broken': {
+                    'module': 'does.not.exist:cmd',
+                    'description': 'A broken command'},
             },
         )
         commands = group.list_commands(None)

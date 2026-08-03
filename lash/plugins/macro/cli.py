@@ -15,22 +15,30 @@ from lash.plugins.macro.core import (
     "-r", "--record", "action", flag_value="record", help="Record a new macro"
 )
 @click.option("-p", "--play", "action", flag_value="play", help="Play a macro")
-@click.option("-l", "--list", "action", flag_value="list", help="List saved macros")
-@click.option("-d", "--delete", "action", flag_value="delete", help="Delete a macro")
+@click.option("-l",
+              "--list",
+              "action",
+              flag_value="list",
+              help="List saved macros")
+@click.option("-d",
+              "--delete",
+              "action",
+              flag_value="delete",
+              help="Delete a macro")
 @click.option("--rename", "action", flag_value="rename", help="Rename a macro")
 @click.argument("name", required=False)
 @click.argument("newname", required=False)
 @click.option("-n", type=int, default=1, help="Repeat N times (with -p)")
-@click.option(
-    "--loop", is_flag=True, help="Loop indefinitely (with -p), F3 to stop between runs"
-)
-@click.option(
-    "--speed", type=float, default=1.0, help="Playback speed multiplier (with -p)"
-)
-@click.option("--full-speed", is_flag=True, help="No delays between events (with -p)")
+@click.option("--loop", is_flag=True,
+              help="Loop indefinitely (with -p), F3 to stop between runs")
+@click.option("--speed", type=float, default=1.0,
+              help="Playback speed multiplier (with -p)")
+@click.option("--full-speed", is_flag=True,
+              help="No delays between events (with -p)")
 def macro(action, name, newname, n, loop, speed, full_speed):  # noqa: C901
     if action is None:
-        raise click.UsageError("Specify an action: -r, -p, -l, -d, or --rename")
+        raise click.UsageError(
+            "Specify an action: -r, -p, -l, -d, or --rename")
 
     if action == "list":
         macros = list_macros()
@@ -55,7 +63,9 @@ def macro(action, name, newname, n, loop, speed, full_speed):  # noqa: C901
             click.echo("Nothing recorded.")
         else:
             print(
-                f"Macro '{name}' [green]saved[/green] ({result['duration']}s, {len(result['events'])} events)"
+                "Macro "
+                f"'{name}' [green]saved[/green] "
+                f"({result['duration']}s, {len(result['events'])} events)"
             )
         return
 
@@ -63,7 +73,8 @@ def macro(action, name, newname, n, loop, speed, full_speed):  # noqa: C901
         if not name:
             raise click.UsageError("-p requires a macro name")
         if speed != 1.0 and full_speed:
-            raise click.UsageError("--speed and --full-speed are mutually exclusive")
+            raise click.UsageError(
+                "--speed and --full-speed are mutually exclusive")
         if loop and n != 1:
             raise click.UsageError("--loop and -n are mutually exclusive")
         if speed <= 0:

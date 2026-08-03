@@ -124,7 +124,8 @@ def start(task, pomo, work_mins, break_mins):  # noqa: C901
     pending = [t for t in state["tasks"] if not t["done"]]
     if task is None:
         if not pending:
-            raise click.ClickException("No pending tasks. Use 'work add' first.")
+            raise click.ClickException(
+                "No pending tasks. Use 'work add' first.")
         for i, t in enumerate(pending, 1):
             click.echo(f"  {i}. {t['name']}")
         query = click.prompt("Enter number or new task name")
@@ -154,7 +155,9 @@ def start(task, pomo, work_mins, break_mins):  # noqa: C901
     )
     save_state(tasks_path, state)
     if pomo:
-        click.echo(f"Started: {task_obj['name']} [Pomodoro {work_mins}/{break_mins}]")
+        click.echo(
+            f"Started: {
+                task_obj['name']} [Pomodoro {work_mins}/{break_mins}]")
         _run_pomodoro(tasks_path, task_obj["name"], work_mins, break_mins)
     else:
         click.echo(f"Started: {task_obj['name']}")
@@ -175,8 +178,11 @@ def stop():
     if session_entry:
         append_session(sessions_path, session_entry)
         click.echo(
-            f"Done: {session_entry['task_name']} ({format_duration(session_entry['total_minutes'] * 60)})"
-        )
+            f"Done: {
+                session_entry['task_name']} ({
+                format_duration(
+                    session_entry['total_minutes'] *
+                    60)})")
     else:
         click.echo("Stopped.")
 
@@ -240,9 +246,8 @@ def log(today):
         table.add_column("Time", justify="right")
         table.add_column("Pomodoros", justify="right")
         for t in day["tasks"]:
-            table.add_row(
-                t["name"], format_duration(t["minutes"] * 60), str(t["pomo_sessions"])
-            )
+            table.add_row(t["name"], format_duration(
+                t["minutes"] * 60), str(t["pomo_sessions"]))
         table.add_row(
             "[bold]Total[/bold]",
             f"[bold]{format_duration(day['total_minutes'] * 60)}[/bold]",

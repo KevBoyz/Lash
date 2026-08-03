@@ -23,9 +23,21 @@ def sched():
 
 @sched.command()
 @click.argument("command", metavar="command", type=click.STRING)
-@click.argument("h", metavar="<hours>", type=click.INT, required=False, default=0)
-@click.argument("m", metavar="<minutes>", type=click.INT, required=False, default=0)
-@click.argument("s", metavar="<seconds>", type=click.INT, required=False, default=0)
+@click.argument("h",
+                metavar="<hours>",
+                type=click.INT,
+                required=False,
+                default=0)
+@click.argument("m",
+                metavar="<minutes>",
+                type=click.INT,
+                required=False,
+                default=0)
+@click.argument("s",
+                metavar="<seconds>",
+                type=click.INT,
+                required=False,
+                default=0)
 def run(command, s, m, h):
     """\b
     Run a command repeatedly at a given interval.
@@ -44,7 +56,11 @@ def run(command, s, m, h):
                 h2, m2, s2 = reg_crono(h2, m2, s2)
                 fh, fm, fs = time_format(h2, m2, s2)
                 prog.update(
-                    task, advance=1, description=f"Time remaining: {fh}:{fm}:{fs}"
+                    task,
+                    advance=1,
+                    description=(
+                        f"Time remaining: {fh}:{fm}:{fs}"
+                    ),
                 )
                 sleep(1)
         system(command=command)
@@ -52,9 +68,21 @@ def run(command, s, m, h):
 
 @sched.command()
 @click.argument("command", metavar="command", type=click.STRING)
-@click.argument("h", metavar="<hours>", type=click.INT, required=False, default=0)
-@click.argument("m", metavar="<minutes>", type=click.INT, required=False, default=0)
-@click.argument("s", metavar="<seconds>", type=click.INT, required=False, default=0)
+@click.argument("h",
+                metavar="<hours>",
+                type=click.INT,
+                required=False,
+                default=0)
+@click.argument("m",
+                metavar="<minutes>",
+                type=click.INT,
+                required=False,
+                default=0)
+@click.argument("s",
+                metavar="<seconds>",
+                type=click.INT,
+                required=False,
+                default=0)
 def wait(command, h, m, s):
     """
     Wait a given time, run a command once and exit.
@@ -68,7 +96,13 @@ def wait(command, h, m, s):
         for i in range(0, t):
             h, m, s = reg_crono(h, m, s)
             fh, fm, fs = time_format(h, m, s)
-            prog.update(task, advance=1, description=f"Time remaining: {fh}:{fm}:{fs}")
+            prog.update(
+                task,
+                advance=1,
+                description=(
+                    f"Time remaining: {fh}:{fm}:{fs}"
+                ),
+            )
             sleep(1)
     system(command=command)
 
@@ -86,18 +120,28 @@ def exec(time, command):
     """
     parts = time.split(":")
     if len(parts) != 3 or not all(p.isdigit() for p in parts):
-        print("[red]ERROR:[/red] syntax incorrect, use HH:MM:SS format, e.g. 10:30:0")
+        print(
+            "[red]ERROR:[/red] syntax incorrect, use HH:MM:SS format, "
+            "e.g. 10:30:0"
+        )
         return
     target_h, target_m, target_s = int(parts[0]), int(parts[1]), int(parts[2])
     with _console.status(
         f"Waiting {datetime.now().hour}:{datetime.now().minute}:{datetime.now().second} -> {time}"
     ) as status:
-        while (datetime.now().hour, datetime.now().minute, datetime.now().second) != (
+        while (
+            datetime.now().hour,
+            datetime.now().minute,
+            datetime.now().second) != (
             target_h,
             target_m,
             target_s,
         ):
             now = datetime.now()
-            status.update(f"Waiting {now.hour}:{now.minute}:{now.second} -> {time}")
+            status.update(
+                f"Waiting {
+                    now.hour}:{
+                    now.minute}:{
+                    now.second} -> {time}")
             sleep(1)
     system(command=command)

@@ -86,7 +86,8 @@ def record_macro(name: str) -> dict | None:  # noqa: C901
     stop_event = threading.Event()
     # Controller.position getter uses GetCursorPos (logical/DPI-scaled coords).
     # WH_MOUSE_LL callbacks give physical coords — mismatches SetCursorPos on scaled displays.
-    # Reading via controller ensures record and playback share the same coordinate space.
+    # Reading via controller ensures record and playback share the same
+    # coordinate space.
     _read_ctrl = _mouse_controller()
 
     def elapsed():
@@ -130,13 +131,26 @@ def record_macro(name: str) -> dict | None:  # noqa: C901
         etype = "mouse_down" if pressed else "mouse_up"
         lx, ly = _read_ctrl.position
         events.append(
-            {"t": elapsed(), "type": etype, "button": btn_name, "x": lx, "y": ly}
+            {
+                "t": elapsed(),
+                "type": etype,
+                "button": btn_name,
+                "x": lx,
+                "y": ly,
+            }
         )
 
     def on_scroll(x, y, dx, dy):
         if start_time[0] is None:
             start_time[0] = time()
-        events.append({"t": elapsed(), "type": "mouse_scroll", "dx": dx, "dy": dy})
+        events.append(
+            {
+                "t": elapsed(),
+                "type": "mouse_scroll",
+                "dx": dx,
+                "dy": dy,
+            }
+        )
 
     minimize_terminal()
 
@@ -183,28 +197,15 @@ def _load_macro_data(name: str) -> dict:
         raise ValueError(f"macro '{name}' not found")
 
 
-def play_macro(
-    name: str, speed: float, full_speed: bool, repeat: int, loop: bool
-) -> bool:  # noqa: C901
-    data = _load_macro_data(name)
-
-    events = data["events"]
-
-
 def _calculate_delay_factor(speed: float, full_speed: bool) -> float:
     return 0 if full_speed else (1 / speed if speed else 1.0)
 
 
-def play_macro(
-    name: str, speed: float, full_speed: bool, repeat: int, loop: bool
-) -> bool:
-    data = _load_macro_data(name)
-
-    events = data["events"]
-    delay_factor = _calculate_delay_factor(speed, full_speed)
-
-
-def _setup_f3_watcher() -> tuple[threading.Event, threading.Event, threading.Thread]:
+def _setup_f3_watcher() -> tuple[
+    threading.Event,
+    threading.Event,
+    threading.Thread,
+]:
     force_stopped = threading.Event()
     done = threading.Event()
 
@@ -224,7 +225,7 @@ def _setup_f3_watcher() -> tuple[threading.Event, threading.Event, threading.Thr
 
 def play_macro(
     name: str, speed: float, full_speed: bool, repeat: int, loop: bool
-) -> bool:
+) -> bool:  # noqa: C901
     data = _load_macro_data(name)
 
     events = data["events"]

@@ -29,7 +29,8 @@ def render_cursor(image_folder, images):
             y = int(cord[1])
             im = Image.open(f"{image_folder}/{images[i]}")
             draw = ImageDraw.Draw(im)
-            draw.ellipse((x, y, x + 20, y + 20), fill=(255, 0, 0), outline=(0, 0, 0))
+            draw.ellipse((x, y, x + 20, y + 20),
+                         fill=(255, 0, 0), outline=(0, 0, 0))
             im.save(f"{image_folder}/{images[i]}")
         except Exception:
             pass
@@ -37,7 +38,8 @@ def render_cursor(image_folder, images):
 
 
 def get_images(image_folder):
-    images_list = [img for img in os.listdir(image_folder) if img.endswith(".jpeg")]
+    images_list = [img for img in os.listdir(
+        image_folder) if img.endswith(".jpeg")]
     intnumbs = []
     for file in images_list:
         intnumbs.append(file[: file.find(".")])

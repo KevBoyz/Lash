@@ -4,9 +4,8 @@ from lash.plugins.random.core import get_size, gen_random, file_save
 
 
 @click.command()
-@click.option(
-    "-c", type=click.INT, default=5, show_default=True, help="Number of characters"
-)
+@click.option("-c", type=click.INT, default=5,
+              show_default=True, help="Number of characters")
 @click.option(
     "-n", is_flag=True, help="Enable numbers", default=True, show_default=True
 )

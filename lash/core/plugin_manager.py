@@ -34,25 +34,32 @@ def _detect_installer(requires):
 
 def _install_cmd(requires, installer):
     if installer == "uv":
-        return ["uv", "pip", "install", "--python", sys.executable] + requires
+        return (
+            ["uv", "pip", "install", "--python", sys.executable] + requires
+        )
     return [sys.executable, "-m", "pip", "install"] + requires
 
 
 def _uninstall_cmd(pkg_names, installer):
     if installer == "uv":
-        return ["uv", "pip", "uninstall", "--python", sys.executable] + pkg_names
+        return [
+            "uv",
+            "pip",
+            "uninstall",
+            "--python",
+            sys.executable] + pkg_names
     return [sys.executable, "-m", "pip", "uninstall", "-y"] + pkg_names
 
 
 def make_download_command(*, plugins_dir=None, state_file=None):  # noqa: C901
     @click.command("add")
     @click.argument("plugins", nargs=-1, required=False)
-    @click.option(
-        "-a", "--all", "install_all", is_flag=True, help="Install all missing plugins"
-    )
+    @click.option("-a", "--all", "install_all", is_flag=True,
+                  help="Install all missing plugins")
     def add(plugins, install_all):
         """Add one or more plugins."""
-        available = plugin_registry.get_available_plugins(plugins_dir=plugins_dir)
+        available = plugin_registry.get_available_plugins(
+            plugins_dir=plugins_dir)
 
         if install_all:
             plugins = list(available.keys())
@@ -85,8 +92,8 @@ def make_download_command(*, plugins_dir=None, state_file=None):  # noqa: C901
 
 def _install_plugin(plugin_name, available, state_file):  # noqa: C901
     already_installed = set(
-        plugin_registry._load_state(state_file).get("installed_commands", {}).keys()
-    )
+        plugin_registry._load_state(state_file).get(
+            "installed_commands", {}).keys())
     commands_to_install = {
         cmd_name: cmd_info
         for cmd_name, cmd_info in available[plugin_name]["commands"].items()
@@ -107,7 +114,10 @@ def _install_plugin(plugin_name, available, state_file):  # noqa: C901
     if requires:
         installer = _detect_installer(requires)
         with _console.status(
-            f"Installing dependencies for {plugin_name}: {', '.join(requires)}",
+            (
+                f"Installing dependencies for {plugin_name}: "
+                f"{', '.join(requires)}"
+            ),
             spinner="dots",
         ):
             result = subprocess.run(
@@ -116,7 +126,9 @@ def _install_plugin(plugin_name, available, state_file):  # noqa: C901
                 text=True,
             )
         if result.returncode != 0:
-            raise RuntimeError(f"Dependency install failed:\n{result.stderr}")
+            raise RuntimeError(
+                f"Dependency install failed:\n{result.stderr}"
+            )
 
     for cmd_name, cmd_info in commands_to_install.items():
         plugin_registry.mark_command_installed(
@@ -139,11 +151,13 @@ def _list_installed_plugins(available, state_file):
     for name, manifest in available.items():
         is_core = manifest.get("core", False)
         if is_core:
-            any_installed = any(cmd not in removed_cmds for cmd in manifest["commands"])
+            any_installed = any(
+                cmd not in removed_cmds for cmd in manifest["commands"])
             if any_installed:
                 installed.append(name)
         else:
-            any_installed = any(cmd in installed_cmds for cmd in manifest["commands"])
+            any_installed = any(
+                cmd in installed_cmds for cmd in manifest["commands"])
             if any_installed:
                 installed.append(name)
     if installed:
@@ -155,19 +169,21 @@ def _list_installed_plugins(available, state_file):
 def make_remove_command(*, plugins_dir=None, state_file=None):
     @click.command("remove")
     @click.argument("plugins", nargs=-1, required=False)
-    @click.option(
-        "-a", "--all", "remove_all", is_flag=True, help="Remove all installed plugins"
-    )
+    @click.option("-a", "--all", "remove_all", is_flag=True,
+                  help="Remove all installed plugins")
     def remove(plugins, remove_all):
         """Remove one or more plugins."""
-        available = plugin_registry.get_available_plugins(plugins_dir=plugins_dir)
+        available = plugin_registry.get_available_plugins(
+            plugins_dir=plugins_dir)
 
         if remove_all:
             plugins = list(available.keys())
         elif not plugins:
-            raise click.UsageError("Missing argument 'PLUGIN' or use -a to remove all.")
+            raise click.UsageError(
+                "Missing argument 'PLUGIN' or use -a to remove all.")
 
-        commands_to_remove = _collect_remove_commands(available, plugins, state_file)
+        commands_to_remove = _collect_remove_commands(
+            available, plugins, state_file)
 
         if not commands_to_remove:
             click.echo("Nothing to remove — no commands are installed.")
@@ -196,8 +212,7 @@ def _collect_remove_commands(available, plugins, state_file):
             }
         else:
             plugin_installed = {
-                k for k, v in installed_cmds.items() if v["plugin"] == plugin_name
-            }
+                k for k, v in installed_cmds.items() if v["plugin"] == plugin_name}
         commands_to_remove.update(plugin_installed)
     return commands_to_remove
 
@@ -212,7 +227,9 @@ def _execute_remove(commands_to_remove, state_file, plugins_dir):
         click.echo(f"  - {cmd_name}")
     if all_orphaned:
         pkg_names = [_package_name(r) for r in all_orphaned]
-        click.echo(f"Uninstalling orphaned dependencies: {', '.join(pkg_names)}")
+        click.echo(
+            f"Uninstalling orphaned dependencies: {
+                ', '.join(pkg_names)}")
         installer = _detect_installer(pkg_names)
         result = subprocess.run(
             _uninstall_cmd(pkg_names, installer),
@@ -220,7 +237,9 @@ def _execute_remove(commands_to_remove, state_file, plugins_dir):
             text=True,
         )
         if result.returncode != 0:
-            click.echo(f"Warning: dependency uninstall failed:\n{result.stderr}")
+            click.echo(
+                f"Warning: dependency uninstall failed:\n{
+                    result.stderr}")
 
 
 remove = make_remove_command()
@@ -262,7 +281,7 @@ def _layout_panels(panels, per_row=2):
     from rich.text import Text
 
     for i in range(0, len(panels), per_row):
-        row = panels[i : i + per_row]
+        row = panels[i: i + per_row]
         heights = [len(panel.renderable.renderables) for panel in row]
         max_height = max(heights)
         for panel, height in zip(row, heights):
@@ -287,7 +306,8 @@ def make_plugin_list_command(  # noqa: C901
     )
     def plugin_list(installed, not_installed):
         """List plugins and their install status."""
-        available = plugin_registry.get_available_plugins(plugins_dir=plugins_dir)
+        available = plugin_registry.get_available_plugins(
+            plugins_dir=plugins_dir)
         active_cmds = set(
             plugin_registry.get_lazy_commands(
                 plugins_dir=plugins_dir, state_file=state_file
@@ -318,8 +338,11 @@ def make_plugin_list_command(  # noqa: C901
             found_any = True
             panel_width = max(30, _console.width // 2 - 2)
             panels.append(
-                _render_category_panel(category, cat_cmds, active_cmds, panel_width)
-            )
+                _render_category_panel(
+                    category,
+                    cat_cmds,
+                    active_cmds,
+                    panel_width))
 
         if panels:
             _layout_panels(panels)
@@ -369,7 +392,8 @@ def make_fix_command(*, plugins_dir=None, state_file=None):
         state = plugin_registry._load_state(state_file)
         installed_cmds = set(state.get("installed_commands", {}).keys())
         removed_cmds = set(state.get("removed_commands", []))
-        available = plugin_registry.get_available_plugins(plugins_dir=plugins_dir)
+        available = plugin_registry.get_available_plugins(
+            plugins_dir=plugins_dir)
 
         active_requires = _collect_active_requires(
             available, installed_cmds, removed_cmds
@@ -381,7 +405,10 @@ def make_fix_command(*, plugins_dir=None, state_file=None):
                 click.echo("Run 'lash plugin add <plugin>' first.")
             return
 
-        click.echo(f"Checking dependencies: {', '.join(sorted(active_requires))}")
+        click.echo(
+            "Checking dependencies: "
+            f"{', '.join(sorted(active_requires))}"
+        )
 
         requires = list(active_requires)
         installer = _detect_installer(requires)
@@ -393,7 +420,8 @@ def make_fix_command(*, plugins_dir=None, state_file=None):
             )
 
         if result.returncode != 0:
-            _console.print(f"[red]Dependency install failed:[/red]\n{result.stderr}")
+            _console.print(
+                f"[red]Dependency install failed:[/red]\n{result.stderr}")
             raise SystemExit(1)
 
         _sync_installed_requires(available, installed_cmds, state_file)
@@ -439,8 +467,9 @@ def make_plugin_group(*, plugins_dir=None, state_file=None):
         make_remove_command(plugins_dir=plugins_dir, state_file=state_file)
     )
     plugin_group.add_command(
-        make_plugin_list_command(plugins_dir=plugins_dir, state_file=state_file)
-    )
+        make_plugin_list_command(
+            plugins_dir=plugins_dir,
+            state_file=state_file))
     plugin_group.add_command(fix)
     _annotate_aliases(plugin_group)
     return plugin_group

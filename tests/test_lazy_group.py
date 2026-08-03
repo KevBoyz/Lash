@@ -6,7 +6,9 @@ from click.testing import CliRunner
 class TestLazyGroupListCommands:
     def test_returns_lazy_names_without_importing(self):
         from lash.core.lazy_group import LazyGroup
-        group = LazyGroup(name='test', lazy_subcommands={'foo': 'nonexistent_xyz:attr'})
+        group = LazyGroup(
+            name='test', lazy_subcommands={
+                'foo': 'nonexistent_xyz:attr'})
         ctx = click.Context(group)
         # nonexistent module — proves import is never triggered
         result = group.list_commands(ctx)
@@ -14,7 +16,9 @@ class TestLazyGroupListCommands:
 
     def test_merges_lazy_and_eager_commands(self):
         from lash.core.lazy_group import LazyGroup
-        group = LazyGroup(name='test', lazy_subcommands={'lazy_cmd': 'os:getcwd'})
+        group = LazyGroup(
+            name='test', lazy_subcommands={
+                'lazy_cmd': 'os:getcwd'})
 
         @group.command('eager_cmd')
         def eager():
@@ -27,14 +31,20 @@ class TestLazyGroupListCommands:
 
     def test_result_is_sorted(self):
         from lash.core.lazy_group import LazyGroup
-        group = LazyGroup(name='test', lazy_subcommands={'zzz': 'os:getcwd', 'aaa': 'os:getcwd'})
+        group = LazyGroup(
+            name='test',
+            lazy_subcommands={
+                'zzz': 'os:getcwd',
+                'aaa': 'os:getcwd'})
         ctx = click.Context(group)
         result = group.list_commands(ctx)
         assert result == sorted(result)
 
     def test_help_does_not_import_lazy_modules(self):
         from lash.core.lazy_group import LazyGroup
-        group = LazyGroup(name='root', lazy_subcommands={'video': 'nonexistent_heavy:video'})
+        group = LazyGroup(
+            name='root', lazy_subcommands={
+                'video': 'nonexistent_heavy:video'})
         runner = CliRunner()
         with mock.patch('importlib.import_module') as mock_import:
             result = runner.invoke(group, ['--help'])
@@ -53,8 +63,13 @@ class TestLazyGroupGetCommand:
         fake_module = mock.MagicMock()
         fake_module.mycommand = mycommand
 
-        with mock.patch('importlib.import_module', return_value=fake_module) as mock_import:
-            group = LazyGroup(name='test', lazy_subcommands={'mycommand': 'fake.module:mycommand'})
+        with mock.patch(
+            'importlib.import_module', return_value=fake_module
+        ) as mock_import:
+            group = LazyGroup(
+                name='test',
+                lazy_subcommands={'mycommand': 'fake.module:mycommand'},
+            )
             ctx = click.Context(group)
             result = group.get_command(ctx, 'mycommand')
 
@@ -78,7 +93,9 @@ class TestLazyGroupGetCommand:
         fake_module.greet = greet
 
         with mock.patch('importlib.import_module', return_value=fake_module):
-            group = LazyGroup(name='root', lazy_subcommands={'greet': 'fake.module:greet'})
+            group = LazyGroup(
+                name='root', lazy_subcommands={
+                    'greet': 'fake.module:greet'})
             runner = CliRunner()
             result = runner.invoke(group, ['greet'])
 

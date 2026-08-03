@@ -171,14 +171,20 @@ def resume(path):
 
 
 @video.command(help="Prepend an intro clip to a video")
-@click.argument("video_path", metavar="<video_path>", type=click.Path(exists=True))
-@click.argument("video_intro", metavar="<video_into>", type=click.Path(exists=True))
+@click.argument("video_path",
+                metavar="<video_path>",
+                type=click.Path(exists=True))
+@click.argument("video_intro",
+                metavar="<video_into>",
+                type=click.Path(exists=True))
 @click.option("-s", is_flag=True, help="overwrite original file")
 def intro(video_path, video_intro, s):
     p = Path(video_path)
     out = video_path if s else str(p.with_stem(p.stem + "_with_intro"))
     ffmpeg = imageio_ffmpeg.get_ffmpeg_exe()
-    total = _get_duration(ffmpeg, video_intro) + _get_duration(ffmpeg, video_path)
+    total = _get_duration(ffmpeg, video_intro) + (
+        _get_duration(ffmpeg, video_path)
+    )
 
     with tempfile.NamedTemporaryFile(mode="w", suffix=".txt", delete=False) as f:
         f.write(f"file '{video_intro}'\nfile '{video_path}'\n")
@@ -209,14 +215,19 @@ def intro(video_path, video_intro, s):
 
 
 @video.command(help="Append an end clip to a video")
-@click.argument("video_path", metavar="<video_path>", type=click.Path(exists=True))
-@click.argument("video_end", metavar="<video_end>", type=click.Path(exists=True))
+@click.argument("video_path",
+                metavar="<video_path>",
+                type=click.Path(exists=True))
+@click.argument("video_end", metavar="<video_end>",
+                type=click.Path(exists=True))
 @click.option("-s", is_flag=True, help="overwrite original file")
 def end(video_path, video_end, s):
     p = Path(video_path)
     out = video_path if s else str(p.with_stem(p.stem + "_with_end"))
     ffmpeg = imageio_ffmpeg.get_ffmpeg_exe()
-    total = _get_duration(ffmpeg, video_path) + _get_duration(ffmpeg, video_end)
+    total = _get_duration(ffmpeg, video_path) + (
+        _get_duration(ffmpeg, video_end)
+    )
 
     with tempfile.NamedTemporaryFile(mode="w", suffix=".txt", delete=False) as f:
         f.write(f"file '{video_path}'\nfile '{video_end}'\n")
@@ -249,8 +260,10 @@ def end(video_path, video_end, s):
 @video.command()
 @click.argument("path", metavar="<path>", type=click.Path(exists=True))
 @click.option("-s", is_flag=True, help="Overwrite the original file")
-@click.option("-i", type=(int, int, int), help="Start time as h m s (e.g. -i 0 1 30)")
-@click.option("-f", type=(int, int, int), help="End time as h m s (e.g. -f 0 3 0)")
+@click.option("-i", type=(int, int, int),
+              help="Start time as h m s (e.g. -i 0 1 30)")
+@click.option("-f", type=(int, int, int),
+              help="End time as h m s (e.g. -f 0 3 0)")
 def cut(path, s, i, f):
     """Cut a segment from a video.
 
@@ -272,9 +285,8 @@ def cut(path, s, i, f):
         [ffmpeg, "-hide_banner", "-i", path], capture_output=True, text=True
     )
     m = re.search(r"Duration: (\d+):(\d+):(\d+\.\d+)", info.stderr)
-    total = (
-        int(m.group(1)) * 3600 + int(m.group(2)) * 60 + float(m.group(3)) if m else 0
-    )
+    total = (int(m.group(1)) * 3600 + int(m.group(2))
+             * 60 + float(m.group(3)) if m else 0)
     start_t = tuple_to_seconds(i) if i else 0
     end_t = tuple_to_seconds(f) if f else total
     cut_duration = end_t - start_t

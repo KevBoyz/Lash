@@ -13,16 +13,16 @@ def _fake_run(returncode):
 
 def _setup_state(state_file, installed_commands):
     state_file.parent.mkdir(parents=True, exist_ok=True)
-    state_file.write_text(json.dumps({"installed_commands": installed_commands}))
+    state_file.write_text(json.dumps(
+        {"installed_commands": installed_commands}))
 
 
 def _setup_plugins(plugins_dir, *plugins):
     for name, commands in plugins:
         d = plugins_dir / name
         d.mkdir()
-        (d / "manifest.json").write_text(
-            json.dumps({"name": name, "description": "d", "commands": commands})
-        )
+        (d / "manifest.json").write_text(json.dumps(
+            {"name": name, "description": "d", "commands": commands}))
 
 
 def _invoke(state_file, plugins_dir, pip_returncode=0):
@@ -31,7 +31,8 @@ def _invoke(state_file, plugins_dir, pip_returncode=0):
     cmd = make_fix_command(state_file=state_file, plugins_dir=plugins_dir)
     runner = CliRunner()
     with mock.patch("subprocess.run") as mock_run:
-        mock_run.return_value = mock.MagicMock(returncode=pip_returncode, stderr="")
+        mock_run.return_value = mock.MagicMock(
+            returncode=pip_returncode, stderr="")
         result = runner.invoke(cmd, [])
     return result, mock_run
 
@@ -76,7 +77,11 @@ class TestFixCommand:
             (
                 "file",
                 {
-                    "organize": {"module": "x:y", "description": "d", "requires": []},
+                    "organize": {
+                        "module": "x:y",
+                        "description": "d",
+                        "requires": [],
+                    },
                 },
             ),
         )

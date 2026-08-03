@@ -34,9 +34,13 @@ class LazyGroup(click.Group):
 
                 def _broken_cb():
                     click.echo(
-                        f"Error: Command '{cmd_name}' requires missing dependency: {missing_name}.\n"
-                        f"Run 'lash plugin fix' to automatically install required packages.",
-                        err=True
+                        (
+                            f"Error: Command '{cmd_name}' requires missing "
+                            f"dependency: {missing_name}.\n"
+                            "Run 'lash plugin fix' to automatically install "
+                            "required packages."
+                        ),
+                        err=True,
                     )
                 return click.Command(cmd_name, callback=_broken_cb)
         return super().get_command(ctx, cmd_name)
@@ -50,7 +54,12 @@ class LazyGroup(click.Group):
                 cmd = super().get_command(ctx, cmd_name)
                 if cmd is None or cmd.hidden:
                     continue
-                rows.append((cmd_name, cmd.get_short_help_str(limit=formatter.width)))
+                rows.append(
+                    (
+                        cmd_name,
+                        cmd.get_short_help_str(limit=formatter.width),
+                    )
+                )
         if rows:
             with formatter.section('Commands'):
                 formatter.write_dl(rows)

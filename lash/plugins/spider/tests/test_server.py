@@ -32,7 +32,10 @@ class TestProtocol:
         from lash.plugins.spider.helpers import send_msg, recv_msg
         a, b = socket.socketpair()
         try:
-            data = {"type": "result", "data": "file.txt\n", "addr": "192.168.1.5"}
+            data = {
+                "type": "result",
+                "data": "file.txt\n",
+                "addr": "192.168.1.5"}
             send_msg(a, data)
             assert recv_msg(b) == data
         finally:
@@ -66,14 +69,15 @@ class TestWebClient:
         from lash.plugins.spider.core import run_web_client
 
         with patch("lash.plugins.spider.core.recv_msg") as mock_recv, \
-             patch("lash.plugins.spider.core.send_msg") as mock_send, \
-             patch("lash.plugins.spider.core.socket.socket") as mock_socket_cls, \
-             patch("lash.plugins.spider.core.subprocess.run") as mock_run:
+                patch("lash.plugins.spider.core.send_msg") as mock_send, \
+                patch("lash.plugins.spider.core.socket.socket") as mock_socket_cls, \
+                patch("lash.plugins.spider.core.subprocess.run") as mock_run:
 
             mock_run.return_value = MagicMock(stdout="hello\n", stderr="")
             mock_socket_inst = MagicMock()
             mock_socket_cls.return_value.__enter__ = lambda s, *a: mock_socket_inst
-            mock_socket_cls.return_value.__exit__ = MagicMock(return_value=False)
+            mock_socket_cls.return_value.__exit__ = MagicMock(
+                return_value=False)
 
             mock_recv.side_effect = [
                 {"lash": "web"},
@@ -98,14 +102,15 @@ class TestWebClient:
         from lash.plugins.spider.core import run_web_client
 
         with patch("lash.plugins.spider.core.recv_msg") as mock_recv, \
-             patch("lash.plugins.spider.core.send_msg") as mock_send, \
-             patch("lash.plugins.spider.core.socket.socket") as mock_socket_cls, \
-             patch("lash.plugins.spider.core.os.chdir") as mock_chdir, \
-             patch("lash.plugins.spider.core.os.getcwd", return_value="/new/path"):
+                patch("lash.plugins.spider.core.send_msg") as mock_send, \
+                patch("lash.plugins.spider.core.socket.socket") as mock_socket_cls, \
+                patch("lash.plugins.spider.core.os.chdir") as mock_chdir, \
+                patch("lash.plugins.spider.core.os.getcwd", return_value="/new/path"):
 
             mock_socket_inst = MagicMock()
             mock_socket_cls.return_value.__enter__ = lambda s, *a: mock_socket_inst
-            mock_socket_cls.return_value.__exit__ = MagicMock(return_value=False)
+            mock_socket_cls.return_value.__exit__ = MagicMock(
+                return_value=False)
 
             mock_recv.side_effect = [
                 {"lash": "web"},
@@ -126,12 +131,13 @@ class TestWebClient:
         from unittest.mock import patch, MagicMock
 
         with patch("lash.plugins.spider.core.recv_msg") as mock_recv, \
-             patch("lash.plugins.spider.core.send_msg") as mock_send, \
-             patch("lash.plugins.spider.core.socket.socket") as mock_socket_cls:
+                patch("lash.plugins.spider.core.send_msg") as mock_send, \
+                patch("lash.plugins.spider.core.socket.socket") as mock_socket_cls:
 
             mock_socket_inst = MagicMock()
             mock_socket_cls.return_value.__enter__ = lambda s, *a: mock_socket_inst
-            mock_socket_cls.return_value.__exit__ = MagicMock(return_value=False)
+            mock_socket_cls.return_value.__exit__ = MagicMock(
+                return_value=False)
             mock_recv.return_value = {"not_lash": "something"}
 
             run_web_client("127.0.0.1", 9999)
@@ -217,9 +223,9 @@ class TestSeekerScanLoop:
         log_file = tmp_path / "seeker.log"
 
         with patch("lash.plugins.spider.core.socket.socket") as mock_sock_cls, \
-             patch("lash.plugins.spider.core.recv_msg") as mock_recv, \
-             patch("lash.plugins.spider.core.seeker_log_path", return_value=log_file), \
-             patch("lash.plugins.spider.core._spawn_client") as mock_spawn:
+                patch("lash.plugins.spider.core.recv_msg") as mock_recv, \
+                patch("lash.plugins.spider.core.seeker_log_path", return_value=log_file), \
+                patch("lash.plugins.spider.core._spawn_client") as mock_spawn:
 
             mock_sock_inst = MagicMock()
             mock_sock_cls.return_value.__enter__ = lambda s, *a: mock_sock_inst
@@ -238,7 +244,7 @@ class TestSeekerScanLoop:
         connected = {("192.168.1.1", 8080)}
 
         with patch("lash.plugins.spider.core.socket.socket"), \
-             patch("lash.plugins.spider.core._spawn_client") as mock_spawn:
+                patch("lash.plugins.spider.core._spawn_client") as mock_spawn:
 
             _scan_once(["192.168.1.1"], [8080], connected)
             mock_spawn.assert_not_called()
@@ -250,7 +256,7 @@ class TestSeekerScanLoop:
         connected = set()
 
         with patch("lash.plugins.spider.core.socket.socket") as mock_sock_cls, \
-             patch("lash.plugins.spider.core._spawn_client") as mock_spawn:
+                patch("lash.plugins.spider.core._spawn_client") as mock_spawn:
 
             mock_sock_inst = MagicMock()
             mock_sock_inst.connect.side_effect = OSError("refused")
@@ -268,8 +274,8 @@ class TestSeekerScanLoop:
         connected = set()
 
         with patch("lash.plugins.spider.core.socket.socket") as mock_sock_cls, \
-             patch("lash.plugins.spider.core.recv_msg") as mock_recv, \
-             patch("lash.plugins.spider.core._spawn_client") as mock_spawn:
+                patch("lash.plugins.spider.core.recv_msg") as mock_recv, \
+                patch("lash.plugins.spider.core._spawn_client") as mock_spawn:
 
             mock_sock_inst = MagicMock()
             mock_sock_cls.return_value.__enter__ = lambda s, *a: mock_sock_inst
@@ -287,9 +293,9 @@ class TestSeekerScanLoop:
         log_file = tmp_path / "seeker.log"
 
         with patch("lash.plugins.spider.core.socket.socket") as mock_sock_cls, \
-             patch("lash.plugins.spider.core.recv_msg") as mock_recv, \
-             patch("lash.plugins.spider.core.seeker_log_path", return_value=log_file), \
-             patch("lash.plugins.spider.core._spawn_client"):
+                patch("lash.plugins.spider.core.recv_msg") as mock_recv, \
+                patch("lash.plugins.spider.core.seeker_log_path", return_value=log_file), \
+                patch("lash.plugins.spider.core._spawn_client"):
 
             mock_sock_inst = MagicMock()
             mock_sock_cls.return_value.__enter__ = lambda s, *a: mock_sock_inst
@@ -331,7 +337,7 @@ class TestSeekerDaemon:
         pid_file = tmp_path / "seeker.pid"
         pid_file.write_text(str(os.getpid()))
         with patch("lash.plugins.spider.core.seeker_pid_path", return_value=pid_file), \
-             patch("os.kill") as mock_kill:
+                patch("os.kill") as mock_kill:
             result = stop_seeker()
             assert "stopped" in result.lower()
             assert not pid_file.exists()
@@ -374,7 +380,7 @@ class TestSeekerCli:
         from lash.plugins.spider.cli import spider
         runner = CliRunner()
         with patch("lash.plugins.spider.core.read_pid", return_value=12345), \
-             patch("lash.plugins.spider.core.is_pid_alive", return_value=True):
+                patch("lash.plugins.spider.core.is_pid_alive", return_value=True):
             result = runner.invoke(spider, ["seeker", "192.168.1.1", "8080"])
             assert "already running" in result.output.lower()
             assert result.exit_code != 0
@@ -385,7 +391,7 @@ class TestSeekerCli:
         from lash.plugins.spider.cli import spider
         runner = CliRunner()
         with patch("lash.plugins.spider.core.read_pid", return_value=None), \
-             patch("lash.plugins.spider.core.spawn_daemon") as mock_spawn:
+                patch("lash.plugins.spider.core.spawn_daemon") as mock_spawn:
             result = runner.invoke(spider, ["seeker", "192.168.1.1", "8080"])
             mock_spawn.assert_called_once_with("192.168.1.1", "8080", 10)
             assert "started" in result.output.lower()

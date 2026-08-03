@@ -4,7 +4,7 @@ from pathlib import Path
 from lash.plugins.work.helpers import now_iso, generate_id, find_task
 
 
-# ── shared ────────────────────────────────────────────────────────────────────
+# ── shared ──────────────────────────────────────────────────────────────
 
 
 def load_state(path: Path) -> dict:
@@ -49,7 +49,7 @@ def add_task(state: dict, name: str) -> dict:
     return task
 
 
-# ── rm ────────────────────────────────────────────────────────────────────────
+# ── rm ──────────────────────────────────────────────────────────────────
 
 
 def remove_task(state: dict, query: str) -> dict:
@@ -73,7 +73,7 @@ def remove_all_tasks(state: dict) -> list:
     return pending
 
 
-# ── start ─────────────────────────────────────────────────────────────────────
+# ── start ───────────────────────────────────────────────────────────────
 
 
 def start_task(state: dict, task_id: str, pomo: bool = False,
@@ -93,7 +93,7 @@ def start_task(state: dict, task_id: str, pomo: bool = False,
     }
 
 
-# ── pause ─────────────────────────────────────────────────────────────────────
+# ── pause ───────────────────────────────────────────────────────────────
 
 
 def pause_task(state: dict) -> str:
@@ -104,13 +104,14 @@ def pause_task(state: dict) -> str:
         active["current_start"] = now_iso()
         active["is_paused"] = False
         return "resumed"
-    active["segments"].append({"start": active["current_start"], "end": now_iso()})
+    active["segments"].append(
+        {"start": active["current_start"], "end": now_iso()})
     active["current_start"] = None
     active["is_paused"] = True
     return "paused"
 
 
-# ── status ────────────────────────────────────────────────────────────────────
+# ── status ──────────────────────────────────────────────────────────────
 
 
 def calc_elapsed(active: dict) -> int:
@@ -125,7 +126,7 @@ def calc_elapsed(active: dict) -> int:
     return total
 
 
-# ── stop ──────────────────────────────────────────────────────────────────────
+# ── stop ────────────────────────────────────────────────────────────────
 
 
 def stop_task(state: dict, done: bool) -> dict | None:
@@ -133,10 +134,16 @@ def stop_task(state: dict, done: bool) -> dict | None:
     if not active:
         raise ValueError("No active task")
     if not active["is_paused"] and active.get("current_start"):
-        active["segments"].append({"start": active["current_start"], "end": now_iso()})
+        active["segments"].append(
+            {"start": active["current_start"], "end": now_iso()})
     task = next(t for t in state["tasks"] if t["id"] == active["task_id"])
     total_seconds = sum(
-        int((datetime.fromisoformat(s["end"]) - datetime.fromisoformat(s["start"])).total_seconds())
+        int(
+            (
+                datetime.fromisoformat(s["end"])
+                - datetime.fromisoformat(s["start"])
+            ).total_seconds()
+        )
         for s in active["segments"]
     )
     session_entry = None
@@ -158,7 +165,7 @@ def stop_task(state: dict, done: bool) -> dict | None:
     return session_entry
 
 
-# ── log ───────────────────────────────────────────────────────────────────────
+# ── log ─────────────────────────────────────────────────────────────────
 
 
 def format_log(sessions: list) -> list:

@@ -11,11 +11,27 @@ def spider():
     pass
 
 
-@spider.command("web", help="Remote web shell — host a server or connect as passive client")
-@click.option("-h", "--host", "h", type=str, default=None,
-              help="Host this machine. Pass port: -h 8080")
-@click.option("-c", "--connect", "c", type=str, nargs=2, default=None,
-              help="Connect passively to host. Pass IP and port: -c 192.168.1.1 8080")
+@spider.command(
+    "web",
+    help="Remote web shell — host a server or connect as passive client",
+)
+@click.option(
+    "-h",
+    "--host",
+    "h",
+    type=str,
+    default=None,
+    help="Host this machine. Pass port: -h 8080",
+)
+@click.option(
+    "-c",
+    "--connect",
+    "c",
+    type=str,
+    nargs=2,
+    default=None,
+    help="Connect passively to host. Pass IP and port: -c 192.168.1.1 8080",
+)
 def web(h, c):
     if h:
         host = socket.gethostbyname(socket.gethostname())
@@ -34,14 +50,17 @@ def web(h, c):
             sys.exit(1)
         run_web_client(host_ip, port)
     else:
-        click.echo("Error: pass -h <port> to host or -c <ip> <port> to connect", err=True)
+        click.echo(
+            "Error: pass -h <port> to host or -c <ip> <port> to connect",
+            err=True)
         sys.exit(1)
 
 
 @spider.command("seeker")
 @click.argument("addresses", required=False)
 @click.argument("ports", required=False)
-@click.option("-s", "--stop", "do_stop", is_flag=True, help="Stop the running seeker daemon")
+@click.option("-s", "--stop", "do_stop", is_flag=True,
+              help="Stop the running seeker daemon")
 @click.option("-p", "--ping", "ping_interval", default=10, type=int,
               help="Scan interval in seconds")
 @click.option("--_daemon", "is_daemon", is_flag=True, hidden=True)

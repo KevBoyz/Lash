@@ -7,12 +7,10 @@ from rich.panel import Panel
 
 @click.command(short_help="Read articles of wikipedia")
 @click.option("-t", type=click.STRING, help="The title of the article")
-@click.option(
-    "-lang", type=click.STRING, default="pt", show_default=True, help="Article language"
-)
-@click.option(
-    "-f", is_flag=True, default=False, show_default=True, help="View full article"
-)
+@click.option("-lang", type=click.STRING, default="pt",
+              show_default=True, help="Article language")
+@click.option("-f", is_flag=True, default=False,
+              show_default=True, help="View full article")
 def wikip(t, lang, f):
     """
     Read articles of Wikipedia

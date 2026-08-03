@@ -180,7 +180,8 @@ class TestResumeCommand:
             CliRunner().invoke(resume, [str(dummy)])
 
         expected_path = str(tmp_path / "my_clip-resume.mp4")
-        mock_concat.write_videofile.assert_called_once_with(expected_path, logger=None)
+        mock_concat.write_videofile.assert_called_once_with(
+            expected_path, logger=None)
 
     def test_resume_uses_without_audio(self, tmp_path):
         from unittest.mock import patch, MagicMock

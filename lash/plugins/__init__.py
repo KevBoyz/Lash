@@ -49,7 +49,12 @@ def get_lazy_commands(*, plugins_dir=None, state_file=None):
     return commands
 
 
-def mark_command_installed(cmd_name, plugin_name, requires, *, state_file=None):
+def mark_command_installed(
+        cmd_name,
+        plugin_name,
+        requires,
+        *,
+        state_file=None):
     state_file = pathlib.Path(state_file or _DEFAULT_STATE_FILE)
     state_file.parent.mkdir(parents=True, exist_ok=True)
     state = _load_state(state_file)
@@ -72,9 +77,8 @@ def remove_command(cmd_name, *, state_file=None, plugins_dir=None):
 
     if cmd_name not in installed:
         available = get_available_plugins(plugins_dir=plugins_dir)
-        is_core = any(
-            cmd_name in m["commands"] and m.get("core") for m in available.values()
-        )
+        is_core = any(cmd_name in m["commands"] and m.get(
+            "core") for m in available.values())
         if is_core:
             removed = state.setdefault("removed_commands", [])
             if cmd_name not in removed:

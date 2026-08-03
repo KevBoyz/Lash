@@ -42,7 +42,8 @@ class TestAppendSession:
         import json
         from lash.plugins.work.core import append_session
         path = tmp_path / "sessions.json"
-        path.write_text(json.dumps([{"task_name": "first", "total_minutes": 10}]))
+        path.write_text(json.dumps(
+            [{"task_name": "first", "total_minutes": 10}]))
         append_session(path, {"task_name": "second", "total_minutes": 20})
         result = json.loads(path.read_text())
         assert len(result) == 2
@@ -115,9 +116,15 @@ class TestRemoveTask:
         from lash.plugins.work.core import add_task, remove_task
         state = {"tasks": [], "active": None}
         task = add_task(state, "ativa")
-        state["active"] = {"task_id": task["id"], "segments": [], "current_start": None,
-                           "is_paused": False, "pomo": False, "pomo_work_mins": 25,
-                           "pomo_break_mins": 5, "pomo_sessions": 0}
+        state["active"] = {
+            "task_id": task["id"],
+            "segments": [],
+            "current_start": None,
+            "is_paused": False,
+            "pomo": False,
+            "pomo_work_mins": 25,
+            "pomo_break_mins": 5,
+            "pomo_sessions": 0}
         with pytest.raises(ValueError, match="active"):
             remove_task(state, "ativa")
 
@@ -157,7 +164,12 @@ class TestStartTask:
         from lash.plugins.work.core import add_task, start_task
         state = {"tasks": [], "active": None}
         task = add_task(state, "pomo task")
-        start_task(state, task["id"], pomo=True, pomo_work_mins=30, pomo_break_mins=10)
+        start_task(
+            state,
+            task["id"],
+            pomo=True,
+            pomo_work_mins=30,
+            pomo_break_mins=10)
         assert state["active"]["pomo"] is True
         assert state["active"]["pomo_work_mins"] == 30
         assert state["active"]["pomo_break_mins"] == 10
@@ -247,7 +259,8 @@ class TestStopTask:
         entry = stop_task(state, done=False)
         assert entry is None
         assert state["active"] is None
-        task_in_state = next(t for t in state["tasks"] if t["name"] == "pausada")
+        task_in_state = next(
+            t for t in state["tasks"] if t["name"] == "pausada")
         assert task_in_state["accumulated_segments"] == [seg]
 
     def test_com_done_salva_session_e_marca_concluida(self):
@@ -262,7 +275,8 @@ class TestStopTask:
         assert entry["total_minutes"] == 1  # 90s // 60
         assert entry["done"] is True
         assert state["active"] is None
-        task_in_state = next(t for t in state["tasks"] if t["name"] == "concluida")
+        task_in_state = next(
+            t for t in state["tasks"] if t["name"] == "concluida")
         assert task_in_state["done"] is True
         assert task_in_state["accumulated_segments"] == []
 
@@ -295,9 +309,24 @@ class TestFormatLog:
     def test_agrupa_por_data(self):
         from lash.plugins.work.core import format_log
         sessions = [
-            {"task_name": "a", "date": "2026-05-20", "total_minutes": 30, "pomo_sessions": 0},
-            {"task_name": "b", "date": "2026-05-20", "total_minutes": 20, "pomo_sessions": 2},
-            {"task_name": "c", "date": "2026-05-19", "total_minutes": 60, "pomo_sessions": 1},
+            {
+                "task_name": "a",
+                "date": "2026-05-20",
+                "total_minutes": 30,
+                "pomo_sessions": 0,
+            },
+            {
+                "task_name": "b",
+                "date": "2026-05-20",
+                "total_minutes": 20,
+                "pomo_sessions": 2,
+            },
+            {
+                "task_name": "c",
+                "date": "2026-05-19",
+                "total_minutes": 60,
+                "pomo_sessions": 1,
+            },
         ]
         result = format_log(sessions)
         assert result[0]["date"] == "2026-05-19"
@@ -309,10 +338,15 @@ class TestFormatLog:
 
     def test_ordena_mais_antigo_primeiro(self):
         from lash.plugins.work.core import format_log
-        sessions = [
-            {"task_name": "old", "date": "2026-05-01", "total_minutes": 10, "pomo_sessions": 0},
-            {"task_name": "new", "date": "2026-05-20", "total_minutes": 20, "pomo_sessions": 0},
-        ]
+        sessions = [{"task_name": "old",
+                     "date": "2026-05-01",
+                     "total_minutes": 10,
+                     "pomo_sessions": 0},
+                    {"task_name": "new",
+                     "date": "2026-05-20",
+                     "total_minutes": 20,
+                     "pomo_sessions": 0},
+                    ]
         result = format_log(sessions)
         assert result[0]["date"] == "2026-05-01"
         assert result[-1]["date"] == "2026-05-20"

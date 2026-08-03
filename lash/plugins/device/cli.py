@@ -1,10 +1,19 @@
 import click
 from keyboard import is_pressed
+from rich import print
 from lash.plugins.device.core import (
-    key_down, key_up,
-    run_keyhold, run_autoclick_single, run_autoclick_double,
-    run_autoclick_hold, run_autoclick_repeat,
-    record_macro, play_macro, list_macros, rename_macro, delete_macro,
+    key_down,
+    key_up,
+    run_keyhold,
+    run_autoclick_single,
+    run_autoclick_double,
+    run_autoclick_hold,
+    run_autoclick_repeat,
+    record_macro,
+    play_macro,
+    list_macros,
+    rename_macro,
+    delete_macro,
     minimize_terminal,
 )
 
@@ -14,38 +23,56 @@ def device():
     """Keyboard hold, mouse auto-click, and macro automation."""
 
 
-@click.command(help='Keylogger — logs keystrokes to Keylogger.txt, F3 to stop')
-@click.option('-p', type=click.Path(exists=True), default='.', help='Path to write output file')
+@click.command(help="Keylogger — logs keystrokes to Keylogger.txt, F3 to stop")
+@click.option(
+    "-p", type=click.Path(exists=True), default=".", help="Path to write output file"
+)
 def keylogger(p):
     from pynput.keyboard import Listener
-    click.echo('<running> f3 to stop')
+
+    click.echo("<running> f3 to stop")
     import os
+
     os.chdir(p)
     listener = Listener(on_press=key_down, on_release=key_up)
     listener.start()
     listener.join()
-    click.echo('> Process Finished <')
+    click.echo("> Process Finished <")
 
 
-@click.command(short_help='Hold a keyboard key', help='Hold a keyboard key until F3 is pressed')
-@click.argument('key', metavar='<key>', type=click.STRING)
+@click.command(
+    short_help="Hold a keyboard key", help="Hold a keyboard key until F3 is pressed"
+)
+@click.argument("key", metavar="<key>", type=click.STRING)
 def keyhold(key):
-    click.echo('initialized, f4 to start, f3 to stop')
+    click.echo("initialized, f4 to start, f3 to stop")
     while True:
-        if is_pressed('f4'):
-            click.echo('[== -- *typing* -- ==]')
+        if is_pressed("f4"):
+            click.echo("[== -- *typing* -- ==]")
             break
     try:
         run_keyhold(key)
     except Exception as e:
-        click.echo(f'Error: {e}', err=True)
+        print(f"[red]Error:[/red] {e}")
 
 
 @click.command()
-@click.option('-cd', type=click.FLOAT, default=0.0, help='Interval between clicks in seconds')
-@click.option('-ch', is_flag=True, default=False, show_default=True, help='Click and hold mode (click to release)')
-@click.option('-sg', is_flag=True, default=False, show_default=True, help='Single click and exit')
-@click.option('-db', is_flag=True, default=False, show_default=True, help='Double click and exit')
+@click.option(
+    "-cd", type=click.FLOAT, default=0.0, help="Interval between clicks in seconds"
+)
+@click.option(
+    "-ch",
+    is_flag=True,
+    default=False,
+    show_default=True,
+    help="Click and hold mode (click to release)",
+)
+@click.option(
+    "-sg", is_flag=True, default=False, show_default=True, help="Single click and exit"
+)
+@click.option(
+    "-db", is_flag=True, default=False, show_default=True, help="Double click and exit"
+)
 def autoclick(cd, ch, sg, db):
     """Auto clicker — simulates mouse clicks repeatedly.
 
@@ -71,43 +98,49 @@ def autoclick(cd, ch, sg, db):
         run_autoclick_double()
     else:
         if not ch:
-            click.echo('Auto Clicker initialized, f4 to start f3 to stop')
+            click.echo("Auto Clicker initialized, f4 to start f3 to stop")
         else:
-            click.echo('Auto Clicker initialized, f4 to start, *click* to stop')
+            click.echo("Auto Clicker initialized, f4 to start, *click* to stop")
         if ch:
             run_autoclick_hold()
         else:
             run_autoclick_repeat(cd)
 
 
-@click.command(help='Record and play keyboard/mouse macros')
-@click.option('-r', '--record',  'action', flag_value='record',  help='Record a new macro')
-@click.option('-p', '--play',    'action', flag_value='play',    help='Play a macro')
-@click.option('-l', '--list',    'action', flag_value='list',    help='List saved macros')
-@click.option('-d', '--delete',  'action', flag_value='delete',  help='Delete a macro')
-@click.option('--rename',        'action', flag_value='rename',  help='Rename a macro')
-@click.argument('name',   required=False)
-@click.argument('newname', required=False)
-@click.option('-n',           type=int,   default=1,    help='Repeat N times (with -p)')
-@click.option('--loop',       is_flag=True,             help='Loop indefinitely (with -p), F3 to stop between runs')
-@click.option('--speed',      type=float, default=1.0,  help='Playback speed multiplier (with -p)')
-@click.option('--full-speed', is_flag=True,             help='No delays between events (with -p)')
+@click.command(help="Record and play keyboard/mouse macros")
+@click.option(
+    "-r", "--record", "action", flag_value="record", help="Record a new macro"
+)
+@click.option("-p", "--play", "action", flag_value="play", help="Play a macro")
+@click.option("-l", "--list", "action", flag_value="list", help="List saved macros")
+@click.option("-d", "--delete", "action", flag_value="delete", help="Delete a macro")
+@click.option("--rename", "action", flag_value="rename", help="Rename a macro")
+@click.argument("name", required=False)
+@click.argument("newname", required=False)
+@click.option("-n", type=int, default=1, help="Repeat N times (with -p)")
+@click.option(
+    "--loop", is_flag=True, help="Loop indefinitely (with -p), F3 to stop between runs"
+)
+@click.option(
+    "--speed", type=float, default=1.0, help="Playback speed multiplier (with -p)"
+)
+@click.option("--full-speed", is_flag=True, help="No delays between events (with -p)")
 def macro(action, name, newname, n, loop, speed, full_speed):  # noqa: C901
     if action is None:
         raise click.UsageError("Specify an action: -r, -p, -l, -d, or --rename")
 
-    if action == 'list':
+    if action == "list":
         macros = list_macros()
         if not macros:
-            click.echo('No macros saved.')
+            click.echo("No macros saved.")
             return
         click.echo(f"{'NAME':<15} {'CREATED':<20} {'DURATION'}")
         for m in macros:
-            created = m['created_at'].replace('T', ' ')[:16]
+            created = m["created_at"].replace("T", " ")[:16]
             click.echo(f"{m['name']:<15} {created:<20} {m['duration']}s")
         return
 
-    if action == 'record':
+    if action == "record":
         if not name:
             raise click.UsageError("-r requires a macro name")
         click.echo(f"Recording '{name}'... press F3 to stop")
@@ -116,12 +149,14 @@ def macro(action, name, newname, n, loop, speed, full_speed):  # noqa: C901
         except ValueError as e:
             raise click.ClickException(str(e))
         if result is None:
-            click.echo('Nothing recorded.')
+            click.echo("Nothing recorded.")
         else:
-            click.echo(f"Macro '{name}' saved ({result['duration']}s, {len(result['events'])} events)")
+            print(
+                f"Macro '{name}' [green]saved[/green] ({result['duration']}s, {len(result['events'])} events)"
+            )
         return
 
-    if action == 'play':
+    if action == "play":
         if not name:
             raise click.UsageError("-p requires a macro name")
         if speed != 1.0 and full_speed:
@@ -137,14 +172,16 @@ def macro(action, name, newname, n, loop, speed, full_speed):  # noqa: C901
             click.echo(f"Playing '{name}' ({label})...")
         minimize_terminal()
         try:
-            force_stopped = play_macro(name, speed=speed, full_speed=full_speed, repeat=n, loop=loop)
+            force_stopped = play_macro(
+                name, speed=speed, full_speed=full_speed, repeat=n, loop=loop
+            )
         except ValueError as e:
             raise click.ClickException(str(e))
         if force_stopped:
-            click.echo('\nForce stopped (F3)')
+            click.echo("\nForce stopped (F3)")
         return
 
-    if action == 'rename':
+    if action == "rename":
         if not name or not newname:
             raise click.UsageError("--rename requires <old> <new>")
         try:
@@ -154,7 +191,7 @@ def macro(action, name, newname, n, loop, speed, full_speed):  # noqa: C901
         click.echo(f"Macro '{name}' renamed to '{newname}'")
         return
 
-    if action == 'delete':
+    if action == "delete":
         if not name:
             raise click.UsageError("-d requires a macro name")
         try:

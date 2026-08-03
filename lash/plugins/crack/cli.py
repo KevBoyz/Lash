@@ -1,6 +1,8 @@
 import click
 import zipfile
 import time
+from rich import print
+from rich.progress import BarColumn, Progress, TextColumn, TimeElapsedColumn
 from lash.plugins.crack.core import brute, _next, path_no_file, total_combinations
 
 
@@ -12,7 +14,7 @@ def _fmt_eta(seconds):
     return f"{int(seconds // 3600)}h {int((seconds % 3600) // 60)}m"
 
 
-@click.group('crack', short_help='Brute-force password cracking')
+@click.group("crack", short_help="Brute-force password cracking")
 def crack():
     """
     Set of commands to crack passwords
@@ -20,15 +22,40 @@ def crack():
     ...
 
 
-@crack.command(short_help='Crack a ZIP archive password')
-@click.argument('path', metavar='<path>', type=click.Path(exists=True))
-@click.option('-ln', type=click.INT, default=10, show_default=True, help='Max password length to try')
-@click.option('-r', 'r', flag_value=False, default=True, show_default=True,
-              help='Disable ramp (by default tries lengths 1 through -ln)')
-@click.option('-n', is_flag=True, default=False, show_default=True, help='Include numbers')
-@click.option('-l', 'letters', flag_value=False, default=True, show_default=True, help='Disable letters')
-@click.option('-s', is_flag=True, default=False, show_default=True, help='Include symbols')
-@click.option('-sp', is_flag=True, default=False, show_default=True, help='Include spaces')
+@crack.command(short_help="Crack a ZIP archive password")
+@click.argument("path", metavar="<path>", type=click.Path(exists=True))
+@click.option(
+    "-ln",
+    type=click.INT,
+    default=10,
+    show_default=True,
+    help="Max password length to try",
+)
+@click.option(
+    "-r",
+    "r",
+    flag_value=False,
+    default=True,
+    show_default=True,
+    help="Disable ramp (by default tries lengths 1 through -ln)",
+)
+@click.option(
+    "-n", is_flag=True, default=False, show_default=True, help="Include numbers"
+)
+@click.option(
+    "-l",
+    "letters",
+    flag_value=False,
+    default=True,
+    show_default=True,
+    help="Disable letters",
+)
+@click.option(
+    "-s", is_flag=True, default=False, show_default=True, help="Include symbols"
+)
+@click.option(
+    "-sp", is_flag=True, default=False, show_default=True, help="Include spaces"
+)
 def azip(path, ln, r, n, letters, s, sp):
     """Crack the password of a ZIP archive using brute force.
 
@@ -50,23 +77,35 @@ def azip(path, ln, r, n, letters, s, sp):
     start_time = time.time()
     permutations = brute(ln, r, letters, n, s, sp)
     zip_arch = zipfile.ZipFile(path)
-    while True:
-        try:
-            nx = _next(permutations)
-            pm = bytes(nx, encoding='utf-8')
+    with Progress(
+        TextColumn("[progress.description]{task.description}"),
+        BarColumn(),
+        TextColumn("[progress.percentage]{task.percentage:>3.0f}%"),
+        TimeElapsedColumn(),
+        transient=True,
+    ) as prog:
+        task = prog.add_task("Attempts: 0 | Trying: - | ETA: ...", total=total)
+        while True:
             try:
-                zip_arch.extractall(path=path_no_file(path), pwd=pm)
-                print(f'\nPassword is: {nx}')
+                nx = _next(permutations)
+                pm = bytes(nx, encoding="utf-8")
+                try:
+                    zip_arch.extractall(path=path_no_file(path), pwd=pm)
+                    print(f"\n[green]Password is:[/green] {nx}")
+                    break
+                except (RuntimeError, zipfile.BadZipFile):
+                    attempt_count += 1
+                    elapsed = time.time() - start_time
+                    if elapsed > 0 and attempt_count > 0:
+                        remaining = max(total - attempt_count, 0)
+                        eta = _fmt_eta(remaining * elapsed / attempt_count)
+                    else:
+                        eta = "..."
+                    prog.update(
+                        task,
+                        advance=1,
+                        description=f"Attempts: {attempt_count} | Trying: {nx} | ETA: {eta}",
+                    )
+            except StopIteration:
+                print("\n[red]Error:[/red] Password not found")
                 break
-            except (RuntimeError, zipfile.BadZipFile):
-                attempt_count += 1
-                elapsed = time.time() - start_time
-                if elapsed > 0 and attempt_count > 0:
-                    remaining = max(total - attempt_count, 0)
-                    eta = _fmt_eta(remaining * elapsed / attempt_count)
-                else:
-                    eta = "..."
-                print(f'Attempts: {attempt_count} | Trying: {nx} | ETA: {eta}', end='\r')
-        except StopIteration:
-            print('\nPassword not found')
-            break

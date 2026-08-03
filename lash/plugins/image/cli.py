@@ -1,25 +1,36 @@
 import click
 import os
 from tqdm import tqdm
+from rich import print
 from PIL import Image, UnidentifiedImageError
 from lash.plugins.image.core import (
-    files_range, get_file,
-    f_flip, re_size, adjust_exec, filter_apply, wmarke, compare, save,
+    files_range,
+    get_file,
+    f_flip,
+    re_size,
+    adjust_exec,
+    filter_apply,
+    wmarke,
+    compare,
+    save,
 )
 
 
-@click.group('image', help='Batch image editor: flip, resize, filter, watermark')
-def image():
-    ...
+@click.group("image", help="Batch image editor: flip, resize, filter, watermark")
+def image(): ...
 
 
 @image.command()
-@click.argument('path', metavar='<path>', type=click.Path(exists=True))
-@click.option('-all', is_flag=True, help='Edit all images on path')
-@click.option('-c', '-compare', is_flag=True, help='Compare the original image with the edited')
-@click.option('-t', '-test', is_flag=True, help='Just test the editor, don\'t save the edition')
-@click.option('-lr', is_flag=True, help='Mirror left to right')
-@click.option('-tb', is_flag=True, help='Mirror top to bottom')
+@click.argument("path", metavar="<path>", type=click.Path(exists=True))
+@click.option("-all", is_flag=True, help="Edit all images on path")
+@click.option(
+    "-c", "-compare", is_flag=True, help="Compare the original image with the edited"
+)
+@click.option(
+    "-t", "-test", is_flag=True, help="Just test the editor, don't save the edition"
+)
+@click.option("-lr", is_flag=True, help="Mirror left to right")
+@click.option("-tb", is_flag=True, help="Mirror top to bottom")
 def flip(path, all, c, t, lr, tb):  # noqa: C901
     """
     Flip Image(s)
@@ -34,23 +45,37 @@ def flip(path, all, c, t, lr, tb):  # noqa: C901
     $~ lash image flip -tb -all C:\\Users\\User\\Folder
     """
     if not lr and not tb:
-        print('Error, none action received, send some option, --help for more details')
+        print(
+            "[red]Error:[/red] none action received, send some option, --help for more details"
+        )
     if all:
         n_editions = 0
         os.chdir(path)
         with tqdm(total=files_range()) as pbar:
-            for root, folders, files in os.walk('.'):
+            for root, folders, files in os.walk("."):
                 for file in files:
                     try:
                         if lr:
-                            f_flip(Image.open(os.path.join(root, file)), file, c=c, t=t, lr=True)
+                            f_flip(
+                                Image.open(os.path.join(root, file)),
+                                file,
+                                c=c,
+                                t=t,
+                                lr=True,
+                            )
                         elif tb:
-                            f_flip(Image.open(os.path.join(root, file)), file, c=c, t=t, tb=True)
+                            f_flip(
+                                Image.open(os.path.join(root, file)),
+                                file,
+                                c=c,
+                                t=t,
+                                tb=True,
+                            )
                         n_editions += 1
                     except Exception:
                         pass
                     pbar.update(1)
-        print(f'Process Completed, {n_editions} files edited')
+        print(f"Process [green]Completed[/green], {n_editions} files edited")
     else:
         file = get_file(path)
         try:
@@ -59,19 +84,27 @@ def flip(path, all, c, t, lr, tb):  # noqa: C901
                 f_flip(im, file, c=c, t=t, lr=True)
             elif tb:
                 f_flip(im, file, c=c, t=t, tb=True)
-            print('Process completed')
-        except UnidentifiedImageError:
-            print('Error: the file is not a image or the type can\'t be identified')
+            print("Process [green]completed[/green]")
+        except (UnidentifiedImageError, OSError, ValueError):
+            print(
+                "[red]Error:[/red] the file is not a image or the type can't be identified"
+            )
 
 
 @image.command()
-@click.argument('path', metavar='<path>', type=click.Path(exists=True))
-@click.option('-all', is_flag=True, help='Edit all images on path')
-@click.option('-c', '-compare', is_flag=True, help='Compare the original image with the edited')
-@click.option('-t', '-test', is_flag=True, help='Just test the editor, don\'t save the edition')
-@click.option('-axis', nargs=2, type=click.INT, help='Set new values for x, y dimensions')
-@click.option('-d', is_flag=True, help='Double image size')
-@click.option('-r', is_flag=True, help='Reduce image size (size / 2)')
+@click.argument("path", metavar="<path>", type=click.Path(exists=True))
+@click.option("-all", is_flag=True, help="Edit all images on path")
+@click.option(
+    "-c", "-compare", is_flag=True, help="Compare the original image with the edited"
+)
+@click.option(
+    "-t", "-test", is_flag=True, help="Just test the editor, don't save the edition"
+)
+@click.option(
+    "-axis", nargs=2, type=click.INT, help="Set new values for x, y dimensions"
+)
+@click.option("-d", is_flag=True, help="Double image size")
+@click.option("-r", is_flag=True, help="Reduce image size (size / 2)")
 def resize(path, all, c, t, axis, d, r):
     """
     Resize Image(s)
@@ -85,38 +118,64 @@ def resize(path, all, c, t, axis, d, r):
     $~ lash image resize -axis 400 300 C:\\Users\\User\\Folder\\image.png
     $~ lash image resize -all -r C:\\Users\\User\\Folder
     """
+    if not axis and not d and not r:
+        print(
+            "[red]Error:[/red] none action received, send some option, --help for more details"
+        )
+        return
     if all:
         n_editions = 0
         os.chdir(path)
         with tqdm(total=files_range()) as pbar:
-            for root, folders, files in os.walk('.'):
+            for root, folders, files in os.walk("."):
                 for file in files:
                     try:
-                        re_size(Image.open(os.path.join(root, file)), file, root, axis, d, r, c, t)
+                        re_size(
+                            Image.open(os.path.join(root, file)),
+                            file,
+                            root,
+                            axis,
+                            d,
+                            r,
+                            c,
+                            t,
+                        )
                         n_editions += 1
                     except Exception:
                         pass
                     pbar.update(1)
-        print(f'Process completed, {n_editions} files edited')
+        print(f"Process [green]completed[/green], {n_editions} files edited")
     else:
         file = get_file(path)
         try:
             im = Image.open(file)
-            re_size(im, file, '.', axis, d, r, c, t)
-            print('Process completed')
-        except UnidentifiedImageError:
-            print('Error: the file is not a image or the type can\'t be identified')
+            re_size(im, file, ".", axis, d, r, c, t)
+            print("Process [green]completed[/green]")
+        except (UnidentifiedImageError, OSError, ValueError):
+            print(
+                "[red]Error:[/red] the file is not a image or the type can't be identified"
+            )
 
 
 @image.command()
-@click.argument('path', metavar='<path>', type=click.Path(exists=True))
-@click.option('-all', is_flag=True, help='Edit all images on path')
-@click.option('-c', '-compare', is_flag=True, help='Compare the original image with the edited')
-@click.option('-t', '-test', is_flag=True, help='Just test the editor, don\'t save the edition')
-@click.option('-ct', '-contrast', type=click.FLOAT, help='Adjust the image contrast', default=1)
-@click.option('-b', '-brightness', type=click.FLOAT, help='Adjust the image brightness', default=1)
-@click.option('-s', '-saturation', type=click.FLOAT, help='Adjust the image saturation', default=1)
-@click.option('-sh', '-sharp', type=click.FLOAT, help='Sharp the image', default=1)
+@click.argument("path", metavar="<path>", type=click.Path(exists=True))
+@click.option("-all", is_flag=True, help="Edit all images on path")
+@click.option(
+    "-c", "-compare", is_flag=True, help="Compare the original image with the edited"
+)
+@click.option(
+    "-t", "-test", is_flag=True, help="Just test the editor, don't save the edition"
+)
+@click.option(
+    "-ct", "-contrast", type=click.FLOAT, help="Adjust the image contrast", default=1
+)
+@click.option(
+    "-b", "-brightness", type=click.FLOAT, help="Adjust the image brightness", default=1
+)
+@click.option(
+    "-s", "-saturation", type=click.FLOAT, help="Adjust the image saturation", default=1
+)
+@click.option("-sh", "-sharp", type=click.FLOAT, help="Sharp the image", default=1)
 def adjust(path, all, c, t, ct, b, s, sh):
     """
     Adjust Image(s)
@@ -139,15 +198,20 @@ def adjust(path, all, c, t, ct, b, s, sh):
         n_editions = 0
         os.chdir(path)
         with tqdm(total=files_range()) as pbar:
-            for root, folders, files in os.walk('.'):
+            for root, folders, files in os.walk("."):
                 for file in files:
                     try:
-                        save(adjust_exec(Image.open(os.path.join(root, file)), ct, b, s, sh), file)
+                        save(
+                            adjust_exec(
+                                Image.open(os.path.join(root, file)), ct, b, s, sh
+                            ),
+                            file,
+                        )
                         n_editions += 1
                     except Exception:
                         pass
                     pbar.update(1)
-        print(f'Process completed, {n_editions} files edited')
+        print(f"Process [green]completed[/green], {n_editions} files edited")
     else:
         file = get_file(path)
         try:
@@ -157,24 +221,30 @@ def adjust(path, all, c, t, ct, b, s, sh):
             if c:
                 compare(im, mod_im)
             if t:
-                print('Test concluded, nothing special happens')
+                print("Test [green]concluded[/green], nothing special happens")
             else:
                 save(mod_im, file)
-                print('Process completed, image rewritten')
-        except UnidentifiedImageError:
-            print('Error: the file is not a image or the type can\'t be identified')
+                print("Process [green]completed[/green], image rewritten")
+        except (UnidentifiedImageError, OSError, ValueError):
+            print(
+                "[red]Error:[/red] the file is not a image or the type can't be identified"
+            )
 
 
 @image.command()
-@click.argument('path', metavar='<path>', type=click.Path(exists=True))
-@click.option('-all', is_flag=True, help='Edit all images on path')
-@click.option('-c', '-compare', is_flag=True, help='Compare the original image with the edited')
-@click.option('-t', '-test', is_flag=True, help='Just test the editor, don\'t save the edition')
-@click.option('-b', '-blur', is_flag=True, help='Apply blur filter')
-@click.option('-co', '-contour', is_flag=True, help='Apply contour filter')
-@click.option('-d', '-detail', is_flag=True, help='Apply detail filter')
-@click.option('-e', '-emboss', is_flag=True, help='Apply emboss filter')
-@click.option('-k', '-kbzup', is_flag=True, help='Apply kbzup filter')
+@click.argument("path", metavar="<path>", type=click.Path(exists=True))
+@click.option("-all", is_flag=True, help="Edit all images on path")
+@click.option(
+    "-c", "-compare", is_flag=True, help="Compare the original image with the edited"
+)
+@click.option(
+    "-t", "-test", is_flag=True, help="Just test the editor, don't save the edition"
+)
+@click.option("-b", "-blur", is_flag=True, help="Apply blur filter")
+@click.option("-co", "-contour", is_flag=True, help="Apply contour filter")
+@click.option("-d", "-detail", is_flag=True, help="Apply detail filter")
+@click.option("-e", "-emboss", is_flag=True, help="Apply emboss filter")
+@click.option("-k", "-kbzup", is_flag=True, help="Apply kbzup filter")
 def filter(path, all, c, t, b, co, d, e, k):
     """
     Apply Filters
@@ -195,36 +265,83 @@ def filter(path, all, c, t, b, co, d, e, k):
         n_editions = 0
         os.chdir(path)
         with tqdm(total=files_range()) as pbar:
-            for root, folders, files in os.walk('.'):
+            for root, folders, files in os.walk("."):
                 for file in files:
                     try:
-                        filter_apply(Image.open(os.path.join(root, file)), file, root, t, c, b, co, d, e, k)
+                        filter_apply(
+                            Image.open(os.path.join(root, file)),
+                            file,
+                            root,
+                            t,
+                            c,
+                            b,
+                            co,
+                            d,
+                            e,
+                            k,
+                        )
                         n_editions += 1
                     except Exception:
                         pass
                     pbar.update(1)
-        print(f'Process completed, {n_editions} images edited')
+        print(f"Process [green]completed[/green], {n_editions} images edited")
     else:
         file = get_file(path)
         try:
             im = Image.open(file)
             filter_apply(im, file, os.getcwd(), t, c, b, co, d, e, k)
-            print('Process completed')
-        except UnidentifiedImageError:
-            print('Error: the file is not a image or the type can\'t be identified')
+            print("Process [green]completed[/green]")
+        except (UnidentifiedImageError, OSError, ValueError):
+            print(
+                "[red]Error:[/red] the file is not a image or the type can't be identified"
+            )
 
 
 @image.command()
-@click.argument('text', metavar='<text>', type=click.STRING)
-@click.argument('path', metavar='<path>', type=click.Path(exists=True))
-@click.option('-all', is_flag=True, help='Edit all images on path')
-@click.option('-c', '-compare', is_flag=True, help='Compare the original image with the edited')
-@click.option('-t', '-test', is_flag=True, help='Just test the editor, don\'t save the edition')
-@click.option('-tp', '-txpadding', type=click.INT, default=5, show_default=True, help='Text padding')
-@click.option('-ts', '-txtsize', type=click.INT, default=40, show_default=True, help='Text size (px)')
-@click.option('-tc', '-txcolor', type=click.STRING, default='#ffffff', show_default=True, help='Text color')
-@click.option('-tf', '-txfont', type=click.STRING, default='consolab.ttf', show_default=True, help='Text font')
-@click.option('-axis', nargs=2, type=click.INT, help='Set new values for x, y dimensions')
+@click.argument("text", metavar="<text>", type=click.STRING)
+@click.argument("path", metavar="<path>", type=click.Path(exists=True))
+@click.option("-all", is_flag=True, help="Edit all images on path")
+@click.option(
+    "-c", "-compare", is_flag=True, help="Compare the original image with the edited"
+)
+@click.option(
+    "-t", "-test", is_flag=True, help="Just test the editor, don't save the edition"
+)
+@click.option(
+    "-tp",
+    "-txpadding",
+    type=click.INT,
+    default=5,
+    show_default=True,
+    help="Text padding",
+)
+@click.option(
+    "-ts",
+    "-txtsize",
+    type=click.INT,
+    default=40,
+    show_default=True,
+    help="Text size (px)",
+)
+@click.option(
+    "-tc",
+    "-txcolor",
+    type=click.STRING,
+    default="#ffffff",
+    show_default=True,
+    help="Text color",
+)
+@click.option(
+    "-tf",
+    "-txfont",
+    type=click.STRING,
+    default="consolab.ttf",
+    show_default=True,
+    help="Text font",
+)
+@click.option(
+    "-axis", nargs=2, type=click.INT, help="Set new values for x, y dimensions"
+)
 def wmark(text, path, all, c, t, tp, ts, tc, tf, axis):
     """
     Apply a watermark on image(s)
@@ -245,36 +362,67 @@ def wmark(text, path, all, c, t, tp, ts, tc, tf, axis):
     \b
     $~ lash image wmark -all -axis 10 30 -tc #000000 KevBz C:\\Users\\User\\Folder
     """
+    if os.name != "nt":
+        print(
+            "[red]Error:[/red] this command is not available for your operational system"
+        )
+        return
     if all:
         n_editions = 0
         os.chdir(path)
         with tqdm(total=files_range()) as pbar:
-            for root, folders, files in os.walk('.'):
+            for root, folders, files in os.walk("."):
                 for file in files:
                     try:
-                        wmarke(text, file, root, Image.open(file), c, t, tp, ts, tc, tf, axis)
+                        wmarke(
+                            text,
+                            file,
+                            root,
+                            Image.open(file),
+                            c,
+                            t,
+                            tp,
+                            ts,
+                            tc,
+                            tf,
+                            axis,
+                        )
                         n_editions += 1
                     except Exception:
                         pass
                     pbar.update(1)
-        print(f'Process completed, {n_editions} images edited')
+        print(f"Process [green]completed[/green], {n_editions} images edited")
     else:
         file = get_file(path)
         try:
             im = Image.open(file)
-            wmarke(text, file, '.', im, c, t, tp, ts, tc, tf, axis)
-        except UnidentifiedImageError:
-            print('Error: the file is not a image or the type can\'t be identified')
+            wmarke(text, file, ".", im, c, t, tp, ts, tc, tf, axis)
+        except (UnidentifiedImageError, OSError, ValueError):
+            print(
+                "[red]Error:[/red] the file is not a image or the type can't be identified"
+            )
 
 
 @image.command()
-@click.argument('path', metavar='<path>', type=click.Path(exists=True))
-@click.option('-ps', type=click.Path(exists=True), help='Paste de copied image here')
-@click.option('-all', is_flag=True, help='Paste the copied image to all images on a path')
-@click.option('-c', '-compare', is_flag=True, help='Compare the original image with the edited')
-@click.option('-t', '-test', is_flag=True, help='Just test the editor, don\'t save the edition')
-@click.option('-axis', nargs=2, type=click.INT, default=(0, 0), help='Set new values for x, y dimensions')
-@click.option('-rs', is_flag=True, help='Resize the copied image to be pasted')
+@click.argument("path", metavar="<path>", type=click.Path(exists=True))
+@click.option("-ps", type=click.Path(exists=True), help="Paste de copied image here")
+@click.option(
+    "-all", is_flag=True, help="Paste the copied image to all images on a path"
+)
+@click.option(
+    "-c", "-compare", is_flag=True, help="Compare the original image with the edited"
+)
+@click.option(
+    "-t", "-test", is_flag=True, help="Just test the editor, don't save the edition"
+)
+@click.option(
+    "-axis",
+    nargs=2,
+    type=click.INT,
+    default=(0, 0),
+    help="Set new values for x, y dimensions",
+)
+@click.option("-rs", is_flag=True, help="Resize the copied image to be pasted")
 def paste(path, ps, axis, rs, all, c, t):  # noqa: C901
     """
     Paste one image in other image(s)
@@ -298,7 +446,7 @@ def paste(path, ps, axis, rs, all, c, t):  # noqa: C901
             try:
                 os.chdir(ps)
                 with tqdm(total=files_range()) as pbar:
-                    for root, folders, files in os.walk('.'):
+                    for root, folders, files in os.walk("."):
                         for file in files:
                             try:
                                 im2 = Image.open(file)
@@ -309,12 +457,14 @@ def paste(path, ps, axis, rs, all, c, t):  # noqa: C901
                             except Exception:
                                 pass
                             pbar.update(1)
-                print(f'Process completed, {n_editions} images edited')
+                print(f"Process [green]completed[/green], {n_editions} images edited")
             except Exception as e:
-                print(e)
+                print(f"[red]Error:[/red] {e}")
         else:
             if not ps:
-                print('Error, set a image to paste the copied with -pc, --help fot datails')
+                print(
+                    "[red]Error:[/red] set a image to paste the copied with -pc, --help fot datails"
+                )
             else:
                 im2 = Image.open(get_file(ps))
                 if rs:
@@ -322,5 +472,7 @@ def paste(path, ps, axis, rs, all, c, t):  # noqa: C901
                 im2.paste(im, (x, y))
                 compare(im, im2) if c else None
                 save(im2, get_file(path)) if not t else None
-    except UnidentifiedImageError:
-        print('Error: the file is not a image or the type can\'t be identified')
+    except (UnidentifiedImageError, OSError, ValueError):
+        print(
+            "[red]Error:[/red] the file is not a image or the type can't be identified"
+        )

@@ -8,21 +8,21 @@ from PIL import Image, ImageEnhance, ImageFilter, ImageFont, ImageDraw
 
 def files_range():
     total = 0
-    for root, dirs, files in os.walk('.'):
+    for root, dirs, files in os.walk("."):
         for file in files:
             total += 1
     return total
 
 
 def get_file(path):
-    if '\\' not in path:
+    if "\\" not in path:
         return path
-    if os.name == 'nt':
-        os.chdir(path[:path.rfind('\\')])
-        fn = path[path.rfind('\\') + 1:]
+    if os.name == "nt":
+        os.chdir(path[: path.rfind("\\")])
+        fn = path[path.rfind("\\") + 1 :]
     else:
-        os.chdir(path[:path.rfind('/')])
-        fn = path[path.rfind('/') + 1:]
+        os.chdir(path[: path.rfind("/")])
+        fn = path[path.rfind("/") + 1 :]
     return fn
 
 
@@ -47,22 +47,19 @@ def brightness(im, v):
 
 
 def save(im, file):
-    try:
-        im.save(file)
-    except ValueError as e:
-        print(f'Error: {e}')
+    im.save(file)
 
 
 def compare(im, mod_im):
-    plt.figure(facecolor='#cccccc')
-    plt.suptitle('\n\n\nImages comparison')
+    plt.figure(facecolor="#cccccc")
+    plt.suptitle("\n\n\nImages comparison")
 
     plt.subplot(1, 2, 1)
-    plt.title('Original')
+    plt.title("Original")
     plt.imshow(im)
 
     plt.subplot(1, 2, 2)
-    plt.title('Edited')
+    plt.title("Edited")
     plt.imshow(mod_im)
 
     plt.show()
@@ -88,24 +85,21 @@ def f_flip(im, file, c, t, lr=False, tb=False):
 
 
 def re_size(im, file, root, axis, d, r, c, t):
-    if not axis and not d and not r:
-        print('Error, none action received, send some option, --help for more details')
-    else:
-        if not c:
-            c = True if t else None
-        if axis:
-            x, y = axis
-            im_rszd = im.resize((x, y))
-            compare(im, im_rszd) if c else None
-            save(im_rszd, os.path.join(root, file)) if not t else None
-        elif d:
-            im_rszd = im.resize((int(im.size[0] * 2), int(im.size[1] * 2)))
-            compare(im, im_rszd) if c else None
-            save(im_rszd, os.path.join(root, file)) if not t else None
-        elif r:
-            im_rszd = im.resize((int(im.size[0] / 2), int(im.size[1] / 2)))
-            compare(im, im_rszd) if c else None
-            save(im_rszd, os.path.join(root, file)) if not t else None
+    if not c:
+        c = True if t else None
+    if axis:
+        x, y = axis
+        im_rszd = im.resize((x, y))
+        compare(im, im_rszd) if c else None
+        save(im_rszd, os.path.join(root, file)) if not t else None
+    elif d:
+        im_rszd = im.resize((int(im.size[0] * 2), int(im.size[1] * 2)))
+        compare(im, im_rszd) if c else None
+        save(im_rszd, os.path.join(root, file)) if not t else None
+    elif r:
+        im_rszd = im.resize((int(im.size[0] / 2), int(im.size[1] / 2)))
+        compare(im, im_rszd) if c else None
+        save(im_rszd, os.path.join(root, file)) if not t else None
 
 
 # ── adjust ────────────────────────────────────────────────────────────────────
@@ -149,29 +143,23 @@ def filter_apply(im, file, root, t, c, b, co, d, e, k):
 
 
 def wmarke(text, file, root, im, c, t, tp, ts, tc, tf, axis):
-    if os.name != 'nt':
-        print('Sorry, this command are not available for your operational system')
-        return
-    if tf[-4:] != '.ttf':
-        tf = tf + '.ttf'
-    try:
-        font = ImageFont.truetype(os.path.join('C:\\', 'Windows', 'Fonts', tf), size=ts)
-        mod_im = im.copy()
-        draw = ImageDraw.Draw(mod_im)
-        if not axis:
-            pxlen = len(text) * ts
-            x = ((mod_im.size[0] - pxlen) + pxlen / 2.5) - tp + 5
-            y = mod_im.size[1] / 10 - 15
-            if y < ts + tp:
-                while y < ts + tp:
-                    y += tp
-            draw.text((x, mod_im.size[1] - y), text, font=font, fill=tc)
-        else:
-            x, y = axis
-            draw.text((x, y), text, font=font, fill=tc)
-        if not c:
-            c = True if t else None
-        compare(im, mod_im) if c else None
-        save(mod_im, os.path.join(root, file)) if not t else None
-    except OSError:
-        print('Error: Font not valid, try use arial or ebrima. --help for details')
+    if tf[-4:] != ".ttf":
+        tf = tf + ".ttf"
+    font = ImageFont.truetype(os.path.join("C:\\", "Windows", "Fonts", tf), size=ts)
+    mod_im = im.copy()
+    draw = ImageDraw.Draw(mod_im)
+    if not axis:
+        pxlen = len(text) * ts
+        x = ((mod_im.size[0] - pxlen) + pxlen / 2.5) - tp + 5
+        y = mod_im.size[1] / 10 - 15
+        if y < ts + tp:
+            while y < ts + tp:
+                y += tp
+        draw.text((x, mod_im.size[1] - y), text, font=font, fill=tc)
+    else:
+        x, y = axis
+        draw.text((x, y), text, font=font, fill=tc)
+    if not c:
+        c = True if t else None
+    compare(im, mod_im) if c else None
+    save(mod_im, os.path.join(root, file)) if not t else None

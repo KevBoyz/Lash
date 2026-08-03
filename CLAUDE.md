@@ -52,8 +52,8 @@ Plugins que precisam de armazenamento persistente devem usar `~/.lash/data/<plug
 
 ```
 lash plugin list [-i | -ni]        # list plugins by category
-lash plugin add <plugin>...        # install one or more plugins
-lash plugin remove <plugin>...     # uninstall one or more plugins
+lash plugin add <plugin>...        # install one or more plugins (alias: install)
+lash plugin remove <plugin>...     # uninstall one or more plugins (alias: uninstall)
 ```
 
 ## Plugin File Distribution Rules

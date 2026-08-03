@@ -73,6 +73,51 @@ def _invoke(plugins, plugins_dir, state_file, pip_returncode=0):
     return result, mock_run
 
 
+def _invoke_group(command, plugins, plugins_dir, state_file, pip_returncode=0):
+    from lash.core.plugin_manager import make_plugin_group
+
+    group = make_plugin_group(plugins_dir=plugins_dir, state_file=state_file)
+    runner = CliRunner()
+    with mock.patch("subprocess.run") as mock_run:
+        mock_run.return_value = mock.MagicMock(returncode=pip_returncode, stderr="")
+        result = runner.invoke(group, [command] + list(plugins))
+    return result, mock_run
+
+
+class TestInstallAlias:
+    def test_installs_plugin_como_install(self, tmp_path):
+        plugins_dir = _setup_plugins(tmp_path)
+        state_file = tmp_path / "installed.json"
+        result, _ = _invoke_group("install", ["file"], plugins_dir, state_file)
+        assert result.exit_code == 0
+        state = json.loads(state_file.read_text())
+        assert "organize" in state["installed_commands"]
+        assert "zip" in state["installed_commands"]
+
+    def test_alias_nao_duplica_no_help(self, tmp_path):
+        from lash.core.plugin_manager import make_plugin_group
+
+        plugins_dir = _setup_plugins(tmp_path)
+        state_file = tmp_path / "installed.json"
+        group = make_plugin_group(plugins_dir=plugins_dir, state_file=state_file)
+        runner = CliRunner()
+        result = runner.invoke(group, ["--help"])
+        assert result.exit_code == 0
+        assert "add" in result.output
+        assert "  install" not in result.output
+
+    def test_help_do_add_anuncia_alias_install(self, tmp_path):
+        from lash.core.plugin_manager import make_plugin_group
+
+        plugins_dir = _setup_plugins(tmp_path)
+        state_file = tmp_path / "installed.json"
+        group = make_plugin_group(plugins_dir=plugins_dir, state_file=state_file)
+        runner = CliRunner()
+        result = runner.invoke(group, ["add", "--help"])
+        assert result.exit_code == 0
+        assert "Alias: install" in result.output
+
+
 class TestDownloadAll:
     def test_installs_all_commands_of_plugin(self, tmp_path):
         plugins_dir = _setup_plugins(tmp_path)

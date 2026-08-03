@@ -66,6 +66,61 @@ def _invoke(plugins, plugins_dir, state_file, pip_returncode=0):
     return result, mock_run
 
 
+def _invoke_group(command, plugins, plugins_dir, state_file, pip_returncode=0):
+    from lash.core.plugin_manager import make_plugin_group
+
+    group = make_plugin_group(plugins_dir=plugins_dir, state_file=state_file)
+    runner = CliRunner()
+    with mock.patch("subprocess.run") as mock_run:
+        mock_run.return_value = mock.MagicMock(returncode=pip_returncode, stderr="")
+        result = runner.invoke(group, [command] + list(plugins))
+    return result, mock_run
+
+
+class TestUninstallAlias:
+    def test_removes_plugin_como_uninstall(self, tmp_path):
+        plugins_dir = _setup_plugins(tmp_path)
+        state_file = tmp_path / "installed.json"
+        _setup_state(
+            state_file,
+            {
+                "organize": {"plugin": "file", "requires": ["rich>=12.6.0"]},
+                "zip": {
+                    "plugin": "file",
+                    "requires": ["pyminizip>=0.2.6", "rich>=12.6.0"],
+                },
+            },
+        )
+        result, _ = _invoke_group("uninstall", ["file"], plugins_dir, state_file)
+        assert result.exit_code == 0
+        state = json.loads(state_file.read_text())
+        assert "organize" not in state["installed_commands"]
+        assert "zip" not in state["installed_commands"]
+
+    def test_alias_nao_duplica_no_help(self, tmp_path):
+        from lash.core.plugin_manager import make_plugin_group
+
+        plugins_dir = _setup_plugins(tmp_path)
+        state_file = tmp_path / "installed.json"
+        group = make_plugin_group(plugins_dir=plugins_dir, state_file=state_file)
+        runner = CliRunner()
+        result = runner.invoke(group, ["--help"])
+        assert result.exit_code == 0
+        assert "remove" in result.output
+        assert "  uninstall" not in result.output
+
+    def test_help_do_remove_anuncia_alias_uninstall(self, tmp_path):
+        from lash.core.plugin_manager import make_plugin_group
+
+        plugins_dir = _setup_plugins(tmp_path)
+        state_file = tmp_path / "installed.json"
+        group = make_plugin_group(plugins_dir=plugins_dir, state_file=state_file)
+        runner = CliRunner()
+        result = runner.invoke(group, ["remove", "--help"])
+        assert result.exit_code == 0
+        assert "Alias: uninstall" in result.output
+
+
 class TestRemoveAll:
     def test_removes_all_commands_of_plugin(self, tmp_path):
         plugins_dir = _setup_plugins(tmp_path)

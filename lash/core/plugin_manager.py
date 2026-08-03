@@ -352,8 +352,26 @@ def make_fix_command(*, plugins_dir=None, state_file=None):
 fix = make_fix_command()
 
 
+class _PluginGroup(click.Group):
+    """click.Group com aliases ocultos no help: install -> add, uninstall -> remove."""
+
+    _aliases = {"install": "add", "uninstall": "remove"}
+
+    def get_command(self, ctx, cmd_name):
+        return super().get_command(ctx, self._aliases.get(cmd_name, cmd_name))
+
+
+def _annotate_aliases(group):
+    for alias, name in group._aliases.items():
+        cmd = group.commands.get(name)
+        if cmd is None:
+            continue
+        base = cmd.help or ""
+        cmd.help = f"{base}\n\nAlias: {alias}"
+
+
 def make_plugin_group(*, plugins_dir=None, state_file=None):
-    @click.group("plugin")
+    @click.group("plugin", cls=_PluginGroup)
     def plugin_group():
         """Manage lash plugins: add, remove, list, fix."""
 
@@ -367,6 +385,7 @@ def make_plugin_group(*, plugins_dir=None, state_file=None):
         make_plugin_list_command(plugins_dir=plugins_dir, state_file=state_file)
     )
     plugin_group.add_command(fix)
+    _annotate_aliases(plugin_group)
     return plugin_group
 
 

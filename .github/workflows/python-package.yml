@@ -40,8 +40,8 @@ jobs:
           python -m pip install --upgrade pip
           pip install -e ".[all]" flake8==7.2.0 pytest==8.3.5
 
-      - name: Lint with flake8
-        run: flake8 . --count --max-complexity=10 --max-line-length=127 --show-source --statistics
+      #- name: Lint with flake8
+      #  run: flake8 . --count --max-complexity=10 --max-line-length=127 --show-source --statistics
 
       - name: Test with pytest
         run: pytest

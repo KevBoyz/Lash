@@ -34,7 +34,7 @@ def _setup_plugins(tmp_path):
                 "zip": {
                     "module": "lash.plugins.file.cli:zip_group",
                     "description": "d",
-                    "requires": ["pyminizip>=0.2.6", "rich>=12.6.0"],
+                    "requires": ["pyzipper>=0.2.6", "rich>=12.6.0"],
                 },
             },
         ),
@@ -56,8 +56,9 @@ def _setup_plugins(tmp_path):
     ]:
         d = tmp_path / name
         d.mkdir()
-        (d / "manifest.json").write_text(json.dumps(
-            {"name": name, "description": "d", "commands": commands}))
+        (d / "manifest.json").write_text(
+            json.dumps({"name": name, "description": "d", "commands": commands})
+        )
     return tmp_path
 
 
@@ -67,8 +68,7 @@ def _invoke(plugins, plugins_dir, state_file, pip_returncode=0):
     cmd = make_download_command(plugins_dir=plugins_dir, state_file=state_file)
     runner = CliRunner()
     with mock.patch("subprocess.run") as mock_run:
-        mock_run.return_value = mock.MagicMock(
-            returncode=pip_returncode, stderr="")
+        mock_run.return_value = mock.MagicMock(returncode=pip_returncode, stderr="")
         result = runner.invoke(cmd, list(plugins))
     return result, mock_run
 
@@ -79,8 +79,7 @@ def _invoke_group(command, plugins, plugins_dir, state_file, pip_returncode=0):
     group = make_plugin_group(plugins_dir=plugins_dir, state_file=state_file)
     runner = CliRunner()
     with mock.patch("subprocess.run") as mock_run:
-        mock_run.return_value = mock.MagicMock(
-            returncode=pip_returncode, stderr="")
+        mock_run.return_value = mock.MagicMock(returncode=pip_returncode, stderr="")
         result = runner.invoke(group, [command] + list(plugins))
     return result, mock_run
 
@@ -100,9 +99,7 @@ class TestInstallAlias:
 
         plugins_dir = _setup_plugins(tmp_path)
         state_file = tmp_path / "installed.json"
-        group = make_plugin_group(
-            plugins_dir=plugins_dir,
-            state_file=state_file)
+        group = make_plugin_group(plugins_dir=plugins_dir, state_file=state_file)
         runner = CliRunner()
         result = runner.invoke(group, ["--help"])
         assert result.exit_code == 0
@@ -114,9 +111,7 @@ class TestInstallAlias:
 
         plugins_dir = _setup_plugins(tmp_path)
         state_file = tmp_path / "installed.json"
-        group = make_plugin_group(
-            plugins_dir=plugins_dir,
-            state_file=state_file)
+        group = make_plugin_group(plugins_dir=plugins_dir, state_file=state_file)
         runner = CliRunner()
         result = runner.invoke(group, ["add", "--help"])
         assert result.exit_code == 0
@@ -192,12 +187,10 @@ class TestDownloadErrors:
         result, _ = _invoke(["bogus"], plugins_dir, state_file)
         assert "file" in result.output or "crack" in result.output
 
-    def test_pip_failure_skips_plugin_and_does_not_mark_installed(
-            self, tmp_path):
+    def test_pip_failure_skips_plugin_and_does_not_mark_installed(self, tmp_path):
         plugins_dir = _setup_plugins(tmp_path)
         state_file = tmp_path / "installed.json"
-        result, _ = _invoke(["file"], plugins_dir,
-                            state_file, pip_returncode=1)
+        result, _ = _invoke(["file"], plugins_dir, state_file, pip_returncode=1)
         assert result.exit_code == 0
         assert not state_file.exists() or "organize" not in json.loads(
             state_file.read_text()
@@ -221,9 +214,7 @@ class TestInstallerDetection:
 
         plugins_dir = _setup_plugins(tmp_path)
         state_file = tmp_path / "installed.json"
-        cmd = make_download_command(
-            plugins_dir=plugins_dir,
-            state_file=state_file)
+        cmd = make_download_command(plugins_dir=plugins_dir, state_file=state_file)
         runner = CliRunner()
         with (
             mock.patch(
@@ -242,16 +233,14 @@ class TestInstallerDetection:
             sys.executable,
         ]
         assert "rich>=12.6.0" in install_args
-        assert "pyminizip>=0.2.6" in install_args
+        assert "pyzipper>=0.2.6" in install_args
 
     def test_erro_quando_pip_e_uv_indisponiveis(self, tmp_path):
         from lash.core.plugin_manager import make_download_command
 
         plugins_dir = _setup_plugins(tmp_path)
         state_file = tmp_path / "installed.json"
-        cmd = make_download_command(
-            plugins_dir=plugins_dir,
-            state_file=state_file)
+        cmd = make_download_command(plugins_dir=plugins_dir, state_file=state_file)
         runner = CliRunner()
         with (
             mock.patch("subprocess.run", return_value=_fake_run(1)),
@@ -262,4 +251,4 @@ class TestInstallerDetection:
         assert "No package installer found" in result.output
         assert "pip install" in result.output
         assert "rich>=12.6.0" in result.output
-        assert "pyminizip>=0.2.6" in result.output
+        assert "pyzipper>=0.2.6" in result.output

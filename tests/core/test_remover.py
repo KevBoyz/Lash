@@ -32,7 +32,7 @@ def _setup_plugins(tmp_path):
                 "zip": {
                     "module": "lash.plugins.file.cli:zip_group",
                     "description": "d",
-                    "requires": ["pyminizip>=0.2.6", "rich>=12.6.0"],
+                    "requires": ["pyzipper>=0.2.6", "rich>=12.6.0"],
                 },
             },
         ),
@@ -49,8 +49,9 @@ def _setup_plugins(tmp_path):
     ]:
         d = tmp_path / name
         d.mkdir()
-        (d / "manifest.json").write_text(json.dumps(
-            {"name": name, "description": "d", "commands": commands}))
+        (d / "manifest.json").write_text(
+            json.dumps({"name": name, "description": "d", "commands": commands})
+        )
     return tmp_path
 
 
@@ -60,8 +61,7 @@ def _invoke(plugins, plugins_dir, state_file, pip_returncode=0):
     cmd = make_remove_command(plugins_dir=plugins_dir, state_file=state_file)
     runner = CliRunner()
     with mock.patch("subprocess.run") as mock_run:
-        mock_run.return_value = mock.MagicMock(
-            returncode=pip_returncode, stderr="")
+        mock_run.return_value = mock.MagicMock(returncode=pip_returncode, stderr="")
         result = runner.invoke(cmd, list(plugins))
     return result, mock_run
 
@@ -72,8 +72,7 @@ def _invoke_group(command, plugins, plugins_dir, state_file, pip_returncode=0):
     group = make_plugin_group(plugins_dir=plugins_dir, state_file=state_file)
     runner = CliRunner()
     with mock.patch("subprocess.run") as mock_run:
-        mock_run.return_value = mock.MagicMock(
-            returncode=pip_returncode, stderr="")
+        mock_run.return_value = mock.MagicMock(returncode=pip_returncode, stderr="")
         result = runner.invoke(group, [command] + list(plugins))
     return result, mock_run
 
@@ -88,12 +87,11 @@ class TestUninstallAlias:
                 "organize": {"plugin": "file", "requires": ["rich>=12.6.0"]},
                 "zip": {
                     "plugin": "file",
-                    "requires": ["pyminizip>=0.2.6", "rich>=12.6.0"],
+                    "requires": ["pyzipper>=0.2.6", "rich>=12.6.0"],
                 },
             },
         )
-        result, _ = _invoke_group(
-            "uninstall", ["file"], plugins_dir, state_file)
+        result, _ = _invoke_group("uninstall", ["file"], plugins_dir, state_file)
         assert result.exit_code == 0
         state = json.loads(state_file.read_text())
         assert "organize" not in state["installed_commands"]
@@ -104,9 +102,7 @@ class TestUninstallAlias:
 
         plugins_dir = _setup_plugins(tmp_path)
         state_file = tmp_path / "installed.json"
-        group = make_plugin_group(
-            plugins_dir=plugins_dir,
-            state_file=state_file)
+        group = make_plugin_group(plugins_dir=plugins_dir, state_file=state_file)
         runner = CliRunner()
         result = runner.invoke(group, ["--help"])
         assert result.exit_code == 0
@@ -118,9 +114,7 @@ class TestUninstallAlias:
 
         plugins_dir = _setup_plugins(tmp_path)
         state_file = tmp_path / "installed.json"
-        group = make_plugin_group(
-            plugins_dir=plugins_dir,
-            state_file=state_file)
+        group = make_plugin_group(plugins_dir=plugins_dir, state_file=state_file)
         runner = CliRunner()
         result = runner.invoke(group, ["remove", "--help"])
         assert result.exit_code == 0
@@ -137,7 +131,7 @@ class TestRemoveAll:
                 "organize": {"plugin": "file", "requires": ["rich>=12.6.0"]},
                 "zip": {
                     "plugin": "file",
-                    "requires": ["pyminizip>=0.2.6", "rich>=12.6.0"],
+                    "requires": ["pyzipper>=0.2.6", "rich>=12.6.0"],
                 },
             },
         )
@@ -156,7 +150,7 @@ class TestRemoveAll:
                 "organize": {"plugin": "file", "requires": ["rich>=12.6.0"]},
                 "zip": {
                     "plugin": "file",
-                    "requires": ["pyminizip>=0.2.6", "rich>=12.6.0"],
+                    "requires": ["pyzipper>=0.2.6", "rich>=12.6.0"],
                 },
             },
         )
@@ -164,17 +158,18 @@ class TestRemoveAll:
         assert result.exit_code == 0
         call_args = mock_run.call_args[0][0]
         assert "rich" in " ".join(call_args)
-        assert "pyminizip" in " ".join(call_args)
+        assert "pyzipper" in " ".join(call_args)
 
     def test_preserves_deps_used_by_other_plugins(self, tmp_path):
         plugins_dir = _setup_plugins(tmp_path)
         state_file = tmp_path / "installed.json"
         _setup_state(
-            state_file, {
-                "organize": {
-                    "plugin": "file", "requires": ["rich>=12.6.0"]}, "web": {
-                    "plugin": "web", "requires": [
-                        "bs4>=0.0.1", "rich>=12.6.0"]}, }, )
+            state_file,
+            {
+                "organize": {"plugin": "file", "requires": ["rich>=12.6.0"]},
+                "web": {"plugin": "web", "requires": ["bs4>=0.0.1", "rich>=12.6.0"]},
+            },
+        )
         result, mock_run = _invoke(["file"], plugins_dir, state_file)
         assert result.exit_code == 0
         if mock_run.called:
@@ -196,13 +191,16 @@ class TestRemoveAll:
         plugins_dir = _setup_plugins(tmp_path)
         state_file = tmp_path / "installed.json"
         _setup_state(
-            state_file, {
-                "organize": {
-                    "plugin": "file", "requires": ["rich>=12.6.0"]}, "zip": {
-                    "plugin": "file", "requires": [
-                        "pyminizip>=0.2.6", "rich>=12.6.0"], }, "web": {
-                        "plugin": "web", "requires": [
-                            "bs4>=0.0.1", "rich>=12.6.0"]}, }, )
+            state_file,
+            {
+                "organize": {"plugin": "file", "requires": ["rich>=12.6.0"]},
+                "zip": {
+                    "plugin": "file",
+                    "requires": ["pyzipper>=0.2.6", "rich>=12.6.0"],
+                },
+                "web": {"plugin": "web", "requires": ["bs4>=0.0.1", "rich>=12.6.0"]},
+            },
+        )
         result, _ = _invoke(["file", "web"], plugins_dir, state_file)
         assert result.exit_code == 0
         state = json.loads(state_file.read_text())
@@ -233,13 +231,11 @@ class TestUninstallerDetection:
                 "organize": {"plugin": "file", "requires": ["rich>=12.6.0"]},
                 "zip": {
                     "plugin": "file",
-                    "requires": ["pyminizip>=0.2.6", "rich>=12.6.0"],
+                    "requires": ["pyzipper>=0.2.6", "rich>=12.6.0"],
                 },
             },
         )
-        cmd = make_remove_command(
-            plugins_dir=plugins_dir,
-            state_file=state_file)
+        cmd = make_remove_command(plugins_dir=plugins_dir, state_file=state_file)
         runner = CliRunner()
         with (
             mock.patch(
@@ -258,4 +254,4 @@ class TestUninstallerDetection:
             sys.executable,
         ]
         assert "rich" in uninstall_args
-        assert "pyminizip" in uninstall_args
+        assert "pyzipper" in uninstall_args

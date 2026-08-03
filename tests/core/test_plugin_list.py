@@ -41,7 +41,7 @@ def _setup(tmp_path):
                 "zip": {
                     "module": "x:y",
                     "description": "ZIP tools",
-                    "requires": ["pyminizip>=0.2.6"],
+                    "requires": ["pyzipper>=0.2.6"],
                 },
             },
         ),
@@ -75,9 +75,7 @@ def _setup(tmp_path):
 def _invoke(args, plugins_dir, state_file):
     from lash.core.plugin_manager import make_plugin_list_command
 
-    cmd = make_plugin_list_command(
-        plugins_dir=plugins_dir,
-        state_file=state_file)
+    cmd = make_plugin_list_command(plugins_dir=plugins_dir, state_file=state_file)
     runner = CliRunner()
     return runner.invoke(cmd, args)
 
@@ -92,8 +90,7 @@ class TestPluginList:
         assert "File Tools" in result.output
         assert "Video Tools" in result.output
 
-    def test_default_shows_installed_and_not_installed_commands(
-            self, tmp_path):
+    def test_default_shows_installed_and_not_installed_commands(self, tmp_path):
         plugins_dir = _setup(tmp_path)
         state_file = tmp_path / "installed.json"
         state_file.write_text(
@@ -137,8 +134,7 @@ class TestPluginList:
         assert "Video Tools" in result.output
         assert "Random Generators" not in result.output
 
-    def test_not_installed_flag_shows_message_when_all_installed(
-            self, tmp_path):
+    def test_not_installed_flag_shows_message_when_all_installed(self, tmp_path):
         plugins_dir = _setup(tmp_path)
         state_file = tmp_path / "installed.json"
         state_file.write_text(
@@ -156,8 +152,7 @@ class TestPluginList:
         assert result.exit_code == 0
         assert "All available" in result.output
 
-    def test_installed_flag_shows_message_when_nothing_installed(
-            self, tmp_path):
+    def test_installed_flag_shows_message_when_nothing_installed(self, tmp_path):
         plugins_dir = _setup(tmp_path)
         state_file = tmp_path / "installed.json"
         state_file.write_text(
@@ -213,10 +208,7 @@ class TestTituloCapitalizado:
 
         panel = _render_category_panel("web tools", {}, set())
         buf = StringIO()
-        Console(
-            file=buf,
-            force_terminal=True,
-            color_system="standard").print(panel)
+        Console(file=buf, force_terminal=True, color_system="standard").print(panel)
         assert " Web Tools " in buf.getvalue()
 
     def test_categoria_media_fica_media(self):
@@ -227,10 +219,7 @@ class TestTituloCapitalizado:
 
         panel = _render_category_panel("media", {}, set())
         buf = StringIO()
-        Console(
-            file=buf,
-            force_terminal=True,
-            color_system="standard").print(panel)
+        Console(file=buf, force_terminal=True, color_system="standard").print(panel)
         assert " Media " in buf.getvalue()
 
 
@@ -258,10 +247,7 @@ class TestPanelCores:
 
         panel = _render_category_panel("Cat", commands, active_cmds)
         buf = StringIO()
-        Console(
-            file=buf,
-            force_terminal=True,
-            color_system=color_system).print(panel)
+        Console(file=buf, force_terminal=True, color_system=color_system).print(panel)
         return buf.getvalue()
 
     def test_instalado_em_verde(self):

@@ -4,7 +4,7 @@ import os
 import shutil as sh
 from random import shuffle
 from rich import print
-import pyminizip
+import pyzipper
 import pyaes as pya
 from lash.plugins.file.core import (
     bar_template,
@@ -83,11 +83,14 @@ def crypt(p, key, dc, ex, cl, v):  # noqa: C901
             crypted = open(fp, "wb")
             crypted.write(data)
         if ex:
-            if not cl:
+            key_path = "recovery-key.txt"
+            if cl:
+                key_path = os.path.join(fp, "recovery-key.txt")
+            else:
                 d = os.path.dirname(fp)
                 if d:
-                    os.chdir(d)
-            open("recovery-key.txt", "w").write(key)
+                    key_path = os.path.join(d, "recovery-key.txt")
+            open(key_path, "w").write(key)
         print("\nFile(s) encrypted") if v else None
 
 
@@ -315,13 +318,13 @@ def compress(path, fn, v, fo):  # noqa: C901
     print("[cyan]Moving zipfile to parent folder...[/cyan]")
     if fn == "..zip":
         try:
-            dir_name = os.getcwd()[os.getcwd().rfind("\\") + 1:] + ".zip"
+            dir_name = os.getcwd()[os.getcwd().rfind("\\") + 1 :] + ".zip"
             os.rename(fn, dir_name)
         except FileExistsError:
             rlist = [7, 5, 6, 2]
             shuffle(rlist)
             rand = "".join(str(e) for e in rlist)
-            dir_name = os.getcwd()[os.getcwd().rfind("\\") + 1:] + f"_{rand}" + ".zip"
+            dir_name = os.getcwd()[os.getcwd().rfind("\\") + 1 :] + f"_{rand}" + ".zip"
             os.rename(fn, dir_name)
         fn = dir_name
     else:
@@ -409,7 +412,14 @@ def encode(path, password):
         os.chdir(path_no_file(path))
         file = get_file(path)
         output = "enc-" + file.replace(get_ext(file), ".zip")
-        pyminizip.compress(file, None, output, password, 5)
+        with pyzipper.AESZipFile(
+            output,
+            "w",
+            compression=pyzipper.ZIP_DEFLATED,
+            encryption=pyzipper.WZ_AES,
+        ) as zf:
+            zf.password = password.encode("utf-8")
+            zf.write(file)
         print("File encoded")
     except FileNotFoundError:
         print("File not found")

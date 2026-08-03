@@ -8,7 +8,7 @@
       "description": "File organization, ZIP compression, and encryption tools",
       "requires": [
         "pyaes>=1.6.1",
-        "pyminizip>=0.2.6"
+        "pyzipper>=0.3.6"
       ]
     }
   }

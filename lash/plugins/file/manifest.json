@@ -8,7 +8,6 @@
       "description": "File organization, ZIP compression, and encryption tools",
       "requires": [
         "pyaes>=1.6.1",
-        "rich>=12.6.0",
         "pyminizip>=0.2.6"
       ]
     }

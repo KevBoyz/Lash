@@ -7,7 +7,6 @@
       "module": "lash.plugins.work.cli:work_group",
       "description": "Manage tasks and track work time",
       "requires": [
-        "rich>=12.6.0",
         "plyer>=2.1.0"
       ]
     }

@@ -1,6 +1,6 @@
 {
   "name": "calc",
-  "category": "productivity",
+  "category": "miscellaneous",
   "description": "Math utilities: probability, cartesian product, polynomial functions",
   "commands": {
     "calc": {

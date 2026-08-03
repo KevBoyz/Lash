@@ -1,6 +1,6 @@
 {
   "name": "sched",
-  "category": "Task Scheduler",
+  "category": "productivity",
   "description": "Command-line task scheduling and timing",
   "commands": {
     "sched": {

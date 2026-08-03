@@ -222,6 +222,51 @@ def _execute_remove(commands_to_remove, state_file, plugins_dir):
 remove = make_remove_command()
 
 
+def _render_category_panel(category, commands, active_cmds, width=None):
+    from rich.console import Group
+    from rich.panel import Panel
+    from rich.text import Text
+
+    active_count = sum(1 for c in commands if c in active_cmds)
+    total = len(commands)
+    if active_count == total:
+        panel_color = "green"
+    elif active_count == 0:
+        panel_color = "red"
+    else:
+        panel_color = "hot_pink"
+
+    lines = []
+    for cmd_name, cmd_info in commands.items():
+        marker = "+" if cmd_name in active_cmds else "-"
+        status_color = "green" if cmd_name in active_cmds else "red"
+        line = Text()
+        line.append(f"{marker} {cmd_name}: ", style=status_color)
+        line.append(cmd_info["description"], style="white")
+        lines.append(line)
+    return Panel(
+        Group(*lines),
+        title=Text(category.title(), style=panel_color),
+        title_align="left",
+        border_style=panel_color,
+        width=width,
+    )
+
+
+def _layout_panels(panels, per_row=2):
+    from rich.columns import Columns
+    from rich.text import Text
+
+    for i in range(0, len(panels), per_row):
+        row = panels[i : i + per_row]
+        heights = [len(panel.renderable.renderables) for panel in row]
+        max_height = max(heights)
+        for panel, height in zip(row, heights):
+            for _ in range(max_height - height):
+                panel.renderable.renderables.append(Text(""))
+        _console.print(Columns(row, equal=True, expand=True))
+
+
 def make_plugin_list_command(*, plugins_dir=None, state_file=None):  # noqa: C901
     @click.command("list")
     @click.option(
@@ -249,6 +294,7 @@ def make_plugin_list_command(*, plugins_dir=None, state_file=None):  # noqa: C90
             by_category[category].append(manifest)
 
         found_any = False
+        panels = []
         for category in sorted(by_category.keys()):
             cat_cmds = {}
             for manifest in by_category[category]:
@@ -264,18 +310,20 @@ def make_plugin_list_command(*, plugins_dir=None, state_file=None):  # noqa: C90
                 continue
 
             found_any = True
-            click.echo(f"  {category}")
-            for cmd_name, cmd_info in cat_cmds.items():
-                marker = "+" if cmd_name in active_cmds else "-"
-                click.echo(f"    {marker} {cmd_name:<16} {cmd_info['description']}")
-            click.echo()
+            panel_width = max(30, _console.width // 2 - 2)
+            panels.append(
+                _render_category_panel(category, cat_cmds, active_cmds, panel_width)
+            )
+
+        if panels:
+            _layout_panels(panels)
 
         if not found_any:
             if installed:
-                click.echo("No plugins installed.")
-                click.echo("Run 'lash plugin add <plugin>' to install.")
+                _console.print("No plugins installed.")
+                _console.print("Run 'lash plugin add <plugin>' to install.")
             elif not_installed:
-                click.echo("All available plugins are installed.")
+                _console.print("All available plugins are installed.")
 
     return plugin_list
 

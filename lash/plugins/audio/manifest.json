@@ -1,12 +1,15 @@
 {
   "name": "audio",
-  "category": "Audio Handlers",
+  "category": "media",
   "description": "Audio extraction and cutting tools",
   "commands": {
     "audio": {
       "module": "lash.plugins.audio.cli:audio_group",
       "description": "Extract and cut audio from video files",
-      "requires": ["moviepy>=1.0.3", "rich>=12.6.0"]
+      "requires": [
+        "moviepy>=1.0.3",
+        "rich>=12.6.0"
+      ]
     }
   }
 }

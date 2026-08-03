@@ -1,12 +1,14 @@
 {
   "name": "spider",
-  "category": "Spider Tools",
+  "category": "hacking",
   "description": "Remote web shell and auto-discovery daemon",
   "commands": {
     "spider": {
       "module": "lash.plugins.spider.cli:spider",
       "description": "Remote web shell and auto-discovery tools",
-      "requires": ["rich>=12.6.0"]
+      "requires": [
+        "rich>=12.6.0"
+      ]
     }
   }
 }

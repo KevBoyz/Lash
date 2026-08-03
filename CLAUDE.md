@@ -111,21 +111,21 @@ No test execution during development — run only when explicitly requested.
 
 ## Current Plugins
 
-| Name    | Category          | Commands              |
-|---------|-------------------|-----------------------|
-| audio   | Audio Handlers    | audio                 |
-| calc    | Calculation Tools | calc                  |
-| crack   | Crack Tools       | crack (core)          |
-| device  | Device Automation | autoclick, keyhold, keylogger |
-| file    | File Tools        | organize, zip, crypt          |
-| image   | Image Tools       | image                         |
-| monitor | System Monitor    | monitor                       |
-| random  | Random Generators | random (core)                 |
-| sched   | Task Scheduler    | sched                         |
-| spider  | Spider Tools      | web, seeker                   |
-| video   | Video Tools       | video                 |
-| web     | Web Tools         | web                   |
-| work    | Work Tracker      | work                  |
+| Name    | Category      | Commands              |
+|---------|---------------|-----------------------|
+| audio   | media         | audio                 |
+| video   | media         | video                 |
+| image   | media         | image                 |
+| device  | system        | device                |
+| monitor | system        | monitor               |
+| file    | system        | file                  |
+| calc    | productivity  | calc                  |
+| work    | productivity  | work                  |
+| sched   | productivity  | sched                 |
+| web     | web tools     | web                   |
+| crack   | hacking       | crack (core)          |
+| spider  | hacking       | spider                |
+| random  | miscellaneous | random (core)         |
 
 ## Executando comandos 
 

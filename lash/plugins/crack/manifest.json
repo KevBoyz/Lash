@@ -1,6 +1,6 @@
 {
   "name": "crack",
-  "category": "Crack Tools",
+  "category": "hacking",
   "description": "ZIP password cracker via brute force",
   "core": true,
   "commands": {

@@ -1,12 +1,16 @@
 {
   "name": "file",
-  "category": "File Tools",
+  "category": "system",
   "description": "File organization, ZIP compression, and encryption tools",
   "commands": {
     "file": {
       "module": "lash.plugins.file.cli:file",
       "description": "File organization, ZIP compression, and encryption tools",
-      "requires": ["pyaes>=1.6.1", "rich>=12.6.0", "pyminizip>=0.2.6"]
+      "requires": [
+        "pyaes>=1.6.1",
+        "rich>=12.6.0",
+        "pyminizip>=0.2.6"
+      ]
     }
   }
 }

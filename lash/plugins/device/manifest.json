@@ -1,12 +1,15 @@
 {
   "name": "device",
-  "category": "Device Automation",
+  "category": "system",
   "description": "Keyboard hold, mouse auto-click, and macro automation",
   "commands": {
     "device": {
       "module": "lash.plugins.device.cli:device",
       "description": "Keyboard hold, mouse auto-click, and macro automation",
-      "requires": ["pynput>=1.7.6", "keyboard"]
+      "requires": [
+        "pynput>=1.7.6",
+        "keyboard"
+      ]
     }
   }
 }

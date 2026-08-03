@@ -1,6 +1,6 @@
 {
   "name": "random",
-  "category": "Random Generators",
+  "category": "miscellaneous",
   "description": "Random sequence generator",
   "core": true,
   "commands": {

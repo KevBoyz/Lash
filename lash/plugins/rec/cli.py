@@ -13,9 +13,17 @@ console = Console()
 
 @click.command()
 @click.argument(
-    "path", metavar="<path>", type=click.Path(exists=True), required=False, default="."
+    "path",
+    metavar="<path>",
+    type=click.Path(exists=True),
+    required=False,
+    default=".",
 )
-@click.option("-w", type=click.INT, help="Countdown in seconds before recording starts")
+@click.option(
+    "-w",
+    type=click.INT,
+    help="Countdown in seconds before recording starts",
+)
 @click.option(
     "-n",
     type=click.STRING,
@@ -85,7 +93,8 @@ def rec(path, w, n, c, b, f):
             if c:
                 conf.write(f"{position().x} {position().y}\n")
             console.print(
-                f"[bold]f3 to stop[/bold] | Recording... {ceil(time() - start)}s | fps {ceil(mean(fps_list))}",
+                f"[bold]f3 to stop[/bold] | Recording... "
+                f"{ceil(time() - start)}s | fps {ceil(mean(fps_list))}",
                 end="\r",
             )
             if is_pressed("f3"):

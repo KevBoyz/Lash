@@ -60,7 +60,8 @@ class TestMacroCommand:
 
         monkeypatch.setattr(Path, "home", lambda: tmp_path)
         with patch(
-            "lash.plugins.macro.cli.play_macro", side_effect=ValueError("not found")
+            "lash.plugins.macro.cli.play_macro",
+            side_effect=ValueError("not found"),
         ):
             from lash.plugins.macro.cli import macro
 

@@ -23,7 +23,11 @@ def file():
 
 @click.command()
 @click.argument(
-    "p", metavar="path", type=click.Path(exists=True), required=False, default="."
+    "p",
+    metavar="path",
+    type=click.Path(exists=True),
+    required=False,
+    default=".",
 )
 @click.argument("key", metavar="<key>", type=click.STRING)
 @click.option("-dc", is_flag=True, default=False, help="Decrypt file")
@@ -89,7 +93,11 @@ def crypt(p, key, dc, ex, cl, v):  # noqa: C901
 
 @click.command()
 @click.argument(
-    "path", metavar="<path>", type=click.Path(exists=True), required=False, default="."
+    "path",
+    metavar="<path>",
+    type=click.Path(exists=True),
+    required=False,
+    default=".",
 )
 @click.option("-t", type=click.STRING, help="Organize files per type")
 @click.option(
@@ -107,10 +115,18 @@ def crypt(p, key, dc, ex, cl, v):  # noqa: C901
     help="Group documents into Docs/",
 )
 @click.option(
-    "-o", is_flag=True, default=True, show_default=True, help="Create ~Others~ folder"
+    "-o",
+    is_flag=True,
+    default=True,
+    show_default=True,
+    help="Create ~Others~ folder",
 )
 @click.option(
-    "-s", is_flag=True, default=False, show_default=True, help="Organize sub-folders"
+    "-s",
+    is_flag=True,
+    default=False,
+    show_default=True,
+    help="Organize sub-folders",
 )
 @click.option("-v", is_flag=True, default=True, show_default=True, help="Verbose mode")
 def organize(path, t, m, d, o, s, v):  # noqa: C901
@@ -118,9 +134,11 @@ def organize(path, t, m, d, o, s, v):  # noqa: C901
     Organize your files
 
     \b
-    Organize a folder in a simple way, by predefined execution that separates files
-    according to their context or in a personalized way searching for a specific type.
-    [!Important] - Do not use ('') to declare TYPE on -t option set the value like: -t pdf
+    Organize a folder in a simple way, by predefined execution that
+    separates files according to their context or in a personalized way
+    searching for a specific type.
+    [!Important] - Do not use ('') to declare TYPE on -t option set the
+    value like: -t pdf
     """
     try:
         os.chdir(path)
@@ -146,18 +164,18 @@ def organize(path, t, m, d, o, s, v):  # noqa: C901
                     os.mkdir("Videos")
                     os.mkdir("Musics")
                 else:
-                    os.mkdir("Images") if "Images" not in os.listdir("..") else None
-                    os.mkdir("Videos") if "Videos" not in os.listdir("..") else None
-                    os.mkdir("Musics") if "Musics" not in os.listdir("..") else None
+                    os.mkdir("Images") if ("Images" not in os.listdir("..")) else None
+                    os.mkdir("Videos") if ("Videos" not in os.listdir("..")) else None
+                    os.mkdir("Musics") if ("Musics" not in os.listdir("..")) else None
                 os.chdir(path)
             if d:
                 os.mkdir("Docs") if "Docs" not in files else files.remove("Docs")
             if o:
                 os.mkdir("Others") if "Others" not in files else files.remove("Others")
             if s:
-                os.mkdir("Sub-Folders") if "Sub-Folders" not in files else files.remove(
-                    "Sub-Folders"
-                )
+                os.mkdir("Sub-Folders") if (
+                    "Sub-Folders" not in files
+                ) else files.remove("Sub-Folders")
 
             with click.progressbar(
                 range(len(files)),
@@ -267,7 +285,8 @@ def compress(path, fn, v, fo):  # noqa: C901
                     try:
                         os.chdir(folder)
                         print(
-                            f"[yellow]Compacting:[/yellow] [dark_orange]{file}[/dark_orange]",
+                            f"[yellow]Compacting:[/yellow] "
+                            f"[dark_orange]{file}[/dark_orange]",
                             end="\r",
                         ) if v else None
                         _zip.write(file, compress_type=zipfile.ZIP_DEFLATED)
@@ -280,7 +299,8 @@ def compress(path, fn, v, fo):  # noqa: C901
             for file in files:
                 if file != fn:
                     print(
-                        f"[yellow]Compacting:[/yellow] [dark_orange]{file}[/dark_orange]",
+                        f"[yellow]Compacting:[/yellow] "
+                        f"[dark_orange]{file}[/dark_orange]",
                         end="\r",
                     ) if v else None
                     _zip.write(
@@ -311,7 +331,8 @@ def compress(path, fn, v, fo):  # noqa: C901
         except Exception:
             os.chdir(path)
     print(
-        f"[bright_green]Saved in[/bright_green] [bright_blue]{os.path.join(os.getcwd(), fn)}[/bright_blue]\n"
+        f"[bright_green]Saved in[/bright_green] "
+        f"[bright_blue]{os.path.join(os.getcwd(), fn)}[/bright_blue]\n"
     )
 
 
@@ -358,7 +379,8 @@ def extract(path, to, v, ex=0):
     ) as p:
         for f in p:
             print(
-                f"[yellow]Extracting[/yellow] [green]{ziplist[f]}[/green]", end="\r"
+                f"[yellow]Extracting[/yellow] [green]{ziplist[f]}[/green]",
+                end="\r",
             ) if v else None
             try:
                 _zip.extract(ziplist[f])

@@ -1,7 +1,6 @@
 # pytest lash/plugins/keylogger/tests/test_keylogger.py
 import os
 import pytest
-from unittest.mock import MagicMock, patch
 
 
 class TestKeyDown:

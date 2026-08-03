@@ -31,7 +31,11 @@ def _get_duration(ffmpeg, path):
         [ffmpeg, "-hide_banner", "-i", path], capture_output=True, text=True
     )
     m = re.search(r"Duration: (\d+):(\d+):(\d+\.\d+)", info.stderr)
-    return int(m.group(1)) * 3600 + int(m.group(2)) * 60 + float(m.group(3)) if m else 0
+    return (
+        int(m.group(1)) * 3600 + int(m.group(2)) * 60 + float(m.group(3))
+        if m
+        else 0
+    )
 
 
 def _run_ffmpeg(cmd, label, total):
@@ -59,10 +63,18 @@ def _run_ffmpeg(cmd, label, total):
 
 @video.command()
 @click.argument(
-    "path", metavar="<path>", type=click.Path(exists=True), required=False, default="."
+    "path",
+    metavar="<path>",
+    type=click.Path(exists=True),
+    required=False,
+    default=".",
 )
 @click.option(
-    "-fps", type=click.INT, help="Frames per second", default=5, show_default=True
+    "-fps",
+    type=click.INT,
+    help="Frames per second",
+    default=5,
+    show_default=True,
 )
 @click.option("-n", type=click.STRING, help="Output video name (no extension)")
 @click.option(
@@ -134,7 +146,9 @@ def build(path, fps, n, num, r):
             os.remove(img)
             progress.advance(task)
 
-    console.print(f"[green]Saved:[/green] {os.path.join(os.getcwd(), video_name)}")
+    console.print(
+        f"[green]Saved:[/green] {os.path.join(os.getcwd(), video_name)}"
+    )
 
 
 @video.command(help="Create a 13-second highlight reel from a video")

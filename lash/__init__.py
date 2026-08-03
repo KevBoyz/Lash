@@ -16,7 +16,7 @@ except importlib.metadata.PackageNotFoundError:
 
 
 @click.group(
-    name='lash',
+    name="lash",
     cls=LazyGroup,
     lazy_subcommands=plugin_registry.get_lazy_commands(),
     help=f"\b\n    - Lash {__version__} by KevBoyz ~ https://github.com/KevBoyz/Lash\n",

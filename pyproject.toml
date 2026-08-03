@@ -72,3 +72,8 @@ where = ["."]
 
 [tool.setuptools.package-data]
 "*" = ["manifest.json"]
+
+[dependency-groups]
+dev = [
+    "flake8>=7.3.0",
+]

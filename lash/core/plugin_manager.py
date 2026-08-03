@@ -25,7 +25,8 @@ def _detect_installer(requires):
     if shutil.which("uv"):
         return "uv"
     raise RuntimeError(
-        "No package installer found: 'pip' module missing and 'uv' not in PATH.\n"
+        "No package installer found: 'pip' module missing and "
+        "'uv' not in PATH.\n"
         "Install these dependencies manually with any Python package tool:\n"
         f"  pip install {' '.join(requires)}"
     )
@@ -119,7 +120,10 @@ def _install_plugin(plugin_name, available, state_file):  # noqa: C901
 
     for cmd_name, cmd_info in commands_to_install.items():
         plugin_registry.mark_command_installed(
-            cmd_name, plugin_name, cmd_info.get("requires", []), state_file=state_file
+            cmd_name,
+            plugin_name,
+            cmd_info.get("requires", []),
+            state_file=state_file,
         )
     click.echo(f"Installed: {plugin_name}")
 
@@ -267,7 +271,9 @@ def _layout_panels(panels, per_row=2):
         _console.print(Columns(row, equal=True, expand=True))
 
 
-def make_plugin_list_command(*, plugins_dir=None, state_file=None):  # noqa: C901
+def make_plugin_list_command(  # noqa: C901
+    *, plugins_dir=None, state_file=None
+):
     @click.command("list")
     @click.option(
         "--installed", "-i", is_flag=True, help="Show only installed plugins."
@@ -401,7 +407,10 @@ fix = make_fix_command()
 
 
 class _PluginGroup(click.Group):
-    """click.Group com aliases ocultos no help: install -> add, uninstall -> remove."""
+    """click.Group com aliases ocultos no help.
+
+    install -> add, uninstall -> remove.
+    """
 
     _aliases = {"install": "add", "uninstall": "remove"}
 

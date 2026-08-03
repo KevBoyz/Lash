@@ -19,7 +19,7 @@ def files_range():
 def get_ext(file="", path=""):
     if path:
         index = path.rfind("\\")
-        return path[index + 1 :]
+        return path[index + 1:]
     else:
         index = file.rfind(".")
         return file[index:].lower()
@@ -44,9 +44,9 @@ def file_types():
 
 def get_last(path):
     if path.rfind("\\") != -1:
-        last = path[1 + path.rfind("\\") :]
+        last = path[1 + path.rfind("\\"):]
     else:
-        last = path[1 + path.rfind("/") :]
+        last = path[1 + path.rfind("/"):]
     if last.rfind('"'):
         last = last.replace('"', "")
     return last

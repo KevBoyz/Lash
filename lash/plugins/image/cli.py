@@ -24,10 +24,16 @@ def image(): ...
 @click.argument("path", metavar="<path>", type=click.Path(exists=True))
 @click.option("-all", is_flag=True, help="Edit all images on path")
 @click.option(
-    "-c", "-compare", is_flag=True, help="Compare the original image with the edited"
+    "-c",
+    "-compare",
+    is_flag=True,
+    help="Compare the original image with the edited",
 )
 @click.option(
-    "-t", "-test", is_flag=True, help="Just test the editor, don't save the edition"
+    "-t",
+    "-test",
+    is_flag=True,
+    help="Just test the editor, don't save the edition",
 )
 @click.option("-lr", is_flag=True, help="Mirror left to right")
 @click.option("-tb", is_flag=True, help="Mirror top to bottom")
@@ -36,8 +42,9 @@ def flip(path, all, c, t, lr, tb):  # noqa: C901
     Flip Image(s)
 
     Flip one or all images on a folder, you can flip left to right or top to
-    bottom, before do the flip, you can use the -t option to compare the original
-    image with the edited without rewrite the file. Check the examples below:
+    bottom, before do the flip, you can use the -t option to compare
+    the original image with the edited without rewrite the file. Check
+    the examples below:
     \b
 
     \b
@@ -46,7 +53,8 @@ def flip(path, all, c, t, lr, tb):  # noqa: C901
     """
     if not lr and not tb:
         print(
-            "[red]Error:[/red] none action received, send some option, --help for more details"
+            "[red]Error:[/red] none action received, send some option, "
+            "--help for more details"
         )
     if all:
         n_editions = 0
@@ -87,7 +95,8 @@ def flip(path, all, c, t, lr, tb):  # noqa: C901
             print("Process [green]completed[/green]")
         except (UnidentifiedImageError, OSError, ValueError):
             print(
-                "[red]Error:[/red] the file is not a image or the type can't be identified"
+                "[red]Error:[/red] the file is not a image or the type "
+                "can't be identified"
             )
 
 
@@ -95,10 +104,16 @@ def flip(path, all, c, t, lr, tb):  # noqa: C901
 @click.argument("path", metavar="<path>", type=click.Path(exists=True))
 @click.option("-all", is_flag=True, help="Edit all images on path")
 @click.option(
-    "-c", "-compare", is_flag=True, help="Compare the original image with the edited"
+    "-c",
+    "-compare",
+    is_flag=True,
+    help="Compare the original image with the edited",
 )
 @click.option(
-    "-t", "-test", is_flag=True, help="Just test the editor, don't save the edition"
+    "-t",
+    "-test",
+    is_flag=True,
+    help="Just test the editor, don't save the edition",
 )
 @click.option(
     "-axis", nargs=2, type=click.INT, help="Set new values for x, y dimensions"
@@ -109,9 +124,10 @@ def resize(path, all, c, t, axis, d, r):
     """
     Resize Image(s)
 
-    Resize one or all images on a folder, you can double or reduce by 2 the image size
-    respecting the proportion with -d, -r or do something more customizable defining
-    a custom size (x, y) with -axis as you want. Check the examples below:
+    Resize one or all images on a folder, you can double or reduce by 2
+    the image size respecting the proportion with -d, -r or do something
+    more customizable defining a custom size (x, y) with -axis as you
+    want. Check the examples below:
     \b
 
     \b
@@ -120,7 +136,8 @@ def resize(path, all, c, t, axis, d, r):
     """
     if not axis and not d and not r:
         print(
-            "[red]Error:[/red] none action received, send some option, --help for more details"
+            "[red]Error:[/red] none action received, send some option, "
+            "--help for more details"
         )
         return
     if all:
@@ -153,7 +170,8 @@ def resize(path, all, c, t, axis, d, r):
             print("Process [green]completed[/green]")
         except (UnidentifiedImageError, OSError, ValueError):
             print(
-                "[red]Error:[/red] the file is not a image or the type can't be identified"
+                "[red]Error:[/red] the file is not a image or the type "
+                "can't be identified"
             )
 
 
@@ -161,19 +179,37 @@ def resize(path, all, c, t, axis, d, r):
 @click.argument("path", metavar="<path>", type=click.Path(exists=True))
 @click.option("-all", is_flag=True, help="Edit all images on path")
 @click.option(
-    "-c", "-compare", is_flag=True, help="Compare the original image with the edited"
+    "-c",
+    "-compare",
+    is_flag=True,
+    help="Compare the original image with the edited",
 )
 @click.option(
-    "-t", "-test", is_flag=True, help="Just test the editor, don't save the edition"
+    "-t",
+    "-test",
+    is_flag=True,
+    help="Just test the editor, don't save the edition",
 )
 @click.option(
-    "-ct", "-contrast", type=click.FLOAT, help="Adjust the image contrast", default=1
+    "-ct",
+    "-contrast",
+    type=click.FLOAT,
+    help="Adjust the image contrast",
+    default=1,
 )
 @click.option(
-    "-b", "-brightness", type=click.FLOAT, help="Adjust the image brightness", default=1
+    "-b",
+    "-brightness",
+    type=click.FLOAT,
+    help="Adjust the image brightness",
+    default=1,
 )
 @click.option(
-    "-s", "-saturation", type=click.FLOAT, help="Adjust the image saturation", default=1
+    "-s",
+    "-saturation",
+    type=click.FLOAT,
+    help="Adjust the image saturation",
+    default=1,
 )
 @click.option("-sh", "-sharp", type=click.FLOAT, help="Sharp the image", default=1)
 def adjust(path, all, c, t, ct, b, s, sh):
@@ -184,13 +220,16 @@ def adjust(path, all, c, t, ct, b, s, sh):
     special edition on a specific image, the -all option is not recommended.
     \b
 
-    You can modify the contrast, brightness, saturation or sharp the image, but ponder the
-    values, all image values is 1 by default, to do a good editions, use values only between
-    1 and 2. You can reduce the values passing 0, like 0.5 or 0.9. You can also check the
-    edition before save the file with -t and compare the images with -c. Check the examples below:
+    You can modify the contrast, brightness, saturation or sharp the
+    image, but ponder the values, all image values is 1 by default, to
+    do a good editions, use values only between 1 and 2. You can reduce
+    the values passing 0, like 0.5 or 0.9. You can also check the
+    edition before save the file with -t and compare the images with -c.
+    Check the examples below:
     \b
 
-    $~ lash image adjust -t -ct 1.2 -b 1.1 -s 1.3 C:\\Users\\Usr\\Folder\\img.png
+    $~ lash image adjust -t -ct 1.2 -b 1.1 -s 1.3
+    C:\\Users\\Usr\\Folder\\img.png
     \b
     $~ lash image adjust -all -s 1.1 C:\\Users\\User\\Folder
     """
@@ -203,7 +242,11 @@ def adjust(path, all, c, t, ct, b, s, sh):
                     try:
                         save(
                             adjust_exec(
-                                Image.open(os.path.join(root, file)), ct, b, s, sh
+                                Image.open(os.path.join(root, file)),
+                                ct,
+                                b,
+                                s,
+                                sh,
                             ),
                             file,
                         )
@@ -227,7 +270,8 @@ def adjust(path, all, c, t, ct, b, s, sh):
                 print("Process [green]completed[/green], image rewritten")
         except (UnidentifiedImageError, OSError, ValueError):
             print(
-                "[red]Error:[/red] the file is not a image or the type can't be identified"
+                "[red]Error:[/red] the file is not a image or the type "
+                "can't be identified"
             )
 
 
@@ -235,10 +279,16 @@ def adjust(path, all, c, t, ct, b, s, sh):
 @click.argument("path", metavar="<path>", type=click.Path(exists=True))
 @click.option("-all", is_flag=True, help="Edit all images on path")
 @click.option(
-    "-c", "-compare", is_flag=True, help="Compare the original image with the edited"
+    "-c",
+    "-compare",
+    is_flag=True,
+    help="Compare the original image with the edited",
 )
 @click.option(
-    "-t", "-test", is_flag=True, help="Just test the editor, don't save the edition"
+    "-t",
+    "-test",
+    is_flag=True,
+    help="Just test the editor, don't save the edition",
 )
 @click.option("-b", "-blur", is_flag=True, help="Apply blur filter")
 @click.option("-co", "-contour", is_flag=True, help="Apply contour filter")
@@ -249,15 +299,16 @@ def filter(path, all, c, t, b, co, d, e, k):
     """
     Apply Filters
 
-    Apply simple filters on images with this command. The most recommended is -k (kbzup),
-    that do a simple upgrade in your image, test the filters with -t option and choose the
-    better for you.
+    Apply simple filters on images with this command. The most
+    recommended is -k (kbzup), that do a simple upgrade in your image,
+    test the filters with -t option and choose the better for you.
     \b
 
     You can use multiple filters ore just one to run the command. See below:
     \b
 
-    $~ lash image filter -t -k -d C:\\Users\\User\\Folder\\image.png           >
+    $~ lash image filter -t -k -d
+    C:\\Users\\User\\Folder\\image.png           >
     \b
     $~ lash image filter -all -k -d -b C:\\Users\\User\\Folder
     """
@@ -293,7 +344,8 @@ def filter(path, all, c, t, b, co, d, e, k):
             print("Process [green]completed[/green]")
         except (UnidentifiedImageError, OSError, ValueError):
             print(
-                "[red]Error:[/red] the file is not a image or the type can't be identified"
+                "[red]Error:[/red] the file is not a image or the type "
+                "can't be identified"
             )
 
 
@@ -302,10 +354,16 @@ def filter(path, all, c, t, b, co, d, e, k):
 @click.argument("path", metavar="<path>", type=click.Path(exists=True))
 @click.option("-all", is_flag=True, help="Edit all images on path")
 @click.option(
-    "-c", "-compare", is_flag=True, help="Compare the original image with the edited"
+    "-c",
+    "-compare",
+    is_flag=True,
+    help="Compare the original image with the edited",
 )
 @click.option(
-    "-t", "-test", is_flag=True, help="Just test the editor, don't save the edition"
+    "-t",
+    "-test",
+    is_flag=True,
+    help="Just test the editor, don't save the edition",
 )
 @click.option(
     "-tp",
@@ -357,11 +415,14 @@ def wmark(text, path, all, c, t, tp, ts, tc, tf, axis):
     See the execution examples below:
     \b
 
-    $~ lash image wmark -tc green -ts 50 -c KevBz C:\\Users\\Usr\\Folder\\img.png
+    $~ lash image wmark -tc green -ts 50 -c KevBz
+    C:\\Users\\Usr\\Folder\\img.png
     \b
-    $~ lash image wmark -t -tp 10 -tf arial KevBz C:\\Users\\Usr\\Folder\\img.png
+    $~ lash image wmark -t -tp 10 -tf arial KevBz
+    C:\\Users\\Usr\\Folder\\img.png
     \b
-    $~ lash image wmark -all -axis 10 30 -tc #000000 KevBz C:\\Users\\User\\Folder
+    $~ lash image wmark -all -axis 10 30 -tc #000000 KevBz
+    C:\\Users\\User\\Folder
     """
     if all:
         n_editions = 0
@@ -395,7 +456,8 @@ def wmark(text, path, all, c, t, tp, ts, tc, tf, axis):
             wmarke(text, file, ".", im, c, t, tp, ts, tc, tf, axis)
         except (UnidentifiedImageError, OSError, ValueError):
             print(
-                "[red]Error:[/red] the file is not a image or the type can't be identified"
+                "[red]Error:[/red] the file is not a image or the type "
+                "can't be identified"
             )
 
 
@@ -406,10 +468,16 @@ def wmark(text, path, all, c, t, tp, ts, tc, tf, axis):
     "-all", is_flag=True, help="Paste the copied image to all images on a path"
 )
 @click.option(
-    "-c", "-compare", is_flag=True, help="Compare the original image with the edited"
+    "-c",
+    "-compare",
+    is_flag=True,
+    help="Compare the original image with the edited",
 )
 @click.option(
-    "-t", "-test", is_flag=True, help="Just test the editor, don't save the edition"
+    "-t",
+    "-test",
+    is_flag=True,
+    help="Just test the editor, don't save the edition",
 )
 @click.option(
     "-axis",
@@ -423,14 +491,18 @@ def paste(path, ps, axis, rs, all, c, t):  # noqa: C901
     """
     Paste one image in other image(s)
 
-    In the path argument you need pass an image to be pasted, like a filter, effect, watermark or other,
-    second you need pass one or more images to be edited, -ps to one image or -all for all images on a
-    folder. You can set new axis to do de paste, by default x, y = 0, 0. Try to use the -axis option.
+    In the path argument you need pass an image to be pasted, like a
+    filter, effect, watermark or other, second you need pass one or more
+    images to be edited, -ps to one image or -all for all images on a
+    folder. You can set new axis to do de paste, by default x, y = 0, 0.
+    Try to use the -axis option.
     \b
 
     \b
-    $~ lash image paste -rs -t C:\\Usrs\\Usr\\Fld\\im.png -ps C:\\Usrs\\Usr\\Fld\\im2.png
-    $~ lash image paste C:\\Usrs\\Usr\\Fld\\im.png -all C:\\Usrs\\Usr\\Fld -axis 50 50
+    $~ lash image paste -rs -t C:\\Usrs\\Usr\\Fld\\im.png
+    -ps C:\\Usrs\\Usr\\Fld\\im2.png
+    $~ lash image paste C:\\Usrs\\Usr\\Fld\\im.png -all
+    C:\\Usrs\\Usr\\Fld -axis 50 50
     """
     if not c:
         c = True if t else None
@@ -449,7 +521,10 @@ def paste(path, ps, axis, rs, all, c, t):  # noqa: C901
                                 im2.paste(im, (x, y))
                                 n_editions += 1
                                 compare(im, im2) if c else None
-                                save(im2, os.path.join(root, file)) if not t else None
+                                save(
+                                    im2,
+                                    os.path.join(root, file),
+                                ) if not t else None
                             except Exception:
                                 pass
                             pbar.update(1)
@@ -459,7 +534,8 @@ def paste(path, ps, axis, rs, all, c, t):  # noqa: C901
         else:
             if not ps:
                 print(
-                    "[red]Error:[/red] set a image to paste the copied with -pc, --help fot datails"
+                    "[red]Error:[/red] set a image to paste the copied "
+                    "with -pc, --help fot datails"
                 )
             else:
                 im2 = Image.open(get_file(ps))

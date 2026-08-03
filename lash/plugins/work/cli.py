@@ -3,9 +3,18 @@ import click
 from datetime import date
 from lash.plugins.work.helpers import data_dir, format_duration, find_task
 from lash.plugins.work.core import (
-    load_state, save_state, load_sessions, append_session,
-    add_task, remove_task, remove_all_tasks, start_task, pause_task, stop_task,
-    calc_elapsed, format_log,
+    load_state,
+    save_state,
+    load_sessions,
+    append_session,
+    add_task,
+    remove_task,
+    remove_all_tasks,
+    start_task,
+    pause_task,
+    stop_task,
+    calc_elapsed,
+    format_log,
 )
 
 
@@ -31,7 +40,13 @@ def add(name):
 
 @work_group.command()
 @click.argument("task", required=False)
-@click.option("-a", "--all", "remove_all", is_flag=True, help="Remove all pending tasks")
+@click.option(
+    "-a",
+    "--all",
+    "remove_all",
+    is_flag=True,
+    help="Remove all pending tasks",
+)
 def rm(task, remove_all):
     """Remove a task by name or number. Use -a to remove all."""
     d = data_dir()
@@ -45,7 +60,9 @@ def rm(task, remove_all):
                 click.echo(f"Removed: {t['name']}")
         else:
             if not task:
-                raise click.UsageError("Missing argument 'TASK' or use -a to remove all.")
+                raise click.UsageError(
+                    "Missing argument 'TASK' or use -a to remove all."
+                )
             removed = remove_task(state, task)
             save_state(tasks_path, state)
             click.echo(f"Removed: {removed['name']}")
@@ -81,10 +98,22 @@ def ls(done):
 @work_group.command()
 @click.argument("task", required=False)
 @click.option("--pomo", is_flag=True, help="Enable Pomodoro mode")
-@click.option("--work", "work_mins", default=25, show_default=True, type=int,
-              help="Work interval (minutes)")
-@click.option("--break", "break_mins", default=5, show_default=True, type=int,
-              help="Break interval (minutes)")
+@click.option(
+    "--work",
+    "work_mins",
+    default=25,
+    show_default=True,
+    type=int,
+    help="Work interval (minutes)",
+)
+@click.option(
+    "--break",
+    "break_mins",
+    default=5,
+    show_default=True,
+    type=int,
+    help="Break interval (minutes)",
+)
 def start(task, pomo, work_mins, break_mins):  # noqa: C901
     """Start a task. Prompts for selection if no task given."""
     d = data_dir()
@@ -116,8 +145,13 @@ def start(task, pomo, work_mins, break_mins):  # noqa: C901
             task_obj = add_task(state, task)
         except ValueError as e:
             raise click.ClickException(str(e))
-    start_task(state, task_obj["id"], pomo=pomo, pomo_work_mins=work_mins,
-               pomo_break_mins=break_mins)
+    start_task(
+        state,
+        task_obj["id"],
+        pomo=pomo,
+        pomo_work_mins=work_mins,
+        pomo_break_mins=break_mins,
+    )
     save_state(tasks_path, state)
     if pomo:
         click.echo(f"Started: {task_obj['name']} [Pomodoro {work_mins}/{break_mins}]")
@@ -140,7 +174,9 @@ def stop():
     save_state(tasks_path, state)
     if session_entry:
         append_session(sessions_path, session_entry)
-        click.echo(f"Done: {session_entry['task_name']} ({format_duration(session_entry['total_minutes'] * 60)})")
+        click.echo(
+            f"Done: {session_entry['task_name']} ({format_duration(session_entry['total_minutes'] * 60)})"
+        )
     else:
         click.echo("Stopped.")
 
@@ -183,6 +219,7 @@ def log(today):
     """Show time records."""
     from rich.table import Table
     from rich.console import Console
+
     d = data_dir()
     sessions_path = d / "sessions.json"
     sessions = load_sessions(sessions_path)
@@ -203,7 +240,9 @@ def log(today):
         table.add_column("Time", justify="right")
         table.add_column("Pomodoros", justify="right")
         for t in day["tasks"]:
-            table.add_row(t["name"], format_duration(t["minutes"] * 60), str(t["pomo_sessions"]))
+            table.add_row(
+                t["name"], format_duration(t["minutes"] * 60), str(t["pomo_sessions"])
+            )
         table.add_row(
             "[bold]Total[/bold]",
             f"[bold]{format_duration(day['total_minutes'] * 60)}[/bold]",

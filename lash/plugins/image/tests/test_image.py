@@ -1,6 +1,5 @@
 # pytest lash/plugins/image/tests/test_image.py
 import os
-import pytest
 
 
 class TestFilesRange:
@@ -203,7 +202,8 @@ class TestSave:
         from lash.plugins.image.core import save
 
         im = Image.new("RGB", (10, 10))
-        # .xyz is not a known PIL format — save() propagates ValueError so the cli can print it
+        # .xyz is not a known PIL format — save() propagates
+        # ValueError so the cli can print it
         bad_path = str(tmp_path / "out.xyz")
         with pytest.raises(ValueError):
             save(im, bad_path)

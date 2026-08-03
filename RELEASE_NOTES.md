@@ -1,5 +1,15 @@
 # Lash — Release Notes
 
+## v1.3.1.3 — Plugin improvements, cross-platform fixes and refactors
+
+- **plugin manager**: add `uv` fallback when `pip` unavailable
+- **cli**: add `install`/`uninstall` aliases for plugin add/remove
+- **plugins**: improve plugin list design; use `rich` for progress bars and colored output
+- **cross-platform**: add OS-compatible font resolution and fix path bugs
+- **refactor**: split grouped commands into standalone plugins
+
+---
+
 ## v1.3.1.2 — Bugfixes, refactors and plugin manager improvements
 
 - **plugin**: new `plugin fix` command — fixes broken imports by installing missing deps

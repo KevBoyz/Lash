@@ -223,11 +223,52 @@ def _setup_f3_watcher() -> tuple[
     return force_stopped, done, watcher
 
 
-def play_macro(
-    name: str, speed: float, full_speed: bool, repeat: int, loop: bool
-) -> bool:  # noqa: C901
-    data = _load_macro_data(name)
+def _run_macro_once(
+    events: list,
+    delay_factor: float,
+    force_stopped: threading.Event,
+    kb_ctrl,
+    mouse_ctrl,
+) -> None:
+    run_start = time()
+    last_dispatch = time()
+    for event in events:
+        if force_stopped.is_set():
+            return
+        remaining = run_start + event["t"] * delay_factor - time()
+        if remaining > _MIN_EVENT_DELAY:
+            _interruptible_sleep(remaining, force_stopped)
+        else:
+            gap = _MIN_EVENT_DELAY - (time() - last_dispatch)
+            if gap > 0:
+                sleep(gap)
+        if force_stopped.is_set():
+            return
+        _dispatch_event(event, kb_ctrl, mouse_ctrl)
+        last_dispatch = time()
 
+
+def _run_macro_loop(
+    events: list,
+    delay_factor: float,
+    force_stopped: threading.Event,
+    kb_ctrl,
+    mouse_ctrl,
+    repeat: int,
+    loop: bool,
+) -> None:
+    if loop:
+        while not force_stopped.is_set():
+            _run_macro_once(events, delay_factor, force_stopped, kb_ctrl, mouse_ctrl)
+    else:
+        for _ in range(repeat):
+            if force_stopped.is_set():
+                break
+            _run_macro_once(events, delay_factor, force_stopped, kb_ctrl, mouse_ctrl)
+
+
+def play_macro(name: str, speed: float, full_speed: bool, repeat: int, loop: bool) -> bool:
+    data = _load_macro_data(name)
     events = data["events"]
     delay_factor = _calculate_delay_factor(speed, full_speed)
 
@@ -236,32 +277,7 @@ def play_macro(
 
     force_stopped, done, watcher = _setup_f3_watcher()
 
-    def run_once():
-        run_start = time()
-        last_dispatch = time()
-        for event in events:
-            if force_stopped.is_set():
-                return
-            remaining = run_start + event["t"] * delay_factor - time()
-            if remaining > _MIN_EVENT_DELAY:
-                _interruptible_sleep(remaining, force_stopped)
-            else:
-                gap = _MIN_EVENT_DELAY - (time() - last_dispatch)
-                if gap > 0:
-                    sleep(gap)
-            if force_stopped.is_set():
-                return
-            _dispatch_event(event, kb_ctrl, mouse_ctrl)
-            last_dispatch = time()
-
-    if loop:
-        while not force_stopped.is_set():
-            run_once()
-    else:
-        for _ in range(repeat):
-            if force_stopped.is_set():
-                break
-            run_once()
+    _run_macro_loop(events, delay_factor, force_stopped, kb_ctrl, mouse_ctrl, repeat, loop)
 
     done.set()
     watcher.join(timeout=0.2)

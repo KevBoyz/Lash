@@ -1,3 +1,4 @@
+import subprocess
 from typing import List, Tuple
 
 
@@ -20,3 +21,7 @@ def time_format(*args: int) -> List:
                    '0' + str(x) if len(str(x)) == 1
                    else str(x), args))
     return fmt
+
+
+def run_command(command: str):
+    return subprocess.run(command, shell=True, check=False)

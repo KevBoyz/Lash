@@ -1,11 +1,10 @@
 import click
-from os import system
 from time import sleep
 from datetime import datetime
 from rich import print
 from rich.console import Console
 from rich.progress import BarColumn, Progress, TextColumn, TimeElapsedColumn
-from lash.plugins.sched.core import reg_crono, time_format
+from lash.plugins.sched.core import reg_crono, run_command, time_format
 
 _console = Console()
 
@@ -63,7 +62,7 @@ def run(command, s, m, h):
                     ),
                 )
                 sleep(1)
-        system(command=command)
+        run_command(command)
 
 
 @sched.command()
@@ -104,7 +103,21 @@ def wait(command, h, m, s):
                 ),
             )
             sleep(1)
-    system(command=command)
+    run_command(command)
+
+
+@sched.command()
+@click.argument("first_command", metavar="<command 1>", type=click.STRING)
+@click.argument("second_command", metavar="<command 2>", type=click.STRING)
+def after(first_command, second_command):
+    """
+    Run one shell command, wait for it to finish, then run a second one.
+
+    \b
+    Example: sched after "python backup.py" "python notify.py"
+    """
+    run_command(first_command)
+    run_command(second_command)
 
 
 @sched.command()
@@ -139,9 +152,7 @@ def exec(time, command):
         ):
             now = datetime.now()
             status.update(
-                f"Waiting {
-                    now.hour}:{
-                    now.minute}:{
-                    now.second} -> {time}")
+                f"Waiting {now.hour}:{now.minute}:{now.second} -> {time}"
+            )
             sleep(1)
-    system(command=command)
+    run_command(command)

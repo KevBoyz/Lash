@@ -1,4 +1,6 @@
 # pytest lash/plugins/sched/tests/test_cli.py
+from unittest.mock import patch
+
 from click.testing import CliRunner
 from lash.plugins.sched.cli import sched
 
@@ -35,3 +37,16 @@ class TestExecCmd:
         result = runner.invoke(sched, ['exec', '10:30:00:00', 'echo hello'])
         assert result.exit_code == 0
         assert 'syntax incorrect' in result.output
+
+
+class TestAfterCmd:
+    def test_runs_second_command_after_first_finishes(self):
+        runner = CliRunner()
+        with patch('lash.plugins.sched.cli.run_command') as mock_run_command:
+            result = runner.invoke(
+                sched, ['after', 'echo first', 'echo second'])
+
+        assert result.exit_code == 0
+        assert mock_run_command.call_count == 2
+        assert mock_run_command.call_args_list[0].args[0] == 'echo first'
+        assert mock_run_command.call_args_list[1].args[0] == 'echo second'

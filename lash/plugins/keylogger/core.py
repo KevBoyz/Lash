@@ -1,6 +1,3 @@
-# ── keylogger ─────────────────────────────────────
-
-
 def key_down(key):
     from pynput.keyboard import Key
 

@@ -13,9 +13,6 @@ from lash.plugins.macro.helpers import (
 )
 
 
-# ── macro ──────────────────────────────────────────────────
-
-
 def list_macros() -> list:
     return list_macro_files()
 

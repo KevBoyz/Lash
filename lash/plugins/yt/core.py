@@ -1,9 +1,6 @@
 import yt_dlp
 
 
-# ── yt ──────────────────────────────────────────────────────────────────
-
-
 def download_yt(url_or_query, output_path, low=False, audio_only=False):
     is_search = not url_or_query.startswith(("http://", "https://"))
     url = f"ytsearch1:{url_or_query}" if is_search else url_or_query

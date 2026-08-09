@@ -37,7 +37,7 @@ def sched():
                 type=click.INT,
                 required=False,
                 default=0)
-def run(command, s, m, h):
+def run(command, h, m, s):
     """\b
     Run a command repeatedly at a given interval.
 

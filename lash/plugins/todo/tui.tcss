@@ -1,0 +1,238 @@
+Screen {
+    background: #0a0f1a;
+    color: #cfd8e3;
+}
+
+#root {
+    layout: horizontal;
+    height: 100%;
+}
+
+#sidebar {
+    width: 24;
+    min-width: 22;
+    background: #0f1724;
+    border-right: tall #1b2638;
+    padding: 1 1;
+}
+
+#sidebar-title {
+    color: #4ade80;
+    text-style: bold;
+}
+
+#sidebar-sub {
+    color: #6b7a90;
+    padding-bottom: 1;
+}
+
+#sidebar .nav-btn {
+    width: 100%;
+    margin-bottom: 1;
+    background: #121b2b;
+    border: tall #1b2638;
+    color: #cfd8e3;
+    height: 3;
+}
+
+#sidebar .nav-btn.-active {
+    background: #0b2a1f;
+    border: tall #22c55e;
+    color: #4ade80;
+    text-style: bold;
+}
+
+#sidebar-hints {
+    color: #4a5568;
+    dock: bottom;
+    padding-top: 1;
+}
+
+#main {
+    width: 1fr;
+    padding: 1 1;
+}
+
+.panel {
+    background: #0f1724;
+    border: tall #1b2638;
+    padding: 1 1;
+    margin-bottom: 1;
+    height: 1fr;
+}
+
+.panel-header {
+    layout: horizontal;
+    height: 3;
+    margin-bottom: 1;
+}
+
+.panel-title {
+    color: #38bdf8;
+    text-style: bold;
+    width: 1fr;
+    content-align: left middle;
+}
+
+#add-task-btn {
+    background: #0b2a1f;
+    color: #4ade80;
+    border: tall #22c55e;
+    min-width: 14;
+    width: auto;
+    height: 3;
+}
+
+VerticalScroll {
+    scrollbar-size: 1 1;
+}
+
+.task-row {
+    layout: horizontal;
+    height: auto;
+    min-height: 3;
+    background: #121b2b;
+    border: tall #1b2638;
+    padding: 0 1;
+    margin-bottom: 1;
+}
+
+.task-row.-active {
+    border: tall #4ade80;
+    background: #0b2a1f;
+}
+
+.task-row:focus {
+    border: tall #facc15;
+    background: #1a2338;
+}
+
+.col-name {
+    width: 1fr;
+    min-width: 10;
+    height: auto;
+    content-align: left middle;
+    color: #e2e8f0;
+    padding-right: 2;
+}
+
+.col-time {
+    width: 14;
+    content-align: left middle;
+    color: #cbd5e1;
+    padding-right: 2;
+}
+
+.col-status {
+    width: 3;
+    content-align: center middle;
+    color: #e2e8f0;
+    text-style: bold;
+}
+
+.col-status.-active { color: #4ade80; }
+.col-status.-paused { color: #38bdf8; }
+.col-status.-done { color: #4ade80; }
+
+.col-date {
+    width: 14;
+    content-align: left middle;
+    color: #94a3b8;
+}
+
+#empty-pending, #empty-completed {
+    color: #6b7a90;
+    padding: 2 2;
+}
+
+#perf-total {
+    color: #4ade80;
+    text-style: bold;
+    width: auto;
+    content-align: right middle;
+}
+
+#chart {
+    height: 1fr;
+    padding: 1 1;
+}
+
+.config-body {
+    padding: 1 1;
+    height: 1fr;
+}
+
+.config-label {
+    color: #38bdf8;
+    text-style: bold;
+    padding-top: 1;
+}
+
+.config-label.-danger {
+    color: #fca5a5;
+}
+
+.config-value {
+    color: #cbd5e1;
+    padding: 0 1;
+    margin-bottom: 1;
+}
+
+.config-sep {
+    height: 1;
+}
+
+.config-btn {
+    background: #0b2140;
+    color: #60a5fa;
+    border: tall #3b82f6;
+    width: auto;
+    min-width: 24;
+    height: 3;
+    margin-top: 1;
+}
+
+.config-btn.-danger {
+    background: #2b0e14;
+    color: #fca5a5;
+    border: tall #ef4444;
+}
+
+AddTaskModal, ConfirmModal, TextPromptModal {
+    align: center middle;
+}
+
+#modal-box {
+    width: 60;
+    height: auto;
+    max-height: 14;
+    background: #0f1724;
+    border: tall #38bdf8;
+    padding: 1 2;
+}
+
+#modal-title {
+    color: #38bdf8;
+    text-style: bold;
+    margin-bottom: 1;
+}
+
+#modal-message {
+    color: #cbd5e1;
+    margin-bottom: 1;
+    height: auto;
+}
+
+#modal-input {
+    margin-bottom: 1;
+}
+
+#modal-actions {
+    layout: horizontal;
+    height: 3;
+    align: right middle;
+}
+
+#modal-actions Button {
+    margin-left: 1;
+}

@@ -1,10 +1,7 @@
 import json
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 from pathlib import Path
-from lash.plugins.work.helpers import now_iso, generate_id, find_task
-
-
-# ── shared ──────────────────────────────────────────────────────────────
+from lash.plugins.todo.helpers import now_iso, generate_id, find_task
 
 
 def load_state(path: Path) -> dict:
@@ -49,9 +46,6 @@ def add_task(state: dict, name: str) -> dict:
     return task
 
 
-# ── rm ──────────────────────────────────────────────────────────────────
-
-
 def remove_task(state: dict, query: str) -> dict:
     pending = [t for t in state["tasks"] if not t["done"]]
     task = find_task(pending, query)
@@ -73,9 +67,6 @@ def remove_all_tasks(state: dict) -> list:
     return pending
 
 
-# ── start ───────────────────────────────────────────────────────────────
-
-
 def start_task(state: dict, task_id: str, pomo: bool = False,
                pomo_work_mins: int = 25, pomo_break_mins: int = 5) -> None:
     if state["active"]:
@@ -93,9 +84,6 @@ def start_task(state: dict, task_id: str, pomo: bool = False,
     }
 
 
-# ── pause ───────────────────────────────────────────────────────────────
-
-
 def pause_task(state: dict) -> str:
     active = state["active"]
     if not active:
@@ -111,9 +99,6 @@ def pause_task(state: dict) -> str:
     return "paused"
 
 
-# ── status ──────────────────────────────────────────────────────────────
-
-
 def calc_elapsed(active: dict) -> int:
     total = 0
     for seg in active["segments"]:
@@ -126,7 +111,13 @@ def calc_elapsed(active: dict) -> int:
     return total
 
 
-# ── stop ────────────────────────────────────────────────────────────────
+def accumulated_seconds(task: dict) -> int:
+    total = 0
+    for seg in task.get("accumulated_segments", []):
+        start = datetime.fromisoformat(seg["start"])
+        end = datetime.fromisoformat(seg["end"])
+        total += int((end - start).total_seconds())
+    return total
 
 
 def stop_task(state: dict, done: bool) -> dict | None:
@@ -150,6 +141,7 @@ def stop_task(state: dict, done: bool) -> dict | None:
     if done:
         task["done"] = True
         task["done_at"] = now_iso()
+        task["total_minutes"] = total_seconds // 60
         task["accumulated_segments"] = []
         session_entry = {
             "task_id": active["task_id"],
@@ -165,9 +157,6 @@ def stop_task(state: dict, done: bool) -> dict | None:
     return session_entry
 
 
-# ── log ─────────────────────────────────────────────────────────────────
-
-
 def format_log(sessions: list) -> list:
     from collections import defaultdict
     grouped = defaultdict(lambda: {"total_minutes": 0, "tasks": []})
@@ -179,3 +168,14 @@ def format_log(sessions: list) -> list:
             "pomo_sessions": s["pomo_sessions"],
         })
     return [{"date": d, **v} for d, v in sorted(grouped.items())]
+
+
+def seven_day_totals(sessions: list, today: date | None = None) -> list[dict]:
+    today = today or date.today()
+    totals = []
+    for i in range(6, -1, -1):
+        day = today - timedelta(days=i)
+        day_str = day.isoformat()
+        minutes = sum(s["total_minutes"] for s in sessions if s["date"] == day_str)
+        totals.append({"date": day, "minutes": minutes})
+    return totals

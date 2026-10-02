@@ -1,19 +1,5 @@
-import os
-
-
-# ── shared ────────────────────────────────────────────────────────────────────
-
-
 def bar_template():
     return "%(label)s  %(bar)s  %(info)s"
-
-
-def files_range():
-    total = 0
-    for root, files, folders in os.walk("."):
-        for file in files:
-            total += 1
-    return total
 
 
 def get_ext(file="", path=""):
@@ -25,9 +11,6 @@ def get_ext(file="", path=""):
         return file[index:].lower()
 
 
-# ── organize ──────────────────────────────────────────────────────────────────
-
-
 def file_types():
     return {
         "midia": {
@@ -37,30 +20,3 @@ def file_types():
         },
         "docs": (".pdf", ".ppt", ".docx", ".txt", ".xls", ".doc"),
     }
-
-
-# ── zip ───────────────────────────────────────────────────────────────────────
-
-
-def get_last(path):
-    if path.rfind("\\") != -1:
-        last = path[1 + path.rfind("\\"):]
-    else:
-        last = path[1 + path.rfind("/"):]
-    if last.rfind('"'):
-        last = last.replace('"', "")
-    return last
-
-
-def path_no_file(path):
-    filename = get_last(path)
-    return path.replace(filename, "")
-
-
-def get_file(path):
-    if "\\" not in path and "/" not in path:
-        return path
-    d = os.path.dirname(path)
-    if d:
-        os.chdir(d)
-    return os.path.basename(path)

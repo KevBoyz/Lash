@@ -119,8 +119,7 @@ No test execution during development — run only when explicitly requested.
 | device  | system        | device                |
 | monitor | system        | monitor               |
 | file    | system        | file                  |
-| calc    | productivity  | calc                  |
-| work    | productivity  | work                  |
+| todo    | productivity  | todo (TUI)            |
 | sched   | productivity  | sched                 |
 | web     | web tools     | web                   |
 | crack   | hacking       | crack (core)          |

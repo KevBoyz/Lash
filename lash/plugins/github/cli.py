@@ -4,6 +4,7 @@ import requests as r
 from rich import print
 from rich.console import Console
 from rich.table import Table
+from lash.core.net import REQUEST_TIMEOUT
 
 
 @click.command(short_help="Scrape a Github profile")
@@ -19,6 +20,7 @@ def github(nick, op):
         api_resp = r.get(
             f"https://api.github.com/users/{nick}",
             headers={"Accept": "application/vnd.github.v3+json"},
+            timeout=REQUEST_TIMEOUT,
         )
         if api_resp.status_code != 200:
             print("Error, profile not found")
@@ -28,6 +30,7 @@ def github(nick, op):
         contrib_resp = r.get(
             f"https://github.com/users/{nick}/contributions",
             headers={"X-Requested-With": "XMLHttpRequest"},
+            timeout=REQUEST_TIMEOUT,
         )
         contrib_soup = bs4.BeautifulSoup(contrib_resp.text, "html.parser")
 

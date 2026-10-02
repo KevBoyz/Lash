@@ -69,6 +69,7 @@ all = [
     "psutil>=5.9.3",
     "dashing>=0.1.0",
     "plyer>=2.1.0",
+    "textual>=0.80.0",
 ]
 
 [project.urls]

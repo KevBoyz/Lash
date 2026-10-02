@@ -1,24 +1,34 @@
 import click
-import zipfile
 import os
+import secrets
+import string
 import shutil as sh
-from random import shuffle
 from rich import print
-import pyzipper
 import pyaes as pya
 from lash.plugins.file.core import (
     bar_template,
     file_types,
     get_ext,
-    get_last,
-    get_file,
-    path_no_file,
 )
 
 
 @click.group()
 def file():
-    """File organization, ZIP compression, and encryption tools."""
+    """File organization and encryption tools."""
+
+
+def _generate_key():
+    alphabet = string.ascii_letters + string.digits
+    return "".join(secrets.choice(alphabet) for _ in range(16))
+
+
+def _crypt_file(path, bkey, decrypt):
+    with open(path, "rb") as src:
+        data = src.read()
+    crip = pya.AESModeOfOperationCTR(bkey)
+    out = crip.decrypt(data) if decrypt else crip.encrypt(data)
+    with open(path, "wb") as dst:
+        dst.write(out)
 
 
 @click.command()
@@ -29,69 +39,81 @@ def file():
     required=False,
     default=".",
 )
-@click.argument("key", metavar="<key>", type=click.STRING)
-@click.option("-dc", is_flag=True, default=False, help="Decrypt file")
-@click.option("-ex", is_flag=True, default=False, help="Export key to text file")
-@click.option("-cl", is_flag=True, default=False, help="Crypt all files in a folder")
+@click.argument("key", metavar="<key>", type=click.STRING, required=False)
+@click.option("-dc", is_flag=True, default=False, help="Decrypt instead of encrypt")
+@click.option("-ex", is_flag=True, default=False, help="Export key to recovery-key.txt")
+@click.option("-ca", is_flag=True, default=False, help="Crypt all files in a folder")
 @click.option("-v", is_flag=True, default=False, help="Verbose mode")
-def crypt(p, key, dc, ex, cl, v):  # noqa: C901
+def crypt(p, key, dc, ex, ca, v):  # noqa: C901
     """\b
     Encrypt/Decrypt files with AES algorithm
 
     \b
-    Save the <key> you need here to decode
-    The key NEED have 16 characters (128bits)
+    Pass a 16-char key or omit to generate one automatically.
+    Generated keys are printed at the end — save them to decrypt later.
+
     \b
-    Ex: crypt -ex ...\text.txt $kvzis1@7y602qsx
+    Ex:
+      crypt secret.txt                     # auto-generate key
+      crypt secret.txt $kvzis1@7y602qsx    # custom key
+      crypt mydir -ca                      # encrypt folder (progress bar)
+      crypt secret.txt mykey -dc           # decrypt
     """
+    if dc and not key:
+        raise click.UsageError("Key is required for decryption (-dc).")
+    if key is not None and len(key) != 16:
+        raise click.UsageError("Key must be exactly 16 characters.")
+
+    generated = key is None
+    if generated:
+        key = _generate_key()
     bkey = str.encode(key)
+
     if p.find("\\") == -1 and p.find("/") == -1:
         fp = os.path.join(".", p)
     else:
         fp = p
-    if dc:
-        file = open(fp, "rb")
-        crip = pya.AESModeOfOperationCTR(bkey)
-        data = crip.decrypt(file.read())
-        crypted = open(fp, "wb")
-        crypted.write(data)
-        print("\nFile decrypted successfully") if v else None
+
+    if ca:
+        if not os.path.isdir(fp):
+            raise click.UsageError(f"-ca requires a directory, got: {fp}")
+        targets = []
+        for root, _, files in os.walk(fp):
+            for name in files:
+                targets.append(os.path.join(root, name))
+        if not targets:
+            click.echo("No files to process.")
+            return
+        with click.progressbar(
+            targets,
+            label="Decrypting" if dc else "Encrypting",
+            empty_char="─",
+            fill_char="█",
+            bar_template=bar_template(),
+        ) as bar:
+            for path in bar:
+                try:
+                    _crypt_file(path, bkey, dc)
+                except Exception as e:
+                    click.echo(f"\n[skip] {path}: {e}", err=True)
     else:
-        if cl:
-            original_cwd = os.getcwd()
-            try:
-                os.chdir(fp)
-            except Exception:
-                print(f"\nError the path {fp} is not valid!")
-                return
-            try:
-                for root, folder, files in os.walk("."):
-                    for file in files:
-                        file_value = open(os.path.join(root, file), "rb")
-                        crip = pya.AESModeOfOperationCTR(bkey)
-                        data = crip.encrypt(file_value.read())
-                        file_value.close()
-                        crypted = open(os.path.join(root, file), "wb")
-                        crypted.write(data)
-            finally:
-                os.chdir(original_cwd)
+        if not os.path.isfile(fp):
+            raise click.UsageError(f"Expected a file, got: {fp}. Use -ca for folders.")
+        _crypt_file(fp, bkey, dc)
+        if v:
+            print("\nFile decrypted" if dc else "\nFile encrypted")
+
+    if ex:
+        if ca:
+            key_path = os.path.join(fp, "recovery-key.txt")
         else:
-            file = open(fp, "rb")
-            crip = pya.AESModeOfOperationCTR(bkey)
-            data = crip.encrypt(file.read())
-            file.close()
-            crypted = open(fp, "wb")
-            crypted.write(data)
-        if ex:
-            key_path = "recovery-key.txt"
-            if cl:
-                key_path = os.path.join(fp, "recovery-key.txt")
-            else:
-                d = os.path.dirname(fp)
-                if d:
-                    key_path = os.path.join(d, "recovery-key.txt")
-            open(key_path, "w").write(key)
-        print("\nFile(s) encrypted") if v else None
+            d = os.path.dirname(fp)
+            key_path = os.path.join(d, "recovery-key.txt") if d else "recovery-key.txt"
+        open(key_path, "w").write(key)
+
+    if generated and not dc:
+        print(f"\n[bold yellow]Generated key:[/bold yellow] [cyan]{key}[/cyan]")
+        print("[dim]Save this key — it is required to decrypt.[/dim]")
 
 
 @click.command()
@@ -124,17 +146,10 @@ def crypt(p, key, dc, ex, cl, v):  # noqa: C901
     show_default=True,
     help="Create ~Others~ folder",
 )
-@click.option(
-    "-s",
-    is_flag=True,
-    default=False,
-    show_default=True,
-    help="Organize sub-folders",
-)
 @click.option("-v", is_flag=True, default=True, show_default=True, help="Verbose mode")
-def organize(path, t, m, d, o, s, v):  # noqa: C901
+def organize(path, t, m, d, o, v):  # noqa: C901
     """
-    Organize your files
+    Organize your files (top-level only — subfolders are left untouched).
 
     \b
     Organize a folder in a simple way, by predefined execution that
@@ -143,288 +158,70 @@ def organize(path, t, m, d, o, s, v):  # noqa: C901
     [!Important] - Do not use ('') to declare TYPE on -t option set the
     value like: -t pdf
     """
+    base = os.path.abspath(path)
     try:
-        os.chdir(path)
-        files = os.listdir()
         if t:
             if not t.startswith("."):
                 t = "." + t
-            cfiles = list()
-            os.mkdir(f"({t}) Files") if f"({t}) Files" not in files else None
-            for root, folders, file in os.walk("."):
-                for c in range(len(file)):
-                    if get_ext(file[c]) == t and file[c] not in cfiles:
-                        print(f"Moving: {file[c]}") if v else None
-                        sh.move(os.path.join(root, file[c]), f"({t}) Files")
-                        cfiles.append(file[c])
-        else:
-            ft = file_types()
-            if m:
-                os.mkdir("Media") if "Media" not in files else files.remove("Media")
-                os.chdir("Media")
-                if not os.listdir(".."):
-                    os.mkdir("Images")
-                    os.mkdir("Videos")
-                    os.mkdir("Musics")
-                else:
-                    os.mkdir("Images") if ("Images" not in os.listdir("..")) else None
-                    os.mkdir("Videos") if ("Videos" not in os.listdir("..")) else None
-                    os.mkdir("Musics") if ("Musics" not in os.listdir("..")) else None
-                os.chdir(path)
-            if d:
-                os.mkdir("Docs") if "Docs" not in files else files.remove("Docs")
-            if o:
-                os.mkdir("Others") if "Others" not in files else files.remove("Others")
-            if s:
-                os.mkdir("Sub-Folders") if (
-                    "Sub-Folders" not in files
-                ) else files.remove("Sub-Folders")
+            dest = os.path.join(base, f"({t}) Files")
+            os.makedirs(dest, exist_ok=True)
+            for name in os.listdir(base):
+                src = os.path.join(base, name)
+                if not os.path.isfile(src):
+                    continue
+                if get_ext(name) != t:
+                    continue
+                if v:
+                    print(f"Moving: {name}")
+                try:
+                    sh.move(src, os.path.join(dest, name))
+                except Exception as e:
+                    print(f"[red]Skip[/red] {name}: {e}")
+            return
 
-            with click.progressbar(
-                range(len(files)),
-                empty_char="─",
-                fill_char="█",
-                bar_template=bar_template(),
-            ) as p:
-                for c in p:
-                    if not os.path.isdir(files[c]):
-                        if get_ext(files[c]) in ft["midia"]["images"]:
-                            sh.move(
-                                os.path.join(path, files[c]),
-                                os.path.join("Media", "Images", files[c]),
-                            )
-                        elif get_ext(files[c]) in ft["midia"]["videos"]:
-                            sh.move(
-                                os.path.join(path, files[c]),
-                                os.path.join("Media", "Videos", files[c]),
-                            )
-                        elif get_ext(files[c]) in ft["midia"]["musics"]:
-                            sh.move(
-                                os.path.join(path, files[c]),
-                                os.path.join("Media", "Musics", files[c]),
-                            )
-                        elif get_ext(files[c]) in ft["docs"]:
-                            sh.move(
-                                os.path.join(path, files[c]),
-                                os.path.join("Docs", files[c]),
-                            )
-                        else:
-                            sh.move(
-                                os.path.join(path, files[c]),
-                                os.path.join("Others", files[c]),
-                            )
-                    else:
-                        if s:
-                            sh.move(
-                                os.path.join(path, files[c]),
-                                os.path.join("Sub-folders", files[c]),
-                            )
-                        else:
-                            continue
+        ft = file_types()
+        if m:
+            os.makedirs(os.path.join(base, "Media", "Images"), exist_ok=True)
+            os.makedirs(os.path.join(base, "Media", "Videos"), exist_ok=True)
+            os.makedirs(os.path.join(base, "Media", "Musics"), exist_ok=True)
+        if d:
+            os.makedirs(os.path.join(base, "Docs"), exist_ok=True)
+        if o:
+            os.makedirs(os.path.join(base, "Others"), exist_ok=True)
+
+        entries = [n for n in os.listdir(base) if os.path.isfile(os.path.join(base, n))]
+        with click.progressbar(
+            entries,
+            empty_char="─",
+            fill_char="█",
+            bar_template=bar_template(),
+        ) as bar:
+            for name in bar:
+                src = os.path.join(base, name)
+                if not os.path.exists(src):
+                    continue
+                ext = get_ext(name)
+                dest = None
+                if m and ext in ft["midia"]["images"]:
+                    dest = os.path.join(base, "Media", "Images", name)
+                elif m and ext in ft["midia"]["videos"]:
+                    dest = os.path.join(base, "Media", "Videos", name)
+                elif m and ext in ft["midia"]["musics"]:
+                    dest = os.path.join(base, "Media", "Musics", name)
+                elif d and ext in ft["docs"]:
+                    dest = os.path.join(base, "Docs", name)
+                elif o:
+                    dest = os.path.join(base, "Others", name)
+                if dest is None:
+                    continue
+                try:
+                    sh.move(src, dest)
+                except Exception as e:
+                    if v:
+                        print(f"[red]Skip[/red] {name}: {e}")
     except Exception as e:
         click.echo(f"Error: {e}", err=True)
 
 
-@click.group("zip", help="Compress, extract, and inspect ZIP archives")
-def zip_group(): ...
-
-
-@zip_group.command(help="List files inside a ZIP archive")
-@click.argument("path", metavar="<path>", type=click.Path(exists=True))
-def view(path):
-    fn = get_file(path)
-    if not fn.endswith(".zip"):
-        fn += ".zip"
-    _zip = zipfile.ZipFile(fn, "r")
-    ziplist = _zip.namelist()
-    if len(ziplist) <= 0:
-        print("Error, no the zip are empty or can't be readied")
-    else:
-        print()
-        for file in ziplist:
-            print(file)
-
-
-@zip_group.command()
-@click.argument("path", metavar="<path>", type=click.Path(exists=True))
-@click.option(
-    "-fn", type=click.STRING, help="Output archive name (no extension needed)"
-)
-@click.option("-v", is_flag=True, default=True, show_default=True, help="Verbose mode")
-@click.option(
-    "-fo",
-    is_flag=True,
-    default=False,
-    show_default=True,
-    help="Flatten: include files only, no subdirectory structure",
-)
-def compress(path, fn, v, fo):  # noqa: C901
-    """Compress a folder into a ZIP archive.
-
-    \b
-    Output is saved in the parent folder of the target directory.
-    Use -fn to set a custom archive name.
-    With -fo, only files are included (directory structure is flattened).
-
-    \b
-    Example:
-      lash zip compress ./my_folder
-      lash zip compress ./my_folder -fn backup -fo
-    """
-    if not fn:
-        fn = get_last(path=path) + ".zip"
-    else:
-        if not fn.endswith(".zip"):
-            fn += ".zip"
-    os.chdir(path)
-    arch = 0
-    _zip = zipfile.ZipFile(fn, "w")
-    print() if v else None
-    if fo:
-        way = os.getcwd()
-        for folder, sub_folders, files in os.walk("."):
-            for file in files:
-                if file != fn:
-                    try:
-                        os.chdir(folder)
-                        print(
-                            f"[yellow]Compacting:[/yellow] "
-                            f"[dark_orange]{file}[/dark_orange]",
-                            end="\r",
-                        ) if v else None
-                        _zip.write(file, compress_type=zipfile.ZIP_DEFLATED)
-                        arch += 1
-                        os.chdir(way)
-                    except Exception:
-                        pass
-    else:
-        for folder, sub_folders, files in os.walk("."):
-            for file in files:
-                if file != fn:
-                    print(
-                        f"[yellow]Compacting:[/yellow] "
-                        f"[dark_orange]{file}[/dark_orange]",
-                        end="\r",
-                    ) if v else None
-                    _zip.write(
-                        os.path.join(folder, file),
-                        os.path.relpath(os.path.join(folder, file), "."),
-                        compress_type=zipfile.ZIP_DEFLATED,
-                    )
-                    arch += 1
-    print() if v else None
-    print(f"[bright_green]Process completed[/bright_green], {arch} files compacted")
-    _zip.close()
-    print("[cyan]Moving zipfile to parent folder...[/cyan]")
-    if fn == "..zip":
-        try:
-            dir_name = os.getcwd()[os.getcwd().rfind("\\") + 1 :] + ".zip"
-            os.rename(fn, dir_name)
-        except FileExistsError:
-            rlist = [7, 5, 6, 2]
-            shuffle(rlist)
-            rand = "".join(str(e) for e in rlist)
-            dir_name = os.getcwd()[os.getcwd().rfind("\\") + 1 :] + f"_{rand}" + ".zip"
-            os.rename(fn, dir_name)
-        fn = dir_name
-    else:
-        os.chdir("..")
-        try:
-            sh.move(fn, ".")
-        except Exception:
-            os.chdir(path)
-    print(
-        f"[bright_green]Saved in[/bright_green] "
-        f"[bright_blue]{os.path.join(os.getcwd(), fn)}[/bright_blue]\n"
-    )
-
-
-@zip_group.command()
-@click.argument("path", metavar="<file_path>", type=click.Path(exists=True))
-@click.option(
-    "-to",
-    type=click.Path(exists=True),
-    help="Destination folder (default: current directory)",
-)
-@click.option("-v", is_flag=True, default=False, show_default=True, help="Verbose mode")
-def extract(path, to, v, ex=0):
-    """Extract a ZIP archive.
-
-    \b
-    Extracts to the current directory by default.
-    Use -to to specify a destination folder.
-    Use -v to see each file as it is extracted.
-
-    \b
-    Example:
-      lash zip extract archive.zip
-      lash zip extract archive.zip -to ./output -v
-    """
-    fn = get_file(path)
-    if not fn.endswith(".zip"):
-        fn += ".zip"
-    _zip = zipfile.ZipFile(fn, "r")
-    ziplist = _zip.namelist()
-    click.secho(f"{len(ziplist)} Files founded in {fn}") if v else None
-    if len(ziplist) <= 0:
-        print(f"Error, {fn} is empty or can't be readied>")
-        return
-    if to:
-        try:
-            os.chdir(to)
-        except Exception as e:
-            print(e)
-    with click.progressbar(
-        range(len(_zip.namelist())),
-        empty_char="─",
-        fill_char="█",
-        bar_template=bar_template(),
-    ) as p:
-        for f in p:
-            print(
-                f"[yellow]Extracting[/yellow] [green]{ziplist[f]}[/green]",
-                end="\r",
-            ) if v else None
-            try:
-                _zip.extract(ziplist[f])
-                ex += 1
-            except Exception as e:
-                print(e) if v else None
-    _zip.close()
-    print(f"[green]Process completed: {ex} files extracted[/green]")
-
-
-@zip_group.command()
-@click.argument("path", metavar="<file_path>", type=click.Path(exists=True))
-@click.argument("password", type=click.STRING)
-def encode(path, password):
-    """Encrypt a ZIP file with a password.
-
-    \b
-    Creates a new file prefixed with 'enc-' alongside the original.
-    The original file is not modified or deleted.
-
-    \b
-    Example:
-      lash zip encode archive.zip mysecretpassword
-    """
-    try:
-        os.chdir(path_no_file(path))
-        file = get_file(path)
-        output = "enc-" + file.replace(get_ext(file), ".zip")
-        with pyzipper.AESZipFile(
-            output,
-            "w",
-            compression=pyzipper.ZIP_DEFLATED,
-            encryption=pyzipper.WZ_AES,
-        ) as zf:
-            zf.password = password.encode("utf-8")
-            zf.write(file)
-        print("File encoded")
-    except FileNotFoundError:
-        print("File not found")
-
-
 file.add_command(crypt)
 file.add_command(organize)
-file.add_command(zip_group)

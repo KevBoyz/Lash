@@ -1,14 +1,13 @@
 {
   "name": "file",
   "category": "system",
-  "description": "File organization, ZIP compression, and encryption tools",
+  "description": "File organization and encryption tools",
   "commands": {
     "file": {
       "module": "lash.plugins.file.cli:file",
-      "description": "File organization, ZIP compression, and encryption tools",
+      "description": "File organization and encryption tools",
       "requires": [
-        "pyaes>=1.6.1",
-        "pyzipper>=0.3.6"
+        "pyaes>=1.6.1"
       ]
     }
   }

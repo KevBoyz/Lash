@@ -1,8 +1,7 @@
 # pytest lash/plugins/file/tests/test_cli.py
 import os
-import zipfile
 from click.testing import CliRunner
-from lash.plugins.file.cli import organize, zip_group, crypt
+from lash.plugins.file.cli import organize, crypt
 
 
 class TestOrganizeCmd:
@@ -25,29 +24,17 @@ class TestOrganizeCmd:
             assert os.path.isdir("Docs")
             assert os.path.isdir("Others")
 
-
-class TestZipView:
-    def test_view_lists_files_in_zip(self):
+    def test_organize_does_not_touch_subfolders(self):
         runner = CliRunner()
         with runner.isolated_filesystem():
-            zf = zipfile.ZipFile("test.zip", "w")
-            zf.writestr("hello.txt", "hi")
-            zf.close()
-            result = runner.invoke(zip_group, ["view", "test.zip"])
+            os.makedirs("sub")
+            with open(os.path.join("sub", "nested.pdf"), "w"):
+                pass
+            open("top.pdf", "w").close()
+            result = runner.invoke(organize, [".", "-t", "pdf"])
             assert result.exit_code == 0
-            assert "hello.txt" in result.output
-
-
-class TestZipExtract:
-    def test_extract_creates_file(self):
-        runner = CliRunner()
-        with runner.isolated_filesystem():
-            zf = zipfile.ZipFile("test.zip", "w")
-            zf.writestr("hello.txt", "hi")
-            zf.close()
-            result = runner.invoke(zip_group, ["extract", "test.zip"])
-            assert result.exit_code == 0
-            assert "Process completed" in result.output
+            assert os.path.isfile(os.path.join("sub", "nested.pdf"))
+            assert "top.pdf" in os.listdir("(.pdf) Files")
 
 
 class TestCryptCommand:
@@ -100,7 +87,7 @@ class TestCryptCommand:
             assert result.exit_code == 0
             assert "decrypted" in result.output.lower()
 
-    def test_encrypt_folder_with_cl_flag(self):
+    def test_encrypt_folder_with_ca_flag(self):
         runner = CliRunner()
         key = "kvzis1@7y602qsxA"
         original_a = b"file alpha content"
@@ -111,7 +98,7 @@ class TestCryptCommand:
                 f.write(original_a)
             with open(os.path.join("mydir", "b.txt"), "wb") as f:
                 f.write(original_b)
-            result = runner.invoke(crypt, ["mydir", key, "-cl"])
+            result = runner.invoke(crypt, ["mydir", key, "-ca"])
             assert result.exit_code == 0
             with open(os.path.join("mydir", "a.txt"), "rb") as f:
                 assert f.read() != original_a
@@ -129,3 +116,48 @@ class TestCryptCommand:
             result = runner.invoke(crypt, [target, key, "-ex"])
             assert result.exit_code == 0
             assert os.path.isfile(os.path.join("sub", "recovery-key.txt"))
+
+    def test_auto_generated_key_is_printed(self):
+        runner = CliRunner()
+        with runner.isolated_filesystem():
+            with open("secret.txt", "wb") as f:
+                f.write(b"plaintext")
+            result = runner.invoke(crypt, ["secret.txt"])
+            assert result.exit_code == 0
+            assert "Generated key" in result.output
+
+    def test_auto_generated_key_roundtrips(self):
+        runner = CliRunner()
+        with runner.isolated_filesystem():
+            original = b"roundtrip plaintext"
+            with open("secret.txt", "wb") as f:
+                f.write(original)
+            result = runner.invoke(crypt, ["secret.txt"])
+            assert result.exit_code == 0
+            lines = [ln for ln in result.output.splitlines() if "Generated key:" in ln]
+            assert lines
+            key = lines[0].split("Generated key:")[1].strip()
+            # strip rich markup residue if any
+            key = key.replace("[cyan]", "").replace("[/cyan]", "").strip()
+            result = runner.invoke(crypt, ["secret.txt", key, "-dc"])
+            assert result.exit_code == 0
+            with open("secret.txt", "rb") as f:
+                assert f.read() == original
+
+    def test_decrypt_requires_key(self):
+        runner = CliRunner()
+        with runner.isolated_filesystem():
+            with open("secret.txt", "wb") as f:
+                f.write(b"x")
+            result = runner.invoke(crypt, ["secret.txt", "-dc"])
+            assert result.exit_code != 0
+            assert "key is required" in result.output.lower()
+
+    def test_invalid_key_length_rejected(self):
+        runner = CliRunner()
+        with runner.isolated_filesystem():
+            with open("secret.txt", "wb") as f:
+                f.write(b"x")
+            result = runner.invoke(crypt, ["secret.txt", "short"])
+            assert result.exit_code != 0
+            assert "16 characters" in result.output

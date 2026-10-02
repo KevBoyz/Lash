@@ -1,0 +1,15 @@
+{
+  "name": "todo",
+  "category": "productivity",
+  "description": "Task manager with time tracking (TUI)",
+  "commands": {
+    "todo": {
+      "module": "lash.plugins.todo.cli:todo",
+      "description": "Launch the todo TUI (tasks + time tracker)",
+      "requires": [
+        "textual>=0.80.0",
+        "plyer>=2.1.0"
+      ]
+    }
+  }
+}

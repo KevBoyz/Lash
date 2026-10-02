@@ -1,5 +1,20 @@
 # Lash — Release Notes
 
+## v1.3.2 — Todo TUI, net defaults and plugin cleanup *(work in progress)*
+
+- **todo**: new Textual TUI plugin (replaces old `work`) — pending/completed/performance/config tabs, time tracking with pause/resume, 7-day bar chart, persistent config file
+- **todo**: keyboard-driven navigation — `↑↓` cycle items within focused pane, `←→` swap sidebar/main, `1-4` jump to tab, `n` add task, `Enter` toggle start/pause, `f` finish, `r` remove
+- **todo**: config pane with change-data-folder and clear-all-records (confirm modal)
+- **todo**: status glyphs with meaning-based colors — `○` white (added), `◐` blue (paused), `●` green (running), `✓` green (completed); completed tab shows accumulated total time; full task names wrap instead of truncating
+- **core**: new `lash/core/net.py` — shared `REQUEST_TIMEOUT` constant and `install_default_timeout()` applied at import
+- **github**: HTTP calls now respect `REQUEST_TIMEOUT`
+- **wikip**: title is now a positional argument; added handling for `DisambiguationError`, `PageError` and generic request failures
+- **file**: dropped bundled ZIP compression and `pyzipper` dependency; scope limited to organization and encryption
+- **chore**: removed `calc`, `work` and `rec` plugins
+- **chore**: added `textual>=0.80.0` to `all` extras
+
+---
+
 ## v1.3.1.3 — Plugin improvements, cross-platform fixes and refactors
 
 - **plugin manager**: add `uv` fallback when `pip` unavailable

@@ -246,6 +246,7 @@ remove = make_remove_command()
 
 
 def _render_category_panel(category, commands, active_cmds, width=None):
+    from rich.box import SQUARE
     from rich.console import Group
     from rich.panel import Panel
     from rich.text import Text
@@ -272,6 +273,7 @@ def _render_category_panel(category, commands, active_cmds, width=None):
         title=Text(category.title(), style=panel_color),
         title_align="left",
         border_style=panel_color,
+        box=SQUARE,
         width=width,
     )
 

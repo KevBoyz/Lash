@@ -178,10 +178,15 @@ class TestSerializeKey:
         assert serialize_key(key) == "a"
 
     def test_special_key(self):
+        import pytest
+        try:
+            import pynput.keyboard as kb
+            shift = kb.Key.shift
+        except Exception as e:
+            pytest.skip(f"pynput.keyboard unavailable: {e}")
         from lash.plugins.macro.helpers import serialize_key
-        import pynput.keyboard as kb
 
-        assert serialize_key(kb.Key.shift) == "Key.shift"
+        assert serialize_key(shift) == "Key.shift"
 
     def test_unknown_key_returns_none(self):
         from lash.plugins.macro.helpers import serialize_key
@@ -200,11 +205,16 @@ class TestDeserializeKey:
         assert result == "a"
 
     def test_special_key(self):
+        import pytest
+        try:
+            import pynput.keyboard as kb
+            shift = kb.Key.shift
+        except Exception as e:
+            pytest.skip(f"pynput.keyboard unavailable: {e}")
         from lash.plugins.macro.helpers import deserialize_key
-        import pynput.keyboard as kb
 
         result = deserialize_key("Key.shift")
-        assert result == kb.Key.shift
+        assert result == shift
 
 
 class TestMinimizeTerminal:
@@ -426,7 +436,9 @@ class TestPlayMacro:
         )
         mock_kb_ctrl = MagicMock()
         mock_mouse_ctrl = MagicMock()
+        mock_mouse_mod = MagicMock()
         with (
+            patch.dict("sys.modules", {"pynput.mouse": mock_mouse_mod}),
             patch("lash.plugins.macro.core._kb_controller", return_value=mock_kb_ctrl),
             patch(
                 "lash.plugins.macro.core._mouse_controller",

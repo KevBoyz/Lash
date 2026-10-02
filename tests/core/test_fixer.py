@@ -30,7 +30,12 @@ def _invoke(state_file, plugins_dir, pip_returncode=0):
 
     cmd = make_fix_command(state_file=state_file, plugins_dir=plugins_dir)
     runner = CliRunner()
-    with mock.patch("subprocess.run") as mock_run:
+    with (
+        mock.patch("subprocess.run") as mock_run,
+        mock.patch(
+            "lash.core.plugin_manager._detect_installer", return_value="pip"
+        ),
+    ):
         mock_run.return_value = mock.MagicMock(returncode=pip_returncode, stderr="")
         result = runner.invoke(cmd, [])
     return result, mock_run

@@ -178,7 +178,7 @@ def wmarke(text, file, root, im, c, t, tp, ts, tc, tf, axis):
         pxlen = len(text) * ts
         x = ((mod_im.size[0] - pxlen) + pxlen / 2.5) - tp + 5
         y = mod_im.size[1] / 10 - 15
-        if y < ts + tp:
+        if tp > 0 and y < ts + tp:
             while y < ts + tp:
                 y += tp
         draw.text((x, mod_im.size[1] - y), text, font=font, fill=tc)

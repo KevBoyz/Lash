@@ -6,7 +6,7 @@
     "spider": {
       "module": "lash.plugins.spider.cli:spider",
       "description": "Remote web shell and auto-discovery tools",
-      "requires": []
+      "requires": ["click>=8.1.3", "rich>=12.6.0"]
     }
   }
 }

@@ -1,4 +1,3 @@
-import socket
 import sys
 
 import click
@@ -6,9 +5,12 @@ import click
 from lash.plugins.spider.core import port_verify, run_web_client, run_server
 
 
-@click.group("spider", help="Remote web shell and auto-discovery tools")
-def spider():
-    pass
+@click.group("spider", invoke_without_command=True,
+             help="Remote web shell. Without a subcommand, start a LAN server.")
+@click.pass_context
+def spider(ctx):
+    if ctx.invoked_subcommand is None:
+        ctx.invoke(web)
 
 
 @spider.command(
@@ -21,7 +23,7 @@ def spider():
     "h",
     type=str,
     default=None,
-    help="Host this machine. Pass port: -h 8080",
+    help="Host on a specific port (default: choose a free port automatically).",
 )
 @click.option(
     "-c",
@@ -32,28 +34,23 @@ def spider():
     default=None,
     help="Connect passively to host. Pass IP and port: -c 192.168.1.1 8080",
 )
-def web(h, c):
-    if h:
-        host = socket.gethostbyname(socket.gethostname())
-        try:
-            port = port_verify(h)
-        except ValueError as e:
-            click.echo(str(e), err=True)
-            sys.exit(1)
-        run_server(host, port)
-    elif c:
-        host_ip, port_str = c
-        try:
-            port = port_verify(port_str)
-        except ValueError as e:
-            click.echo(str(e), err=True)
-            sys.exit(1)
-        run_web_client(host_ip, port)
-    else:
-        click.echo(
-            "Error: pass -h <port> to host or -c <ip> <port> to connect",
-            err=True)
-        sys.exit(1)
+@click.option("--no-discovery", is_flag=True,
+              help="Host without UDP discovery (manual connections only).")
+def web(h, c, no_discovery):
+    if h is not None and c:
+        raise click.UsageError("Use either --host or --connect, not both.")
+    try:
+        if c:
+            host_ip, port_str = c
+            run_web_client(host_ip, port_verify(port_str))
+        else:
+            port = port_verify(h) if h is not None else 0
+            if no_discovery:
+                run_server("0.0.0.0", port, discoverable=False)
+            else:
+                run_server("0.0.0.0", port)
+    except (ValueError, OSError) as e:
+        raise click.ClickException(str(e)) from e
 
 
 @spider.command("seeker")
@@ -61,14 +58,16 @@ def web(h, c):
 @click.argument("ports", required=False)
 @click.option("-s", "--stop", "do_stop", is_flag=True,
               help="Stop the running seeker daemon")
-@click.option("-p", "--ping", "ping_interval", default=10, type=int,
-              help="Scan interval in seconds")
+@click.option("-p", "--ping", "ping_interval", default=10,
+              type=click.IntRange(min=1), show_default=True,
+              help="Discovery/scan interval in seconds")
 @click.option("--_daemon", "is_daemon", is_flag=True, hidden=True)
 def seeker(addresses, ports, do_stop, ping_interval, is_daemon):
     """Background daemon — auto-discovers and connects to Spider servers.
 
     \b
-    Scans the given addresses and ports for active Spider hosts.
+    With no arguments, discovers Spider hosts on the local IPv4 network.
+    Optionally pass both addresses and ports to scan specific hosts.
     When a server is found, connects automatically as a passive client.
     Runs in the background; use --stop to terminate it.
 
@@ -78,31 +77,36 @@ def seeker(addresses, ports, do_stop, ping_interval, is_daemon):
 
     \b
     Example:
+      lash spider seeker
       lash spider seeker 192.168.1.1,192.168.1.2 8080,9090
       lash spider seeker --stop
     """
     from lash.plugins.spider.core import (
-        read_pid, write_pid, is_pid_alive, spawn_daemon,
-        stop_seeker as _stop_seeker, seeker_scan_loop,
+        read_pid, is_pid_alive, spawn_daemon,
+        stop_seeker as _stop_seeker, run_seeker_daemon,
     )
-    import os
 
     if do_stop:
         click.echo(_stop_seeker())
         return
 
-    if is_daemon:
-        if not addresses or not ports:
-            return
-        write_pid(os.getpid())
+    if (addresses is None) != (ports is None):
+        raise click.UsageError(
+            "Pass both ADDRESSES and PORTS, or neither for LAN discovery.")
+    addr_list = port_list = None
+    if addresses is not None:
         addr_list = [a.strip() for a in addresses.split(",")]
-        port_list = [int(p.strip()) for p in ports.split(",")]
-        seeker_scan_loop(addr_list, port_list, ping_interval)
-        return
+        if not all(addr_list):
+            raise click.BadParameter("Addresses cannot be empty.",
+                                     param_hint="ADDRESSES")
+        try:
+            port_list = [port_verify(p.strip()) for p in ports.split(",")]
+        except ValueError as e:
+            raise click.BadParameter(str(e), param_hint="PORTS") from e
 
-    if not addresses or not ports:
-        click.echo("Error: ADDRESSES and PORTS required", err=True)
-        sys.exit(1)
+    if is_daemon:
+        run_seeker_daemon(addr_list, port_list, ping_interval)
+        return
 
     pid = read_pid()
     if pid and is_pid_alive(pid):
@@ -110,4 +114,5 @@ def seeker(addresses, ports, do_stop, ping_interval, is_daemon):
         sys.exit(1)
 
     spawn_daemon(addresses, ports, ping_interval)
-    click.echo("Seeker started")
+    mode = "LAN discovery" if addresses is None else "manual scan"
+    click.echo(f"Seeker started ({mode})")

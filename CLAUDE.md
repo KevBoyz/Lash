@@ -119,6 +119,7 @@ No test execution during development — run only when explicitly requested.
 | device  | system        | device                |
 | monitor | system        | monitor               |
 | file    | system        | file                  |
+| backup  | system        | backup                |
 | todo    | productivity  | todo (TUI)            |
 | sched   | productivity  | sched                 |
 | web     | web tools     | web                   |

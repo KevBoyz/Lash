@@ -10,9 +10,11 @@ def send_msg(sock: socket.socket, data: dict) -> None:
     sock.sendall(header + payload)
 
 
-def recv_msg(sock: socket.socket) -> dict:
+def recv_msg(sock: socket.socket, *, max_size: int | None = None) -> dict:
     header = _recv_exact(sock, MSG_HEADER)
     length = int.from_bytes(header, "big")
+    if max_size is not None and length > max_size:
+        raise ValueError(f"Message exceeds {max_size} bytes")
     payload = _recv_exact(sock, length)
     return json.loads(payload.decode("utf-8"))
 

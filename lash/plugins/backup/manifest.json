@@ -1,0 +1,14 @@
+{
+  "name": "backup",
+  "category": "system",
+  "description": "Register folders and keep zipped backups of them",
+  "commands": {
+    "backup": {
+      "module": "lash.plugins.backup.cli:backup",
+      "description": "Register folders and create zipped backups",
+      "requires": [
+        "rich>=12.6.0"
+      ]
+    }
+  }
+}

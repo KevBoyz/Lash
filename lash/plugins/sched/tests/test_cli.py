@@ -39,9 +39,13 @@ class TestRunCmd:
                 pass
 
         progress = DummyProgress()
+
+        def _stop_run(*_args, **_kwargs):
+            raise SystemExit(0)
+
         monkeypatch.setattr(sched_cli, 'Progress', lambda *args, **kwargs: progress)
         monkeypatch.setattr(sched_cli, 'sleep', lambda *_args, **_kwargs: None)
-        monkeypatch.setattr(sched_cli, 'run_command', lambda *_args, **_kwargs: None)
+        monkeypatch.setattr(sched_cli, 'run_command', _stop_run)
 
         runner = CliRunner()
         result = runner.invoke(sched, ['run', 'echo hello', '0', '0', '10'])

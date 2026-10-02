@@ -154,13 +154,42 @@ class TestWebClient:
 
 
 class TestWebCli:
-    def test_no_option_prints_error(self):
+    @pytest.mark.parametrize("args", [[], ["web"]])
+    def test_no_options_start_auto_port_server(self, args):
         from click.testing import CliRunner
+        from unittest.mock import patch
         from lash.plugins.spider.cli import spider
         runner = CliRunner()
-        result = runner.invoke(spider, ["web"])
-        assert result.exit_code != 0
-        assert "Error" in result.output
+        with patch("lash.plugins.spider.cli.run_server") as server:
+            result = runner.invoke(spider, args)
+        assert result.exit_code == 0, result.output
+        server.assert_called_once_with("0.0.0.0", 0)
+
+    def test_explicit_host_port_still_works(self):
+        from click.testing import CliRunner
+        from unittest.mock import patch
+        from lash.plugins.spider.cli import spider
+        with patch("lash.plugins.spider.cli.run_server") as server:
+            result = CliRunner().invoke(spider, ["web", "-h", "8080"])
+        assert result.exit_code == 0, result.output
+        server.assert_called_once_with("0.0.0.0", 8080)
+
+    def test_can_disable_discovery_for_manual_hosting(self):
+        from click.testing import CliRunner
+        from unittest.mock import patch
+        from lash.plugins.spider.cli import spider
+        with patch("lash.plugins.spider.cli.run_server") as server:
+            result = CliRunner().invoke(
+                spider, ["web", "-h", "8080", "--no-discovery"])
+        assert result.exit_code == 0, result.output
+        server.assert_called_once_with("0.0.0.0", 8080, discoverable=False)
+
+    def test_host_and_connect_are_mutually_exclusive(self):
+        from click.testing import CliRunner
+        from lash.plugins.spider.cli import spider
+        result = CliRunner().invoke(
+            spider, ["web", "-h", "8080", "-c", "127.0.0.1", "8080"])
+        assert result.exit_code == 2
 
     def test_connect_mode_calls_client(self):
         from click.testing import CliRunner
@@ -215,11 +244,11 @@ class TestSeekerPid:
 
 
 class TestSeekerScanLoop:
-    def test_scan_once_adds_new_server_to_connected_set(self, tmp_path):
+    def test_scan_once_tracks_new_client_process(self, tmp_path):
         from unittest.mock import patch, MagicMock
         from lash.plugins.spider.core import _scan_once
 
-        connected = set()
+        connected = {}
         log_file = tmp_path / "seeker.log"
 
         with patch("lash.plugins.spider.core.socket.socket") as mock_sock_cls, \
@@ -235,13 +264,14 @@ class TestSeekerScanLoop:
             _scan_once(["192.168.1.1"], [8080], connected)
 
             assert ("192.168.1.1", 8080) in connected
+            assert connected[("192.168.1.1", 8080)] is mock_spawn.return_value
             mock_spawn.assert_called_once_with("web", "192.168.1.1", 8080)
 
     def test_scan_once_skips_already_connected(self, tmp_path):
         from unittest.mock import patch
         from lash.plugins.spider.core import _scan_once
 
-        connected = {("192.168.1.1", 8080)}
+        connected = {("192.168.1.1", 8080): MagicMock()}
 
         with patch("lash.plugins.spider.core.socket.socket"), \
                 patch("lash.plugins.spider.core._spawn_client") as mock_spawn:
@@ -253,7 +283,7 @@ class TestSeekerScanLoop:
         from unittest.mock import patch, MagicMock
         from lash.plugins.spider.core import _scan_once
 
-        connected = set()
+        connected = {}
 
         with patch("lash.plugins.spider.core.socket.socket") as mock_sock_cls, \
                 patch("lash.plugins.spider.core._spawn_client") as mock_spawn:
@@ -271,7 +301,7 @@ class TestSeekerScanLoop:
         from unittest.mock import patch, MagicMock
         from lash.plugins.spider.core import _scan_once
 
-        connected = set()
+        connected = {}
 
         with patch("lash.plugins.spider.core.socket.socket") as mock_sock_cls, \
                 patch("lash.plugins.spider.core.recv_msg") as mock_recv, \
@@ -289,7 +319,7 @@ class TestSeekerScanLoop:
         from unittest.mock import patch, MagicMock
         from lash.plugins.spider.core import _scan_once
 
-        connected = set()
+        connected = {}
         log_file = tmp_path / "seeker.log"
 
         with patch("lash.plugins.spider.core.socket.socket") as mock_sock_cls, \
@@ -367,12 +397,40 @@ class TestSeekerCli:
             result = runner.invoke(spider, ["seeker", "--stop"])
             assert "stopped" in result.output.lower() or mock_stop.called
 
-    def test_requires_addresses_and_ports_when_not_stopping(self):
+    def test_no_arguments_start_lan_discovery(self):
         from click.testing import CliRunner
+        from unittest.mock import patch
         from lash.plugins.spider.cli import spider
         runner = CliRunner()
-        result = runner.invoke(spider, ["seeker"])
-        assert result.exit_code != 0
+        with patch("lash.plugins.spider.core.read_pid", return_value=None), \
+                patch("lash.plugins.spider.core.spawn_daemon") as spawn:
+            result = runner.invoke(spider, ["seeker"])
+        assert result.exit_code == 0, result.output
+        assert "LAN discovery" in result.output
+        spawn.assert_called_once_with(None, None, 10)
+
+    @pytest.mark.parametrize("args", [
+        ["192.168.1.1"], ["192.168.1.1", "oops"],
+        ["192.168.1.1", "0"], ["192.168.1.1", "65536"],
+        ["192.168.1.1,", "8080"], ["--ping", "0"], ["--ping", "-1"],
+    ])
+    def test_invalid_arguments_do_not_start_daemon(self, args):
+        from click.testing import CliRunner
+        from unittest.mock import patch
+        from lash.plugins.spider.cli import spider
+        with patch("lash.plugins.spider.core.spawn_daemon") as spawn:
+            result = CliRunner().invoke(spider, ["seeker", *args])
+        assert result.exit_code == 2
+        spawn.assert_not_called()
+
+    def test_daemon_accepts_no_addresses(self):
+        from click.testing import CliRunner
+        from unittest.mock import patch
+        from lash.plugins.spider.cli import spider
+        with patch("lash.plugins.spider.core.run_seeker_daemon") as daemon:
+            result = CliRunner().invoke(spider, ["seeker", "--_daemon"])
+        assert result.exit_code == 0, result.output
+        daemon.assert_called_once_with(None, None, 10)
 
     def test_already_running_warns_user(self):
         from click.testing import CliRunner

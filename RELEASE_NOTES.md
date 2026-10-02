@@ -6,10 +6,15 @@
 - **todo**: keyboard-driven navigation — `↑↓` cycle items within focused pane, `←→` swap sidebar/main, `1-4` jump to tab, `n` add task, `Enter` toggle start/pause, `f` finish, `r` remove
 - **todo**: config pane with change-data-folder and clear-all-records (confirm modal)
 - **todo**: status glyphs with meaning-based colors — `○` white (added), `◐` blue (paused), `●` green (running), `✓` green (completed); completed tab shows accumulated total time; full task names wrap instead of truncating
+- **backup**: new plugin — `register`/`edit`/`remove` named folder records, `do` creates `<datetime> <name>.zip` archives in `<destination>/<name>/`, `check` lists a record's backups, `list` shows all records; data in `~/.lash/data/backup/registry.json`
+- **spider**: automatic LAN discovery — `lash spider` starts a server on a free TCP port; `lash spider seeker` discovers and connects through UDP 45873 without IP or port arguments
+- **spider**: seeker retries discovery and reconnects after client exit; manual connections remain supported, with `--no-discovery` for manual-only servers
 - **core**: new `lash/core/net.py` — shared `REQUEST_TIMEOUT` constant and `install_default_timeout()` applied at import
 - **github**: HTTP calls now respect `REQUEST_TIMEOUT`
 - **wikip**: title is now a positional argument; added handling for `DisambiguationError`, `PageError` and generic request failures
 - **file**: dropped bundled ZIP compression and `pyzipper` dependency; scope limited to organization and encryption
+- **image**: fix infinite loop in `wmarke` when `-tp 0` (text padding zero)
+- **sched**: fix `sched run` test hanging in CI — mock now breaks the scheduler loop
 - **chore**: removed `calc`, `work` and `rec` plugins
 - **chore**: added `textual>=0.80.0` to `all` extras
 

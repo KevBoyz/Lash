@@ -219,9 +219,12 @@ class TestDeserializeKey:
 
 class TestMinimizeTerminal:
     def test_does_not_raise_on_any_platform(self):
+        from unittest.mock import patch
         from lash.plugins.macro.helpers import minimize_terminal
 
-        minimize_terminal()
+        with patch("lash.plugins.macro.helpers.platform.system", return_value="Linux"):
+            with patch("sys.stdout"):
+                minimize_terminal()
 
 
 class TestListMacros:
@@ -336,6 +339,19 @@ class TestDeleteMacro:
 
 
 class TestPlayMacro:
+    def setup_method(self):
+        import threading
+        from unittest.mock import Mock, patch
+
+        self.watcher_patch = patch(
+            "lash.plugins.macro.core._setup_f3_watcher",
+            return_value=(threading.Event(), threading.Event(), Mock()),
+        )
+        self.watcher_patch.start()
+
+    def teardown_method(self):
+        self.watcher_patch.stop()
+
     def _make_macro(self, tmp_path, monkeypatch, events):
         from lash.plugins.macro.helpers import save_macro
 

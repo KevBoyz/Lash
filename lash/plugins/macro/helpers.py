@@ -65,21 +65,59 @@ def delete_macro_file(name: str) -> None:
     p.unlink()
 
 
-def serialize_key(key) -> str | None:
-    if hasattr(key, "char") and key.char is not None:
-        return key.char
+def serialize_key(key) -> str | dict | None:
     import enum
 
     if isinstance(key, enum.Enum):
         return f"Key.{key.name}"
+    # A character depends on the modifiers currently held: Ctrl+V can be
+    # '\x16', Shift+V is 'V', and some combinations have no character at all.
+    # Replaying that text loses the actual key needed by keyboard shortcuts.
+    vk = getattr(key, "vk", None)
+    if isinstance(vk, int):
+        data = {"vk": vk}
+        for name in ("_scan", "_flags"):
+            value = getattr(key, name, None)
+            if isinstance(value, int):
+                data[name] = value
+        return data
+    if getattr(key, "char", None) is not None:
+        return key.char
     return None
 
 
-def deserialize_key(s: str):
+def deserialize_key(s: str | dict, *, hotkey: bool = False):
+    if isinstance(s, dict):
+        import pynput.keyboard as kb
+
+        extensions = {
+            name: s[name]
+            for name in ("_scan", "_flags")
+            if name in s and name in kb.KeyCode._PLATFORM_EXTENSIONS
+        }
+        # Keep char unset so pynput cannot turn a physical key into Unicode
+        # text, or defer a dead key, when resolving Shift/AltGr combinations.
+        return kb.KeyCode.from_vk(s["vk"], **extensions)
     if s.startswith("Key."):
         import pynput.keyboard as kb
 
         return getattr(kb.Key, s[4:])
+    # Older recordings stored Ctrl+A..Z as ASCII control characters. Named
+    # keys such as Tab and Enter were stored separately as Key.tab/Key.enter.
+    if len(s) == 1 and 1 <= ord(s) <= 26:
+        s = chr(ord(s) + ord("a") - 1)
+    if hotkey and len(s) == 1 and platform.system() == "Windows":
+        import ctypes
+        import pynput.keyboard as kb
+
+        # Recover legacy shifted letters and punctuation using the active
+        # layout. Modifier down/up events are already present in the macro.
+        key_scan = ctypes.windll.user32.VkKeyScanW
+        key_scan.argtypes = (ctypes.c_wchar,)
+        key_scan.restype = ctypes.c_short
+        code = key_scan(s)
+        if code != -1:
+            return kb.KeyCode.from_vk(code & 0xFF)
     return s
 
 

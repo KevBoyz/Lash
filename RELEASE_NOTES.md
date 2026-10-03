@@ -2,6 +2,7 @@
 
 ## v1.3.2 — Todo TUI, net defaults and plugin cleanup *(work in progress)*
 
+- **macro**: preserve virtual key codes when recording shortcuts (Ctrl/Alt/Shift/Windows, punctuation and numpad); recover legacy Ctrl+A–Z recordings and release held keys when playback ends, stops or fails
 - **todo**: new Textual TUI plugin (replaces old `work`) — pending/completed/performance/config tabs, time tracking with pause/resume, 7-day bar chart, persistent config file
 - **todo**: keyboard-driven navigation — `↑↓` cycle items within focused pane, `←→` swap sidebar/main, `1-4` jump to tab, `n` add task, `Enter` toggle start/pause, `f` finish, `r` remove
 - **todo**: config pane with change-data-folder and clear-all-records (confirm modal)

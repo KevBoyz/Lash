@@ -45,12 +45,34 @@ def _mouse_controller():
     return Controller()
 
 
-def _dispatch_event(event, kb_ctrl, mouse_ctrl):
+def _dispatch_key_event(event, kb_ctrl, held):
+    hotkey = any(
+        getattr(key, "name", "").split("_")[0]
+        in ("ctrl", "alt", "shift", "cmd")
+        for key in held
+    )
+    key = deserialize_key(event["key"], hotkey=hotkey)
+    if event["type"] == "key_down":
+        if key not in held:
+            held.append(key)
+        kb_ctrl.press(key)
+    else:
+        # A legacy character may change when its modifier is released
+        # first (e.g. Ctrl+V down='\x16', up='v'). Release the held key.
+        if key not in held and isinstance(event["key"], str):
+            physical_key = deserialize_key(event["key"], hotkey=True)
+            if physical_key in held:
+                key = physical_key
+        kb_ctrl.release(key)
+        if key in held:
+            held.remove(key)
+
+
+def _dispatch_event(event, kb_ctrl, mouse_ctrl, pressed_keys=None):
     t = event["type"]
-    if t == "key_down":
-        kb_ctrl.press(deserialize_key(event["key"]))
-    elif t == "key_up":
-        kb_ctrl.release(deserialize_key(event["key"]))
+    if t in ("key_down", "key_up"):
+        held = pressed_keys if pressed_keys is not None else []
+        _dispatch_key_event(event, kb_ctrl, held)
     elif t == "mouse_move":
         mouse_ctrl.position = (event["x"], event["y"])
     elif t in ("mouse_down", "mouse_up"):
@@ -91,6 +113,8 @@ def record_macro(name: str) -> dict | None:  # noqa: C901
         return time() - start_time[0] if start_time[0] is not None else 0.0
 
     def on_press(key):
+        if stop_event.is_set():
+            return
         if start_time[0] is None:
             start_time[0] = time()
         if hasattr(key, "_value_") and key == kb.Key.f3:
@@ -102,7 +126,7 @@ def record_macro(name: str) -> dict | None:  # noqa: C901
         events.append({"t": elapsed(), "type": "key_down", "key": serialized})
 
     def on_release(key):
-        if start_time[0] is None:
+        if start_time[0] is None or stop_event.is_set():
             return
         if hasattr(key, "_value_") and key == kb.Key.f3:
             return
@@ -229,20 +253,37 @@ def _run_macro_once(
 ) -> None:
     run_start = time()
     last_dispatch = time()
-    for event in events:
-        if force_stopped.is_set():
-            return
-        remaining = run_start + event["t"] * delay_factor - time()
-        if remaining > _MIN_EVENT_DELAY:
-            _interruptible_sleep(remaining, force_stopped)
-        else:
-            gap = _MIN_EVENT_DELAY - (time() - last_dispatch)
-            if gap > 0:
-                sleep(gap)
-        if force_stopped.is_set():
-            return
-        _dispatch_event(event, kb_ctrl, mouse_ctrl)
-        last_dispatch = time()
+    pressed_keys = []
+    try:
+        for event in events:
+            if force_stopped.is_set():
+                return
+            remaining = run_start + event["t"] * delay_factor - time()
+            if remaining > _MIN_EVENT_DELAY:
+                _interruptible_sleep(remaining, force_stopped)
+            else:
+                gap = _MIN_EVENT_DELAY - (time() - last_dispatch)
+                if gap > 0:
+                    sleep(gap)
+            if force_stopped.is_set():
+                return
+            _dispatch_event(event, kb_ctrl, mouse_ctrl, pressed_keys)
+            last_dispatch = time()
+    finally:
+        _release_pressed_keys(pressed_keys, kb_ctrl)
+
+
+def _release_pressed_keys(pressed_keys, kb_ctrl):
+    error = None
+    for key in reversed(pressed_keys):
+        try:
+            kb_ctrl.release(key)
+        except Exception as exc:
+            # Still release the remaining modifiers if one release fails.
+            if error is None:
+                error = exc
+    if error is not None:
+        raise error
 
 
 def _run_macro_loop(
@@ -274,8 +315,11 @@ def play_macro(name: str, speed: float, full_speed: bool, repeat: int, loop: boo
 
     force_stopped, done, watcher = _setup_f3_watcher()
 
-    _run_macro_loop(events, delay_factor, force_stopped, kb_ctrl, mouse_ctrl, repeat, loop)
-
-    done.set()
-    watcher.join(timeout=0.2)
+    try:
+        _run_macro_loop(
+            events, delay_factor, force_stopped, kb_ctrl, mouse_ctrl, repeat, loop
+        )
+    finally:
+        done.set()
+        watcher.join(timeout=0.2)
     return force_stopped.is_set()

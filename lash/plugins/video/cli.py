@@ -1,6 +1,4 @@
 import os
-import re
-import subprocess
 import tempfile
 from math import trunc
 from pathlib import Path
@@ -13,9 +11,12 @@ from rich.console import Console
 from rich.progress import BarColumn, Progress, TextColumn, TimeElapsedColumn
 
 from lash.plugins.video.core import (
+    FfmpegError,
+    get_duration,
     get_ext,
     get_last,
     resize_images,
+    run_ffmpeg,
     tuple_to_seconds,
 )
 
@@ -24,41 +25,6 @@ console = Console()
 
 @click.group("video", help="Build, cut, and compose videos")
 def video(): ...
-
-
-def _get_duration(ffmpeg, path):
-    info = subprocess.run(
-        [ffmpeg, "-hide_banner", "-i", path], capture_output=True, text=True
-    )
-    m = re.search(r"Duration: (\d+):(\d+):(\d+\.\d+)", info.stderr)
-    return (
-        int(m.group(1)) * 3600 + int(m.group(2)) * 60 + float(m.group(3))
-        if m
-        else 0
-    )
-
-
-def _run_ffmpeg(cmd, label, total):
-    proc = subprocess.Popen(
-        cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
-    )
-    with Progress(
-        TextColumn(f"[bold cyan]{label}"),
-        BarColumn(),
-        "[progress.percentage]{task.percentage:>3.0f}%",
-        TimeElapsedColumn(),
-    ) as progress:
-        task = progress.add_task("", total=total)
-        for line in proc.stdout:
-            if line.startswith("out_time_ms="):
-                try:
-                    ms = int(line.strip().split("=")[1])
-                    progress.update(task, completed=min(ms / 1_000_000, total))
-                except ValueError:
-                    pass
-    proc.wait()
-    if proc.returncode != 0:
-        raise click.ClickException(proc.stderr.read())
 
 
 @video.command()
@@ -182,9 +148,7 @@ def intro(video_path, video_intro, s):
     p = Path(video_path)
     out = video_path if s else str(p.with_stem(p.stem + "_with_intro"))
     ffmpeg = imageio_ffmpeg.get_ffmpeg_exe()
-    total = _get_duration(ffmpeg, video_intro) + (
-        _get_duration(ffmpeg, video_path)
-    )
+    total = get_duration(ffmpeg, video_intro) + get_duration(ffmpeg, video_path)
 
     with tempfile.NamedTemporaryFile(mode="w", suffix=".txt", delete=False) as f:
         f.write(f"file '{video_intro}'\nfile '{video_path}'\n")
@@ -209,7 +173,16 @@ def intro(video_path, video_intro, s):
             "pipe:1",
             out,
         ]
-        _run_ffmpeg(cmd, "Adding intro", total)
+        with Progress(
+            TextColumn("[bold cyan]Adding intro"),
+            BarColumn(),
+            "[progress.percentage]{task.percentage:>3.0f}%",
+            TimeElapsedColumn(),
+        ) as progress:
+            task = progress.add_task("", total=total)
+            run_ffmpeg(cmd, lambda done: progress.update(task, completed=min(done, total)))
+    except FfmpegError as e:
+        raise click.ClickException(str(e)) from None
     finally:
         os.unlink(list_file)
 
@@ -225,9 +198,7 @@ def end(video_path, video_end, s):
     p = Path(video_path)
     out = video_path if s else str(p.with_stem(p.stem + "_with_end"))
     ffmpeg = imageio_ffmpeg.get_ffmpeg_exe()
-    total = _get_duration(ffmpeg, video_path) + (
-        _get_duration(ffmpeg, video_end)
-    )
+    total = get_duration(ffmpeg, video_path) + get_duration(ffmpeg, video_end)
 
     with tempfile.NamedTemporaryFile(mode="w", suffix=".txt", delete=False) as f:
         f.write(f"file '{video_path}'\nfile '{video_end}'\n")
@@ -252,7 +223,16 @@ def end(video_path, video_end, s):
             "pipe:1",
             out,
         ]
-        _run_ffmpeg(cmd, "Adding end", total)
+        with Progress(
+            TextColumn("[bold cyan]Adding end"),
+            BarColumn(),
+            "[progress.percentage]{task.percentage:>3.0f}%",
+            TimeElapsedColumn(),
+        ) as progress:
+            task = progress.add_task("", total=total)
+            run_ffmpeg(cmd, lambda done: progress.update(task, completed=min(done, total)))
+    except FfmpegError as e:
+        raise click.ClickException(str(e)) from None
     finally:
         os.unlink(list_file)
 
@@ -281,12 +261,7 @@ def cut(path, s, i, f):
     out = path if s else str(p.with_stem(p.stem + "_cutted"))
     ffmpeg = imageio_ffmpeg.get_ffmpeg_exe()
 
-    info = subprocess.run(
-        [ffmpeg, "-hide_banner", "-i", path], capture_output=True, text=True
-    )
-    m = re.search(r"Duration: (\d+):(\d+):(\d+\.\d+)", info.stderr)
-    total = (int(m.group(1)) * 3600 + int(m.group(2))
-             * 60 + float(m.group(3)) if m else 0)
+    total = get_duration(ffmpeg, path)
     start_t = tuple_to_seconds(i) if i else 0
     end_t = tuple_to_seconds(f) if f else total
     cut_duration = end_t - start_t
@@ -297,4 +272,14 @@ def cut(path, s, i, f):
     if f:
         cmd += ["-to", str(end_t)]
     cmd += ["-c", "copy", "-progress", "pipe:1", out]
-    _run_ffmpeg(cmd, "Cutting", cut_duration)
+    with Progress(
+        TextColumn("[bold cyan]Cutting"),
+        BarColumn(),
+        "[progress.percentage]{task.percentage:>3.0f}%",
+        TimeElapsedColumn(),
+    ) as progress:
+        task = progress.add_task("", total=cut_duration)
+        try:
+            run_ffmpeg(cmd, lambda done: progress.update(task, completed=min(done, cut_duration)))
+        except FfmpegError as e:
+            raise click.ClickException(str(e)) from None

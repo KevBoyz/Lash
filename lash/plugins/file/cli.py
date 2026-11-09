@@ -1,13 +1,12 @@
 import click
 import os
-import secrets
-import string
 import shutil as sh
 from rich import print
-import pyaes as pya
 from lash.plugins.file.core import (
     bar_template,
+    crypt_file,
     file_types,
+    generate_key,
     get_ext,
 )
 
@@ -15,20 +14,6 @@ from lash.plugins.file.core import (
 @click.group()
 def file():
     """File organization and encryption tools."""
-
-
-def _generate_key():
-    alphabet = string.ascii_letters + string.digits
-    return "".join(secrets.choice(alphabet) for _ in range(16))
-
-
-def _crypt_file(path, bkey, decrypt):
-    with open(path, "rb") as src:
-        data = src.read()
-    crip = pya.AESModeOfOperationCTR(bkey)
-    out = crip.decrypt(data) if decrypt else crip.encrypt(data)
-    with open(path, "wb") as dst:
-        dst.write(out)
 
 
 @click.command()
@@ -66,7 +51,7 @@ def crypt(p, key, dc, ex, ca, v):  # noqa: C901
 
     generated = key is None
     if generated:
-        key = _generate_key()
+        key = generate_key()
     bkey = str.encode(key)
 
     if p.find("\\") == -1 and p.find("/") == -1:
@@ -93,13 +78,13 @@ def crypt(p, key, dc, ex, ca, v):  # noqa: C901
         ) as bar:
             for path in bar:
                 try:
-                    _crypt_file(path, bkey, dc)
+                    crypt_file(path, bkey, dc)
                 except Exception as e:
                     click.echo(f"\n[skip] {path}: {e}", err=True)
     else:
         if not os.path.isfile(fp):
             raise click.UsageError(f"Expected a file, got: {fp}. Use -ca for folders.")
-        _crypt_file(fp, bkey, dc)
+        crypt_file(fp, bkey, dc)
         if v:
             print("\nFile decrypted" if dc else "\nFile encrypted")
 

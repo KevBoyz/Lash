@@ -23,6 +23,7 @@
 - **deps**: declared requirements fixed — `moviepy>=2.0.0` (code uses the 2.x API), `audio` requires `imageio-ffmpeg` instead of `moviepy`, `bs4` replaced by `beautifulsoup4`, `imageio-ffmpeg` added to `all`, `dashing>=0.2.0`
 - **monitor**: fix crash on dashing 0.2.0 (`Log` no longer takes positional args) and replace deprecated ANSI int colors
 - **tests**: replace Click APIs deprecated for Click 9 (`CliRunner.isolated_filesystem`, `click.BaseCommand`)
+- **refactor**: `cli.py` keeps only Click entry points — helper functions moved to `core.py`/`helpers.py` in backup, crack, file and video; gnews core returns formatted text instead of printing
 
 ---
 

@@ -1,5 +1,46 @@
 import os
+import re
+import subprocess
 from PIL import Image
+
+
+class FfmpegError(RuntimeError):
+    """ffmpeg exited with an error; the message is its stderr."""
+
+
+def get_duration(ffmpeg, path):
+    info = subprocess.run(
+        [ffmpeg, "-hide_banner", "-i", path], capture_output=True, text=True
+    )
+    m = re.search(r"Duration: (\d+):(\d+):(\d+\.\d+)", info.stderr)
+    return (
+        int(m.group(1)) * 3600 + int(m.group(2)) * 60 + float(m.group(3))
+        if m
+        else 0
+    )
+
+
+def run_ffmpeg(cmd, on_progress=None):
+    """Run an ffmpeg command that uses `-progress pipe:1`.
+
+    Calls on_progress(seconds_done) on each progress update.
+    Raises FfmpegError with ffmpeg's stderr when it fails.
+    """
+    proc = subprocess.Popen(
+        cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
+    )
+    for line in proc.stdout:
+        if not line.startswith("out_time_ms="):
+            continue
+        try:
+            seconds = int(line.strip().split("=")[1]) / 1_000_000
+        except ValueError:
+            continue
+        if on_progress:
+            on_progress(seconds)
+    proc.wait()
+    if proc.returncode != 0:
+        raise FfmpegError(proc.stderr.read())
 
 
 def get_last(path):

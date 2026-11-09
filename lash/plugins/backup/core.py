@@ -5,6 +5,7 @@ from contextlib import suppress
 from datetime import datetime
 from pathlib import Path
 from lash.plugins.backup.helpers import (
+    BackupError,
     archive_name,
     clean_path,
     is_inside,
@@ -12,10 +13,6 @@ from lash.plugins.backup.helpers import (
     now_iso,
     parse_timestamp,
 )
-
-
-class BackupError(Exception):
-    """Expected failure with a message safe to show to the user."""
 
 
 def registry_file() -> Path:

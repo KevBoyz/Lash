@@ -1,6 +1,10 @@
+import functools
 import re
 from datetime import datetime
 from pathlib import Path
+import click
+from rich.markup import escape
+from rich.table import Table
 
 TIMESTAMP_FORMAT = "%Y-%m-%d_%H-%M-%S"
 _TIMESTAMP_LEN = len("2000-01-01_00-00-00")
@@ -10,6 +14,41 @@ _RESERVED_NAMES = {
     *(f"com{i}" for i in range(1, 10)),
     *(f"lpt{i}" for i in range(1, 10)),
 }
+
+
+class BackupError(Exception):
+    """Expected failure with a message safe to show to the user."""
+
+
+def guard(func):
+    """Turn expected failures into a clean error message and exit code 1."""
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        try:
+            return func(*args, **kwargs)
+        except (click.exceptions.Abort, click.exceptions.Exit, click.ClickException):
+            raise
+        except BackupError as e:
+            raise click.ClickException(str(e)) from e
+        except PermissionError as e:
+            raise click.ClickException(f"Permission denied: {e.filename or e}") from e
+        except OSError as e:
+            raise click.ClickException(f"File system error: {e}") from e
+        except KeyboardInterrupt:
+            raise click.ClickException("Operation cancelled by user.") from None
+        except Exception as e:
+            raise click.ClickException(f"Unexpected error: {e}") from e
+    return wrapper
+
+
+def entry_grid(name: str, source: str, backups_dir: Path) -> Table:
+    grid = Table.grid(padding=(0, 2))
+    grid.add_column(style="bold cyan")
+    grid.add_column(overflow="fold")
+    grid.add_row("Name", escape(name))
+    grid.add_row("Source", escape(source))
+    grid.add_row("Backups", escape(str(backups_dir)))
+    return grid
 
 
 def now_iso() -> str:

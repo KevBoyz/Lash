@@ -1,6 +1,7 @@
 import click
 from gnews import GNews
-from lash.plugins.gnews.core import impress_news
+from rich import print
+from lash.plugins.gnews.core import format_news
 
 
 @click.command(short_help="See the last news (Google News)")
@@ -38,13 +39,13 @@ def gnews(t, c, s, tp, lang, cont):
     gn = GNews(language=lang, country=cont)
     if t:
         top_news = gn.get_top_news()
-        impress_news(top_news)
+        print(format_news(top_news))
     elif c:
         county_news = gn.get_news_by_location(c)
-        impress_news(county_news)
+        print(format_news(county_news))
     elif s:
         kw_news = gn.get_news(s)
-        impress_news(kw_news)
+        print(format_news(kw_news))
     elif tp:
         topic_news = gn.get_news_by_topic(tp)
-        impress_news(topic_news)
+        print(format_news(topic_news))

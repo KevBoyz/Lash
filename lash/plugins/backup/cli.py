@@ -1,5 +1,3 @@
-import functools
-import sys
 from pathlib import Path
 import click
 from rich.console import Console
@@ -26,10 +24,9 @@ from lash.plugins.backup.core import (
     save_registry,
     unregister_entry,
 )
-from lash.plugins.backup.helpers import format_size
+from lash.plugins.backup.helpers import entry_grid, format_size, guard
 
 _console = Console()
-_err_console = Console(stderr=True)
 
 _progress_columns = [
     TextColumn("[progress.description]{task.description}"),
@@ -42,42 +39,6 @@ _progress_columns = [
 _MAX_SKIPPED_SHOWN = 10
 
 
-def _fail(message: str) -> None:
-    _err_console.print(f"[red]Error:[/red] {escape(message)}")
-    sys.exit(1)
-
-
-def _guard(func):
-    """Turn expected failures into a clean error message and exit code 1."""
-    @functools.wraps(func)
-    def wrapper(*args, **kwargs):
-        try:
-            return func(*args, **kwargs)
-        except (click.exceptions.Abort, click.exceptions.Exit, click.ClickException):
-            raise
-        except BackupError as e:
-            _fail(str(e))
-        except PermissionError as e:
-            _fail(f"Permission denied: {e.filename or e}")
-        except OSError as e:
-            _fail(f"File system error: {e}")
-        except KeyboardInterrupt:
-            _fail("Operation cancelled by user.")
-        except Exception as e:
-            _fail(f"Unexpected error: {e}")
-    return wrapper
-
-
-def _print_entry(name: str, entry: dict) -> None:
-    grid = Table.grid(padding=(0, 2))
-    grid.add_column(style="bold cyan")
-    grid.add_column(overflow="fold")
-    grid.add_row("Name", escape(name))
-    grid.add_row("Source", escape(entry["source"]))
-    grid.add_row("Backups", escape(str(archive_dir(entry, name))))
-    _console.print(grid)
-
-
 @click.group("backup")
 def backup():
     """Register folders and keep zipped backups of them."""
@@ -87,7 +48,7 @@ def backup():
 @click.argument("name", metavar="<name>")
 @click.argument("source", metavar="<source>")
 @click.argument("destination", metavar="[destination]", required=False)
-@_guard
+@guard
 def register(name, source, destination):
     """\b
     Register a folder to back up under a nickname.
@@ -106,7 +67,7 @@ def register(name, source, destination):
     entry = register_entry(registry, name, source, destination)
     save_registry(path, registry)
     _console.print(f"[green]Registered[/green] [bold]{escape(name)}[/bold]")
-    _print_entry(name, entry)
+    _console.print(entry_grid(name, entry["source"], archive_dir(entry, name)))
 
 
 @backup.command()
@@ -115,7 +76,7 @@ def register(name, source, destination):
 @click.option("-s", "--source", help="New source folder")
 @click.option("-d", "--dest", "destination",
               help="New destination folder ('' resets to the default)")
-@_guard
+@guard
 def edit(name, new_name, source, destination):
     """\b
     Change the name, source or destination of a record.
@@ -135,7 +96,7 @@ def edit(name, new_name, source, destination):
                             source=source, destination=destination)
     save_registry(path, registry)
     _console.print(f"[green]Updated[/green] [bold]{escape(key)}[/bold]")
-    _print_entry(key, entry)
+    _console.print(entry_grid(key, entry["source"], archive_dir(entry, key)))
 
     if Path(old_entry["destination"]) != Path(entry["destination"]):
         leftover = list_backups(old_entry, key)
@@ -150,7 +111,7 @@ def edit(name, new_name, source, destination):
 @click.argument("name", metavar="<name>")
 @click.option("-p", "--purge", is_flag=True, help="Also delete all backup files of this record")
 @click.option("-y", "--yes", is_flag=True, help="Do not ask for confirmation")
-@_guard
+@guard
 def remove(name, purge, yes):
     """\b
     Remove a record. Backup files are kept unless --purge is used.
@@ -186,7 +147,7 @@ def remove(name, purge, yes):
 
 @backup.command("do")
 @click.argument("name", metavar="<name>")
-@_guard
+@guard
 def do_backup(name):
     """\b
     Create a new zip backup of a record.
@@ -225,7 +186,7 @@ def do_backup(name):
 
 @backup.command()
 @click.argument("name", metavar="<name>")
-@_guard
+@guard
 def check(name):
     """\b
     List all backups of a record.
@@ -263,7 +224,7 @@ def check(name):
 
 
 @backup.command("list")
-@_guard
+@guard
 def list_records():
     """List all registered records."""
     registry = load_registry(registry_file())

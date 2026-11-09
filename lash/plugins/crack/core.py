@@ -60,3 +60,11 @@ def get_last(path):
 def path_no_file(path):
     filename = get_last(path)
     return path.replace(filename, '')
+
+
+def fmt_eta(seconds):
+    if seconds < 60:
+        return f"{int(seconds)}s"
+    if seconds < 3600:
+        return f"{int(seconds // 60)}m {int(seconds % 60)}s"
+    return f"{int(seconds // 3600)}h {int((seconds % 3600) // 60)}m"

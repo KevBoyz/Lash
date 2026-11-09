@@ -3,15 +3,7 @@ import zipfile
 import time
 from rich import print
 from rich.progress import BarColumn, Progress, TextColumn, TimeElapsedColumn
-from lash.plugins.crack.core import brute, _next, path_no_file, total_combinations
-
-
-def _fmt_eta(seconds):
-    if seconds < 60:
-        return f"{int(seconds)}s"
-    if seconds < 3600:
-        return f"{int(seconds // 60)}m {int(seconds % 60)}s"
-    return f"{int(seconds // 3600)}h {int((seconds % 3600) // 60)}m"
+from lash.plugins.crack.core import brute, _next, fmt_eta, path_no_file, total_combinations
 
 
 @click.group("crack", short_help="Brute-force password cracking")
@@ -98,7 +90,7 @@ def azip(path, ln, r, n, letters, s, sp):
                     elapsed = time.time() - start_time
                     if elapsed > 0 and attempt_count > 0:
                         remaining = max(total - attempt_count, 0)
-                        eta = _fmt_eta(remaining * elapsed / attempt_count)
+                        eta = fmt_eta(remaining * elapsed / attempt_count)
                     else:
                         eta = "..."
                     prog.update(

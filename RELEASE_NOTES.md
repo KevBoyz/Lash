@@ -18,6 +18,11 @@
 - **sched**: fix `sched run` test hanging in CI — mock now breaks the scheduler loop
 - **chore**: removed `calc`, `work` and `rec` plugins
 - **chore**: added `textual>=0.80.0` to `all` extras
+- **deps**: dependencies updated with `uv lock --upgrade` — click 8.5.1, yt-dlp 2026.10.26, dashing 0.2.0, imageio-ffmpeg 0.8.1, gnews 0.8.3, matplotlib 3.11.2, numpy 2.5.4, flake8 7.5.0, pytest 9.2.0; Pillow held at 11.3.0 (moviepy 2.2.1 requires `pillow<12`)
+- **deps**: `uv.lock` regenerated (was stale: Python 3.11 marker, leftover `pyminizip`, missing `textual`/`pytest`); `[tool.uv] required-environments` keeps `pyqt5-qt5` 5.15.2 on Windows so `uv sync` works there
+- **deps**: declared requirements fixed — `moviepy>=2.0.0` (code uses the 2.x API), `audio` requires `imageio-ffmpeg` instead of `moviepy`, `bs4` replaced by `beautifulsoup4`, `imageio-ffmpeg` added to `all`, `dashing>=0.2.0`
+- **monitor**: fix crash on dashing 0.2.0 (`Log` no longer takes positional args) and replace deprecated ANSI int colors
+- **tests**: replace Click APIs deprecated for Click 9 (`CliRunner.isolated_filesystem`, `click.BaseCommand`)
 
 ---
 

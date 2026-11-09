@@ -7,9 +7,9 @@
       "module": "lash.plugins.video.cli:video",
       "description": "Build, resume, cut and compose videos",
       "requires": [
-        "moviepy>=1.0.3",
+        "moviepy>=2.0.0",
         "opencv-python>=4.6.0",
-        "imageio-ffmpeg",
+        "imageio-ffmpeg>=0.6.0",
         "numpy>=1.23.0",
         "Pillow>=9.3.0",
         "rich>=12.6.0"

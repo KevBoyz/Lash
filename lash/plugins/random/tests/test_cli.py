@@ -27,9 +27,9 @@ class TestRandomCli:
         result = runner.invoke(random, ['-c', '10', '-s'])
         assert result.exit_code == 0
 
-    def test_f_flag_saves_file(self):
+    def test_f_flag_saves_file(self, tmp_path, monkeypatch):
         runner = CliRunner()
-        with runner.isolated_filesystem():
-            result = runner.invoke(random, ['-c', '5', '-f'])
-            assert result.exit_code == 0
-            assert 'Saved to' in result.output
+        monkeypatch.chdir(tmp_path)
+        result = runner.invoke(random, ['-c', '5', '-f'])
+        assert result.exit_code == 0
+        assert 'Saved to' in result.output

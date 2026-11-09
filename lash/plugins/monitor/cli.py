@@ -5,6 +5,8 @@ from time import sleep
 from datetime import datetime
 from lash.plugins.monitor.core import getListOfProcessSortedByMemory
 
+GREEN = "#00ff00"
+
 
 @click.command()
 def monitor():
@@ -21,16 +23,16 @@ def monitor():
     """
     tui = HSplit(
         VSplit(
-            VGauge(val=100, title='Ram Usage', border_color=2),
-            VGauge(val=100, title='Disk Space', border_color=2)
+            VGauge(val=100, title='Ram Usage', border_color=GREEN),
+            VGauge(val=100, title='Disk Space', border_color=GREEN)
         ),
         VSplit(
-            HGauge(val=100, title='Cpu Usage - x%', border_color=2),
-            HChart(val=100, title='Cpu graph', border_color=2, color=2)
+            HGauge(val=100, title='Cpu Usage - x%', border_color=GREEN),
+            HChart(val=100, title='Cpu graph', border_color=GREEN, color=GREEN)
         ),
         VSplit(
-            Text('Getting information...', border_color=2, title='Machine config', color=2),
-            Log('logs', border_color=2, color=2, title='Processes with highest memory usage')
+            Text('Getting information...', border_color=GREEN, title='Machine config', color=GREEN),
+            Log(border_color=GREEN, color=GREEN, title='Processes with highest memory usage')
         ),
     )
     cpu_percent = tui.items[1].items[0]

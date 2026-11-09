@@ -223,7 +223,23 @@ class TestMonitorCommand:
         import click
         from lash.plugins.monitor.cli import monitor
 
-        assert isinstance(monitor, click.BaseCommand)
+        assert isinstance(monitor, click.Command)
+
+    def test_dashboard_layout_builds_without_errors_or_deprecations(self):
+        import warnings
+        from unittest.mock import patch
+        from click.testing import CliRunner
+        from lash.plugins.monitor.cli import monitor
+
+        class StopLoop(Exception):
+            pass
+
+        with warnings.catch_warnings():
+            warnings.simplefilter("error", DeprecationWarning)
+            with patch('lash.plugins.monitor.cli.ps.cpu_percent', side_effect=StopLoop):
+                result = CliRunner().invoke(monitor, [])
+
+        assert isinstance(result.exception, StopLoop)
 
     def test_monitor_command_name(self):
         from lash.plugins.monitor.cli import monitor

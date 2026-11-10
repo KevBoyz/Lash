@@ -14,7 +14,9 @@ _console = Console()
               help="IP used in the link and QR code (default: auto-detect LAN IP)")
 @click.option("-p2p", "--p2p", "p2p", is_flag=True,
               help="P2P mode: no server folder, files go straight between browsers")
-def share(port, ip, p2p):
+@click.option("-v", "--verbose", is_flag=True,
+              help="Show activity logs (connections, uploads, downloads) in the terminal")
+def share(port, ip, p2p, verbose):
     """\b
     Share files between devices on the local network.
 
@@ -27,12 +29,13 @@ def share(port, ip, p2p):
       share
       share -p 9000
       share -p2p        # receive files from the phone straight to this PC
+      share -v          # show activity logs
     """
     host_ip = ip or detect_lan_ip()
+    on_event = (lambda event: _console.print(format_event(event))) if verbose else None
     try:
         server = ShareServer(None if p2p else storage_dir(), host_ip, port,
-                             on_event=lambda event: _console.print(format_event(event)),
-                             p2p=p2p)
+                             on_event=on_event, p2p=p2p)
     except OSError as e:
         raise click.ClickException(
             f"Could not start server on port {port}: {e.strerror or e}. "

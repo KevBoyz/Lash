@@ -18,7 +18,7 @@ class FakeServer:
 
     def serve_forever(self):
         if FakeServer.emit is not None:
-            self.kwargs["on_event"](FakeServer.emit)
+            (self.kwargs.get("on_event") or (lambda event: None))(FakeServer.emit)
         raise KeyboardInterrupt
 
     def close(self):
@@ -66,10 +66,16 @@ class TestShareCmd:
         env.setattr(cli, "detect_lan_ip", lambda: "127.0.0.1")
         assert "No network found" in _run().output
 
-    def test_eventos_aparecem_no_terminal(self, env):
+    def test_eventos_aparecem_no_terminal_com_verbose(self, env):
         from lash.plugins.share.helpers import ShareEvent
         FakeServer.emit = ShareEvent("connected", "loq", "192.168.0.3")
-        assert "[+] loq (192.168.0.3) connected" in _run().output
+        assert "[+] loq (192.168.0.3) connected" in _run("-v").output
+        assert "[+] loq (192.168.0.3) connected" in _run("--verbose").output
+
+    def test_eventos_ocultos_sem_verbose(self, env):
+        from lash.plugins.share.helpers import ShareEvent
+        FakeServer.emit = ShareEvent("connected", "loq", "192.168.0.3")
+        assert "connected" not in _run().output
 
     def test_mostra_link_quando_qrcode_nao_instalado(self, env):
         from lash.plugins.share import cli

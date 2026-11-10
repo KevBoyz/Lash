@@ -1,7 +1,9 @@
 import re
 import socket
 import unicodedata
+from dataclasses import dataclass
 from urllib.parse import quote
+from rich.text import Text
 
 _OS_RULES = [
     ("iPhone", "iPhone"),
@@ -20,6 +22,43 @@ _BROWSER_RULES = [
 ]
 _FORBIDDEN = re.compile(r'[<>:"/\\|?*\x00-\x1f]')
 _MAX_NAME = 200
+_EVENT_TAGS = {
+    "connected": ("[+]", "bold green"),
+    "renamed": ("[~]", "bold yellow"),
+    "sent": ("[>]", "bold cyan"),
+    "shared": ("[>]", "bold blue"),
+    "downloaded": ("[<]", "bold magenta"),
+}
+
+
+@dataclass(frozen=True)
+class ShareEvent:
+    """Something that happened in a share session, shown in the terminal log."""
+    kind: str  # connected | renamed | sent | shared | downloaded
+    device: str
+    ip: str
+    file: str = ""
+    size: int = 0
+    previous: str = ""  # old device name, for "renamed"
+
+    def __str__(self) -> str:
+        return format_event(self).plain
+
+
+def format_event(event: ShareEvent) -> Text:
+    """Colored log line of an event."""
+    tag, style = _EVENT_TAGS[event.kind]
+    ip = (f"({event.ip})", "dim")
+    if event.kind == "connected":
+        parts = [(event.device, "bold"), " ", ip, " connected"]
+    elif event.kind == "renamed":
+        parts = [(event.previous, "bold"), " ", ip, " identified as ", (event.device, "bold")]
+    elif event.kind == "downloaded":
+        parts = [(event.device, "bold"), " downloaded ", (event.file, "bright_white")]
+    else:
+        parts = [(event.device, "bold"), f" {event.kind} ", (event.file, "bright_white"),
+                 " ", (f"({format_size(event.size)})", "dim")]
+    return Text.assemble((tag, style), " ", *parts)
 
 
 def device_name_from_ua(user_agent: str) -> str:

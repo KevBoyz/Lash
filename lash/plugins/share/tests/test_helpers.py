@@ -115,6 +115,37 @@ class TestFormatSize:
         assert format_size(5 * 1024 ** 3) == "5.0 GB"
 
 
+class TestShareEvent:
+    def test_texto_de_cada_tipo(self):
+        from lash.plugins.share.helpers import ShareEvent
+        assert str(ShareEvent("connected", "loq", "192.168.0.3")) == \
+            "[+] loq (192.168.0.3) connected"
+        assert str(ShareEvent("renamed", "MOTO-G", "192.168.0.2", previous="Android · Chrome")) == \
+            "[~] Android · Chrome (192.168.0.2) identified as MOTO-G"
+        assert str(ShareEvent("sent", "MOTO-G", "192.168.0.2", file="a.txt", size=5)) == \
+            "[>] MOTO-G sent a.txt (5 B)"
+        assert str(ShareEvent("shared", "loq", "192.168.0.3", file="a.txt", size=1536)) == \
+            "[>] loq shared a.txt (1.5 KB)"
+        assert str(ShareEvent("downloaded", "loq", "192.168.0.3", file="a.txt")) == \
+            "[<] loq downloaded a.txt"
+
+
+class TestFormatEvent:
+    def test_texto_colorido_tem_o_mesmo_conteudo(self):
+        from lash.plugins.share.helpers import ShareEvent, format_event
+        event = ShareEvent("sent", "MOTO-G", "192.168.0.2", file="[a].txt", size=5)
+        text = format_event(event)
+        assert text.plain == str(event)
+        assert text.spans
+
+    def test_cada_tipo_tem_cor_propria(self):
+        from lash.plugins.share.helpers import ShareEvent, format_event
+        kinds = ("connected", "renamed", "sent", "shared", "downloaded")
+        styles = {str(format_event(ShareEvent(k, "x", "1.2.3.4", file="f", previous="y")).spans[0].style)
+                  for k in kinds}
+        assert len(styles) == len(kinds)
+
+
 class TestContentDisposition:
     def test_codifica_utf8_e_gera_fallback_ascii(self):
         from lash.plugins.share.helpers import content_disposition

@@ -5,6 +5,7 @@ import pytest
 class FakeServer:
     instances = []
     fail = None
+    emit = None
 
     def __init__(self, storage, host_ip, port, **kwargs):
         if FakeServer.fail:
@@ -16,6 +17,8 @@ class FakeServer:
         FakeServer.instances.append(self)
 
     def serve_forever(self):
+        if FakeServer.emit is not None:
+            self.kwargs["on_event"](FakeServer.emit)
         raise KeyboardInterrupt
 
     def close(self):
@@ -25,7 +28,7 @@ class FakeServer:
 @pytest.fixture
 def env(tmp_path, monkeypatch):
     from lash.plugins.share import cli
-    FakeServer.instances, FakeServer.fail = [], None
+    FakeServer.instances, FakeServer.fail, FakeServer.emit = [], None, None
     monkeypatch.setattr(cli, "ShareServer", FakeServer)
     monkeypatch.setattr(cli, "render_qr", lambda url: "<QR>")
     monkeypatch.setattr(cli, "detect_lan_ip", lambda: "192.168.0.10")
@@ -62,6 +65,11 @@ class TestShareCmd:
         from lash.plugins.share import cli
         env.setattr(cli, "detect_lan_ip", lambda: "127.0.0.1")
         assert "No network found" in _run().output
+
+    def test_eventos_aparecem_no_terminal(self, env):
+        from lash.plugins.share.helpers import ShareEvent
+        FakeServer.emit = ShareEvent("connected", "loq", "192.168.0.3")
+        assert "[+] loq (192.168.0.3) connected" in _run().output
 
     def test_mostra_link_quando_qrcode_nao_instalado(self, env):
         from lash.plugins.share import cli

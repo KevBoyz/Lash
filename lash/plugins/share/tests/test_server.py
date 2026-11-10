@@ -10,7 +10,7 @@ def srv(tmp_path):
     from lash.plugins.share.core import ShareServer
     events = []
     server = ShareServer(tmp_path / "files", host_ip=HOST, port=0,
-                         on_event=events.append,
+                         on_event=lambda event: events.append(str(event)),
                          resolve_name=lambda ip: "pc-" + ip.rsplit(".", 1)[1])
     server.events = events
     threading.Thread(target=server.serve_forever, daemon=True).start()
@@ -60,10 +60,19 @@ class TestEstado:
         assert snap["me"]["ip"] == "127.0.0.2"
         assert [d["ip"] for d in snap["devices"]] == ["127.0.0.2"]
 
-    def test_nome_resolvido_substitui_nome_do_navegador(self, srv):
+    def test_conexao_registrada_na_hora_com_nome_do_navegador(self, srv):
+        _req(srv, "GET", "/api/state", headers={"User-Agent": "Android Chrome/130"})
+        assert srv.events[0] == "[+] Android · Chrome (127.0.0.2) connected"
+
+    def test_nome_resolvido_depois_gera_evento_de_identificacao(self, srv):
         _req(srv, "GET", "/api/state", headers={"User-Agent": "Android Chrome/130"})
         assert _wait(lambda: srv.state.device_name("127.0.0.2") == "pc-2")
-        assert _wait(lambda: "[+] pc-2 (127.0.0.2) connected" in srv.events)
+        assert _wait(lambda: "[~] Android · Chrome (127.0.0.2) identified as pc-2" in srv.events)
+
+    def test_host_conecta_com_nome_da_maquina(self, srv):
+        import socket
+        _req(srv, "GET", "/api/state", source=HOST)
+        assert srv.events[0] == f"[+] {socket.gethostname()} ({HOST}) connected"
 
     def test_localhost_vira_ip_do_host(self, srv):
         assert _state(srv, "127.0.0.1")["me"]["ip"] == HOST
@@ -135,8 +144,11 @@ class TestDownload:
 def p2p():
     import threading
     from lash.plugins.share.core import ShareServer
+    events = []
     server = ShareServer(None, host_ip=HOST, port=0, p2p=True, relay_timeout=2.0,
+                         on_event=lambda event: events.append(str(event)),
                          resolve_name=lambda ip: "pc-" + ip.rsplit(".", 1)[1])
+    server.events = events
     threading.Thread(target=server.serve_forever, daemon=True).start()
     yield server
     server.shutdown()
@@ -180,6 +192,19 @@ class TestP2pCelularParaPc:
         assert (status, body) == (200, b"abc")
         t.join(3)
         assert res["value"][0] == 201
+
+    def test_eventos_do_repasse_saem_em_ordem(self, p2p):
+        t, _ = _bg(lambda: _req(p2p, "PUT", "/api/upload?name=foto.jpg", body=b"abc"))
+        assert _wait(lambda: len(_state(p2p, HOST)["available"]) == 1)
+        fid = _state(p2p, HOST)["available"][0]["id"]
+        _req(p2p, "GET", f"/api/files/{fid}", source=HOST)
+        t.join(3)
+
+        def index(text):
+            return next((i for i, e in enumerate(p2p.events) if text in e), None)
+        assert _wait(lambda: index("sent foto.jpg") is not None
+                     and index("downloaded foto.jpg") is not None)
+        assert index("sent foto.jpg") < index("downloaded foto.jpg")
 
     def test_upload_do_celular_sem_host_retorna_504(self, p2p):
         assert _req(p2p, "PUT", "/api/upload?name=a.txt", body=b"x")[0] == 504
@@ -230,6 +255,18 @@ class TestP2pPcParaCelular:
 
     def test_relay_de_transferencia_desconhecida_retorna_404(self, p2p):
         assert _req(p2p, "PUT", "/api/relay/000000000000", body=b"x", source=HOST)[0] == 404
+
+
+class TestRespostaComCorpoNaoLido:
+    def test_erro_chega_ao_cliente_no_modo_normal(self, srv):
+        assert _req(srv, "PUT", "/api/nope", body=b"x" * 300_000)[0] == 404
+
+    def test_recusa_do_host_chega_ao_cliente_no_p2p(self, p2p):
+        assert _req(p2p, "PUT", "/api/upload?name=a.bin", body=b"x" * 300_000,
+                    source=HOST)[0] == 403
+
+    def test_504_chega_ao_celular_quando_pc_nao_puxa(self, p2p):
+        assert _req(p2p, "PUT", "/api/upload?name=a.bin", body=b"x" * 300_000)[0] == 504
 
 
 class TestPorta:

@@ -16,9 +16,9 @@ from pathlib import Path
 from typing import BinaryIO
 from urllib.parse import parse_qs, urlsplit
 from lash.plugins.share.helpers import (
+    ShareEvent,
     content_disposition,
     device_name_from_ua,
-    format_size,
     resolve_hostname,
     safe_filename,
 )
@@ -27,6 +27,7 @@ DEFAULT_PORT = 8765
 CHUNK = 65536
 ONLINE_TIMEOUT = 10.0
 RELAY_TIMEOUT = 60.0
+_DRAIN_LIMIT = 1 << 20
 _PAGE = Path(__file__).parent / "static" / "index.html"
 _LOOPBACK = {"127.0.0.1", "::1"}
 _FILE_ROUTE = re.compile(r"^/api/files/([0-9a-f]{12})$")
@@ -318,8 +319,26 @@ class _Handler(BaseHTTPRequestHandler):
         ip = self.client_address[0]
         if ip in _LOOPBACK:
             ip = self.app.host_ip
+        self._unread = self._content_length() or 0
         self.app.seen(ip, self.headers.get("User-Agent", ""))
         return parts.path, query, ip
+
+    def _drain(self) -> None:
+        """Read what is left of the request body before replying.
+
+        Closing a socket with unread data sends a TCP reset (always on Windows),
+        and the client loses the reply. Bodies above the limit are dropped anyway.
+        """
+        remaining = min(getattr(self, "_unread", 0), _DRAIN_LIMIT)
+        self._unread = 0
+        try:
+            while remaining > 0:
+                chunk = self.rfile.read(min(CHUNK, remaining))
+                if not chunk:
+                    break
+                remaining -= len(chunk)
+        except OSError:
+            pass
 
     def _is_host(self, ip: str) -> bool:
         return self.app.p2p and ip == self.app.host_ip
@@ -382,7 +401,7 @@ class _Handler(BaseHTTPRequestHandler):
         app.state.set_host_page(page)
         shared = app.state.add_file(new_file_id(), safe_filename(name), size, ip, None,
                                     kind="offer", page=page)
-        app.on_event(f"[>] {app.state.device_name(ip)} shared {shared.name} ({format_size(size)})")
+        app.on_event(ShareEvent("shared", app.state.device_name(ip), ip, shared.name, size))
         self._send_json(201, {"id": shared.id, "name": shared.name, "size": shared.size})
 
     def _relay_upload(self, name: str, ip: str) -> None:
@@ -397,11 +416,12 @@ class _Handler(BaseHTTPRequestHandler):
             return
         shared = app.state.add_file(new_file_id(), safe_filename(name), length, ip, None,
                                     kind="relay")
+        # The "sent" event is emitted by the receiving side, right before "downloaded".
         if not app.relay.send(shared.id, self.rfile, length, app.relay_timeout):
             app.state.remove_file(shared.id)
             self._send_json(504, {"error": "PC offline"})
             return
-        app.on_event(f"[>] {app.state.device_name(ip)} sent {shared.name} ({format_size(length)})")
+        self._unread = 0
         self._send_json(201, {"id": shared.id, "name": shared.name, "size": shared.size})
 
     def _relay_offer(self, transfer_id: str, ip: str) -> None:
@@ -418,6 +438,7 @@ class _Handler(BaseHTTPRequestHandler):
             self._send_json(411, {"error": "missing Content-Length"})
             return
         if app.relay.send(transfer_id, self.rfile, length, app.relay_timeout):
+            self._unread = 0
             self._send_json(200, {"ok": True})
         else:
             self._send_json(504, {"error": "device gone"})
@@ -433,6 +454,7 @@ class _Handler(BaseHTTPRequestHandler):
         """Stream the request body to `target` through a .part file."""
         part = target.with_name(target.name + ".part")
         done = False
+        self._unread = 0  # the body is consumed here, even when the client gives up
         try:
             with part.open("wb") as out:
                 remaining = length
@@ -464,7 +486,7 @@ class _Handler(BaseHTTPRequestHandler):
             self._send_json(400, {"error": "incomplete upload"})
             return
         shared = app.state.add_file(file_id, safe_filename(name), length, ip, target)
-        app.on_event(f"[>] {app.state.device_name(ip)} sent {shared.name} ({format_size(length)})")
+        app.on_event(ShareEvent("sent", app.state.device_name(ip), ip, shared.name, length))
         self._send_json(201, {"id": shared.id, "name": shared.name, "size": shared.size})
 
     def _download(self, file_id: str, ip: str) -> None:
@@ -485,7 +507,7 @@ class _Handler(BaseHTTPRequestHandler):
                 return
         elif not self._pipe_download(shared, ip):
             return
-        self.app.on_event(f"[<] {state.device_name(ip)} downloaded {shared.name}")
+        self.app.on_event(ShareEvent("downloaded", state.device_name(ip), ip, shared.name))
 
     def _pipe_download(self, shared: SharedFile, ip: str) -> bool:
         """Stream a p2p file from the browser that holds it. False if it never came."""
@@ -503,11 +525,16 @@ class _Handler(BaseHTTPRequestHandler):
             return False
         try:
             self._send_file_headers(shared.name, pipe.size)
-            return pipe.copy_to(self.wfile)
+            ok = pipe.copy_to(self.wfile)
         except ConnectionError:
-            return False
+            ok = False
         finally:
             pipe.close()
+        if ok and shared.kind == "relay":
+            uploader = shared.uploader_ip
+            app.on_event(ShareEvent("sent", app.state.device_name(uploader), uploader,
+                                    shared.name, shared.size))
+        return ok
 
     def _send_file_headers(self, name: str, size: int) -> None:
         self.send_response(200)
@@ -518,6 +545,7 @@ class _Handler(BaseHTTPRequestHandler):
         self.end_headers()
 
     def _send(self, status: int, body: bytes, content_type: str) -> None:
+        self._drain()
         self.send_response(status)
         self.send_header("Content-Type", content_type)
         self.send_header("Content-Length", str(len(body)))
@@ -533,13 +561,13 @@ class ShareServer:
     """HTTP server of the share page, listening on every interface."""
 
     def __init__(self, storage: Path | None, host_ip: str, port: int = DEFAULT_PORT,
-                 on_event: Callable[[str], None] | None = None,
+                 on_event: Callable[[ShareEvent], None] | None = None,
                  resolve_name: Callable[[str], str | None] | None = None,
                  p2p: bool = False, relay_timeout: float = RELAY_TIMEOUT):
         self.host_ip = host_ip
         self.p2p = p2p
         self.storage = None if p2p else storage
-        self.on_event = on_event or (lambda message: None)
+        self.on_event = on_event or (lambda event: None)
         self.resolve_name = resolve_name or resolve_hostname
         self.relay_timeout = relay_timeout
         self.relay = Relay()
@@ -554,15 +582,22 @@ class ShareServer:
         return f"http://{self.host_ip}:{self.port}"
 
     def seen(self, ip: str, user_agent: str) -> None:
-        """Register a request from `ip`; new devices get their name resolved."""
-        if self.state.touch(ip, device_name_from_ua(user_agent), time.monotonic()):
-            threading.Thread(target=self._announce, args=(ip,), daemon=True).start()
+        """Register a request from `ip`, logging new devices right away."""
+        if not self.state.touch(ip, device_name_from_ua(user_agent), time.monotonic()):
+            return
+        if ip == self.host_ip:
+            self.state.set_name(ip, socket.gethostname())
+        self.on_event(ShareEvent("connected", self.state.device_name(ip), ip))
+        if ip != self.host_ip:
+            # Reverse DNS can take seconds on Windows: resolve without holding the request.
+            threading.Thread(target=self._identify, args=(ip,), daemon=True).start()
 
-    def _announce(self, ip: str) -> None:
-        name = socket.gethostname() if ip == self.host_ip else self.resolve_name(ip)
-        if name:
+    def _identify(self, ip: str) -> None:
+        name = self.resolve_name(ip)
+        previous = self.state.device_name(ip)
+        if name and name != previous:
             self.state.set_name(ip, name)
-        self.on_event(f"[+] {self.state.device_name(ip)} ({ip}) connected")
+            self.on_event(ShareEvent("renamed", name, ip, previous=previous))
 
     def serve_forever(self) -> None:
         self._httpd.serve_forever()

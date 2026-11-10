@@ -1,7 +1,10 @@
 import webbrowser
 import click
+from rich.console import Console
 from lash.plugins.share.core import DEFAULT_PORT, ShareServer, render_qr, storage_dir
-from lash.plugins.share.helpers import detect_lan_ip
+from lash.plugins.share.helpers import detect_lan_ip, format_event
+
+_console = Console()
 
 
 @click.command("share")
@@ -28,7 +31,8 @@ def share(port, ip, p2p):
     host_ip = ip or detect_lan_ip()
     try:
         server = ShareServer(None if p2p else storage_dir(), host_ip, port,
-                             on_event=click.echo, p2p=p2p)
+                             on_event=lambda event: _console.print(format_event(event)),
+                             p2p=p2p)
     except OSError as e:
         raise click.ClickException(
             f"Could not start server on port {port}: {e.strerror or e}. "

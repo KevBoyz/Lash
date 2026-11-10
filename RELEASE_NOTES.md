@@ -5,6 +5,7 @@
 - **macro**: preserve virtual key codes when recording shortcuts (Ctrl/Alt/Shift/Windows, punctuation and numpad); recover legacy Ctrl+A–Z recordings and release held keys when playback ends, stops or fails
 - **todo**: new Textual TUI plugin (replaces old `work`) — pending/completed/performance/config tabs, time tracking with pause/resume, 7-day bar chart, persistent config file
 - **backup**: new plugin — `register`/`edit`/`remove` named folder records, `do` creates `<datetime> <name>.zip` archives in `<destination>/<name>/`, `check` lists a record's backups, `list` shows all records; data in `~/.lash/data/backup/registry.json`
+- **share**: new plugin — `lash share` serves a LAN page (QR code + link in the terminal) where phones and PCs send files or zipped folders that every other device downloads automatically, once per device; `-p2p` streams files straight between browsers with no server folder
 - **spider**: automatic LAN discovery — `lash spider` starts a server on a free TCP port; `lash spider seeker` discovers and connects through UDP 45873 without IP or port arguments
 - **core**: new `lash/core/net.py` — shared `REQUEST_TIMEOUT` constant and `install_default_timeout()` applied at import
 - **chore**: removed `calc`, `work` and `rec` plugins

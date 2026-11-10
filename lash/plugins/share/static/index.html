@@ -22,7 +22,7 @@
     font-size: 15px;
   }
   body { overflow-x: hidden; }
-  .wrap { max-width: 1100px; margin: 0 auto; padding: 16px; }
+  .wrap { max-width: 1200px; margin: 0 auto; padding: 16px; }
   h1, h2 { font-weight: normal; text-shadow: 0 0 6px rgba(0, 255, 65, .5); }
   h1 { font-size: 1.4rem; margin: 8px 0 16px; }
   h2 { font-size: 1rem; margin: 0 0 10px; }
@@ -30,8 +30,11 @@
   @keyframes blink { 50% { opacity: 0; } }
   .notice {
     border: 1px dashed var(--fg);
-    padding: 8px 12px;
-    margin-bottom: 12px;
+    padding: 2px 8px;
+    margin-left: 12px;
+    font-size: .6em;
+    vertical-align: middle;
+    white-space: nowrap;
   }
   .actions { display: flex; gap: 12px; }
   button {
@@ -46,39 +49,74 @@
   }
   button:hover, button:focus-visible { background: var(--fg); color: var(--bg); outline: none; }
   button:disabled { opacity: .4; cursor: wait; }
-  #status { min-height: 1.4em; margin: 12px 0; color: var(--dim); word-break: break-all; }
+  #status { min-height: 1.4em; margin: 12px 0 0; color: var(--dim); word-break: break-all; }
   #status.err { color: var(--err); }
-  .grid { display: grid; grid-template-columns: 1fr; gap: 16px; }
+  .grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: "head" "devices" "files" "log" "qr";
+    gap: 16px;
+  }
   section { border: 1px solid var(--dim); padding: 12px; min-width: 0; }
   .stack { display: grid; gap: 16px; min-width: 0; }
+  #head { grid-area: head; min-width: 0; }
+  #qr { grid-area: qr; display: block; width: 112px; height: 112px; justify-self: end; }
+  #devices-box { grid-area: devices; }
+  #log-box { grid-area: log; }
+  #files-box { grid-area: files; }
+  #log {
+    height: 150px;
+    overflow-y: auto;
+    font-size: .85rem;
+    line-height: 1.5;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;  /* wrap at spaces; split a word only when it can't fit */
+    text-shadow: 0 0 4px rgba(0, 255, 65, .35);
+  }
   ul { list-style: none; margin: 0; padding: 0; }
   li { padding: 6px 0; border-top: 1px solid var(--line); word-break: break-all; }
   li:first-child { border-top: none; }
   .meta { color: var(--dim); font-size: .85rem; }
   .empty { color: var(--dim); }
   @media (min-width: 900px) {
-    .grid { grid-template-columns: 280px 1fr; align-items: start; }
+    .grid {
+      grid-template-columns: minmax(0, 2fr) minmax(0, 3fr) auto;  /* wide left: log lines fit */
+      grid-template-rows: auto auto 1fr;
+      grid-template-areas:
+        "head    head  qr"
+        "devices files files"
+        "log     files files";
+      align-items: start;
+    }
+    #qr { margin-top: 8px; }  /* lines up with the title; shorter than the header */
+    #log { height: 180px; }
     .actions { max-width: 520px; }
   }
 </style>
 </head>
 <body>
 <div class="wrap">
-  <h1>&gt; lash share<span class="cursor">_</span></h1>
-  <div id="p2p-notice" class="notice" hidden>p2p mode: keep this page open</div>
-  <div class="actions">
-    <button id="send-files" type="button">[ send files ]</button>
-    <button id="send-folder" type="button" hidden>[ send folder ]</button>
-  </div>
-  <input id="file-input" type="file" multiple hidden>
-  <input id="folder-input" type="file" webkitdirectory multiple hidden>
-  <div id="status" role="status"></div>
   <div class="grid">
-    <section>
+    <div id="head">
+      <h1>&gt; lash share<span class="cursor">_</span><span id="p2p-notice" class="notice" hidden>p2p mode</span></h1>
+      <div class="actions">
+        <button id="send-files" type="button">[ send files ]</button>
+        <button id="send-folder" type="button" hidden>[ send folder ]</button>
+      </div>
+      <input id="file-input" type="file" multiple hidden>
+      <input id="folder-input" type="file" webkitdirectory multiple hidden>
+      <div id="status" role="status"></div>
+    </div>
+    <img id="qr" src="/qr.svg" alt="QR code of this page" onerror="this.hidden = true">
+    <section id="devices-box">
       <h2>// connected devices</h2>
       <ul id="devices"></ul>
     </section>
-    <div class="stack">
+    <section id="log-box">
+      <h2>// server log</h2>
+      <div id="log"></div>
+    </section>
+    <div id="files-box" class="stack">
       <section>
         <h2>// available files</h2>
         <ul id="available"></ul>
@@ -98,6 +136,11 @@
   const RETRY_MS = 75000;
   const DOWNLOAD_GAP_MS = 700;
   const TOO_BIG = 'folder too big (max 4 GB / 65535 files)';
+  const TYPE_MS = 20;          // log typing: base delay per character...
+  const TYPE_JITTER_MS = 45;   // ...plus a random part, like someone typing
+  const LINE_PAUSE_MS = 300;
+  const LOG_LINES = 200;
+  const TYPE_LAST = 3;         // when the page opens, older log lines show at once
   const PAGE = Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
 
   const $ = (id) => document.getElementById(id);
@@ -111,6 +154,13 @@
   const queue = [];               // files waiting to be downloaded
   const offers = new Map();       // p2p host: file id -> {name, blob}
   const handledPulls = new Set(); // p2p host: transfers already being sent
+  const logQueue = [];            // log lines waiting to be typed
+  let lastLog = 0;
+  let logReady = false;
+  let typing = false;
+  const cursor = document.createElement('span');
+  cursor.className = 'cursor';
+  cursor.textContent = '_';
 
   // ---------- helpers ----------
 
@@ -171,11 +221,62 @@
     $('p2p-notice').hidden = !isHostP2p();
   }
 
+  // ---------- server log, typed like a terminal ----------
+
+  function writeLog(change) {
+    const log = $('log');
+    const atBottom = log.scrollTop + log.clientHeight >= log.scrollHeight - 4;
+    change(log);
+    if (atBottom) log.scrollTop = log.scrollHeight;
+  }
+
+  function addLogLine(text) {
+    const line = document.createElement('div');
+    line.append(text, cursor);
+    writeLog((log) => {
+      log.appendChild(line);
+      while (log.childElementCount > LOG_LINES) log.firstElementChild.remove();
+    });
+    return line.firstChild;
+  }
+
+  function showLogs(logs) {
+    const fresh = logs.filter((entry) => entry.id > lastLog); // polls can overlap
+    if (fresh.length) lastLog = fresh[fresh.length - 1].id;
+    const lines = fresh.map((entry) => entry.text);
+    if (!logReady) {
+      logReady = true;
+      lines.splice(0, lines.length - TYPE_LAST).forEach((text) => addLogLine(text));
+    }
+    logQueue.push(...lines);
+    typeLogs();
+  }
+
+  async function typeLogs() {
+    if (typing) return;
+    typing = true;
+    while (logQueue.length) {
+      const text = logQueue.shift();
+      const node = addLogLine('');
+      let typed = 0;
+      while (typed < text.length) {
+        // Type faster when lines pile up, so the log never falls behind.
+        const backlog = text.length - typed + logQueue.reduce((n, t) => n + t.length, 0);
+        typed = Math.min(text.length, typed + Math.max(1, Math.floor(backlog / 200)));
+        const shown = text.slice(0, typed);
+        writeLog(() => { node.data = shown; });
+        await sleep(TYPE_MS + Math.random() * TYPE_JITTER_MS);
+      }
+      await sleep(LINE_PAUSE_MS);
+    }
+    typing = false;
+  }
+
   // ---------- polling + automatic downloads ----------
 
   async function poll() {
     try {
-      const res = await fetch('/api/state?page=' + PAGE, {cache: 'no-store'});
+      const res = await fetch('/api/state?page=' + PAGE + '&log=' + lastLog, {cache: 'no-store'});
       if (!res.ok) throw new Error('HTTP ' + res.status);
       state = await res.json();
       if (offline) {
@@ -184,6 +285,7 @@
       }
       scheduleDownloads(state.available);
       render(state);
+      showLogs(state.logs || []);
       if (isHostP2p()) servePulls(state.pulls || []);
     } catch (err) {
       offline = true;
@@ -422,6 +524,7 @@
   });
 
   render({devices: [], available: [], uploads: []});
+  $('log').append(cursor);
   pollLoop();
 })();
 </script>

@@ -62,17 +62,18 @@ class TestEstado:
 
     def test_conexao_registrada_na_hora_com_nome_do_navegador(self, srv):
         _req(srv, "GET", "/api/state", headers={"User-Agent": "Android Chrome/130"})
-        assert srv.events[0] == "[+] Android · Chrome (127.0.0.2) connected"
+        assert srv.events[0][6:] == "[+] Android · Chrome (127.0.0.2) connected"
 
     def test_nome_resolvido_depois_gera_evento_de_identificacao(self, srv):
         _req(srv, "GET", "/api/state", headers={"User-Agent": "Android Chrome/130"})
         assert _wait(lambda: srv.state.device_name("127.0.0.2") == "pc-2")
-        assert _wait(lambda: "[~] Android · Chrome (127.0.0.2) identified as pc-2" in srv.events)
+        assert _wait(lambda: "[~] Android · Chrome (127.0.0.2) identified as pc-2"
+                     in [e[6:] for e in srv.events])
 
     def test_host_conecta_com_nome_da_maquina(self, srv):
         import socket
         _req(srv, "GET", "/api/state", source=HOST)
-        assert srv.events[0] == f"[+] {socket.gethostname()} ({HOST}) connected"
+        assert srv.events[0][6:] == f"[+] {socket.gethostname()} ({HOST}) connected"
 
     def test_localhost_vira_ip_do_host(self, srv):
         assert _state(srv, "127.0.0.1")["me"]["ip"] == HOST
@@ -297,7 +298,7 @@ class TestPagina:
 
     def test_pagina_tem_fluxo_p2p(self, srv):
         html = _req(srv, "GET", "/")[2].decode("utf-8")
-        for text in ("/api/offer", "/api/relay/", "p2p mode: keep this page open",
+        for text in ("/api/offer", "/api/relay/", ">p2p mode<",
                      "page=", "PC offline"):
             assert text in html
 
@@ -308,3 +309,147 @@ class TestPagina:
                      "pendente", "enviando", "enviado", "vazio", "pasta", "mantenha",
                      "tentando", "falha", "anunciado", "montando", "grande demais"):
             assert word not in html, word
+
+
+def _original(tmp_path, name="nota.txt", data=b"hello"):
+    path = tmp_path / name
+    path.write_bytes(data)
+    return path
+
+
+def _docs_folder(tmp_path):
+    folder = tmp_path / "docs"
+    folder.mkdir()
+    (folder / "a.txt").write_bytes(b"a")
+    return folder
+
+
+class TestCompartilharDoPc:
+    def test_arquivo_do_pc_chega_aos_aparelhos_sem_copia(self, srv, tmp_path):
+        import socket
+        shared = srv.share_file(_original(tmp_path))
+        snap = _state(srv, "127.0.0.2")
+        assert [(f["name"], f["size"], f["from"]) for f in snap["available"]] == [
+            ("nota.txt", 5, socket.gethostname())]
+        assert list(srv.storage.iterdir()) == []
+        assert _req(srv, "GET", f"/api/files/{shared.id}", source="127.0.0.2")[2] == b"hello"
+
+    def test_pc_ve_em_meus_envios_e_nao_baixa(self, srv, tmp_path):
+        shared = srv.share_file(_original(tmp_path))
+        snap = _state(srv, HOST)
+        assert snap["available"] == []
+        assert [f["name"] for f in snap["uploads"]] == ["nota.txt"]
+        assert _req(srv, "GET", f"/api/files/{shared.id}", source=HOST)[0] == 410
+
+    def test_original_nao_e_apagado_ao_fechar(self, tmp_path):
+        from lash.plugins.share.core import ShareServer
+        original = _original(tmp_path)
+        server = ShareServer(tmp_path / "files", host_ip=HOST, port=0)
+        server.share_file(original)
+        server.close()
+        assert original.read_bytes() == b"hello"
+        assert not (tmp_path / "files").exists()
+
+    def test_arquivo_apagado_depois_retorna_404_e_some_da_lista(self, srv, tmp_path):
+        original = _original(tmp_path)
+        shared = srv.share_file(original)
+        original.unlink()
+        assert _req(srv, "GET", f"/api/files/{shared.id}", source="127.0.0.2")[0] == 404
+        assert _state(srv, "127.0.0.2")["available"] == []
+
+    def test_pasta_vira_zip_na_pasta_do_servidor(self, srv, tmp_path):
+        import io
+        import zipfile
+        shared = srv.share_folder(_docs_folder(tmp_path))
+        assert shared.name == "docs.zip"
+        assert shared.path.parent == srv.storage
+        body = _req(srv, "GET", f"/api/files/{shared.id}", source="127.0.0.2")[2]
+        assert zipfile.ZipFile(io.BytesIO(body)).read("docs/a.txt") == b"a"
+
+    def test_p2p_entrega_arquivo_do_pc_sem_pagina_do_host(self, p2p, tmp_path):
+        shared = p2p.share_file(_original(tmp_path))
+        assert [f["name"] for f in _state(p2p, "127.0.0.2")["available"]] == ["nota.txt"]
+        status, _, body = _req(p2p, "GET", f"/api/files/{shared.id}", source="127.0.0.2")
+        assert (status, body) == (200, b"hello")
+
+    def test_p2p_zip_fica_em_pasta_temporaria_removida_ao_fechar(self, tmp_path):
+        from lash.plugins.share.core import ShareServer
+        server = ShareServer(None, host_ip=HOST, port=0, p2p=True)
+        shared = server.share_folder(_docs_folder(tmp_path))
+        assert shared.path.is_file()
+        server.close()
+        assert not shared.path.parent.exists()
+
+
+class TestQrNaPagina:
+    def test_rota_qr_retorna_svg(self, srv):
+        pytest.importorskip("qrcode")
+        status, headers, body = _req(srv, "GET", "/qr.svg")
+        assert status == 200
+        assert headers["Content-Type"] == "image/svg+xml"
+        assert body.startswith(b"<svg")
+
+    def test_qr_sem_biblioteca_retorna_404(self, srv, monkeypatch):
+        from lash.plugins.share import core
+
+        def missing(url):
+            raise ImportError("No module named 'qrcode'")
+        monkeypatch.setattr(core, "qr_svg", missing)
+        assert _req(srv, "GET", "/qr.svg")[0] == 404
+
+    def test_pagina_mostra_so_o_qr(self, srv):
+        html = _req(srv, "GET", "/")[2].decode("utf-8")
+        assert 'src="/qr.svg"' in html
+        assert "scan to connect" not in html
+
+
+@pytest.fixture
+def quiet(tmp_path):
+    """Server that never renames devices, so the log only has what each test does."""
+    import threading
+    from lash.plugins.share.core import ShareServer
+    server = ShareServer(tmp_path / "files", host_ip=HOST, port=0,
+                         resolve_name=lambda ip: None)
+    threading.Thread(target=server.serve_forever, daemon=True).start()
+    yield server
+    server.shutdown()
+    server.close()
+
+
+def _logs(srv, after=None, source="127.0.0.2"):
+    import json
+    path = "/api/state" + ("" if after is None else f"?log={after}")
+    return json.loads(_req(srv, "GET", path, source=source)[2])["logs"]
+
+
+class TestLogNaPagina:
+    def test_estado_traz_logs_com_hora(self, quiet):
+        import re
+        logs = _logs(quiet)
+        assert len(logs) == 1
+        assert re.match(r"^\d\d:\d\d \[\+\] Unknown · Browser \(127\.0\.0\.2\) connected$",
+                        logs[0]["text"])
+
+    def test_log_traz_so_linhas_depois_do_id(self, quiet):
+        first = _logs(quiet)
+        logs = _logs(quiet, after=first[-1]["id"], source="127.0.0.3")
+        assert [line["text"][6:] for line in logs] == [
+            "[+] Unknown · Browser (127.0.0.3) connected"]
+
+    def test_log_invalido_traz_tudo(self, quiet):
+        _logs(quiet)
+        assert len(_logs(quiet, after="abc")) == 1
+
+    def test_log_da_pagina_registra_mesmo_sem_verbose(self, tmp_path):
+        import socket
+        from lash.plugins.share.core import ShareServer
+        server = ShareServer(tmp_path / "files", host_ip=HOST, port=0)
+        server.share_file(_original(tmp_path))
+        server.close()
+        assert [line["text"][6:] for line in server.log.since(0)] == [
+            f"[>] {socket.gethostname()} shared nota.txt (5 B)"]
+
+    def test_pagina_tem_bloco_de_log(self, srv):
+        html = _req(srv, "GET", "/")[2].decode("utf-8")
+        for text in ("server log", "&log=", "typeLogs"):
+            assert text in html

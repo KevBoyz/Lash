@@ -6,9 +6,12 @@ import shutil
 import socket
 import socketserver
 import sys
+import tempfile
 import threading
 import time
 import uuid
+import zipfile
+from collections import deque
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -27,6 +30,7 @@ DEFAULT_PORT = 8765
 CHUNK = 65536
 ONLINE_TIMEOUT = 10.0
 RELAY_TIMEOUT = 60.0
+LOG_LIMIT = 200
 _DRAIN_LIMIT = 1 << 20
 _PAGE = Path(__file__).parent / "static" / "index.html"
 _LOOPBACK = {"127.0.0.1", "::1"}
@@ -52,6 +56,20 @@ def new_file_id() -> str:
     return uuid.uuid4().hex[:12]
 
 
+def zip_folder(folder: Path, target: Path) -> str:
+    """Zip the files of `folder` without compression, under a root named after it.
+
+    Same layout as the zip the page builds. Returns the zip name, e.g. 'photos.zip'.
+    """
+    root = folder.resolve()
+    name = root.name or "folder"
+    files = sorted(path for path in root.rglob("*") if path.is_file())
+    with zipfile.ZipFile(target, "w", zipfile.ZIP_STORED, strict_timestamps=False) as zf:
+        for path in files:
+            zf.write(path, f"{name}/{path.relative_to(root).as_posix()}")
+    return name + ".zip"
+
+
 @dataclass
 class Device:
     ip: str
@@ -74,9 +92,10 @@ class SharedFile:
 class ShareState:
     """Devices, files and who downloaded what in one share session. Thread-safe."""
 
-    def __init__(self, host_ip: str = "", p2p: bool = False) -> None:
+    def __init__(self, host_ip: str = "", p2p: bool = False, host_name: str = "") -> None:
         self._lock = threading.Lock()
         self._host_ip = host_ip
+        self._host_name = host_name
         self._p2p = p2p
         self._host_page = ""
         self._devices: dict[str, Device] = {}
@@ -104,7 +123,10 @@ class ShareState:
 
     def _name(self, ip: str) -> str:
         device = self._devices.get(ip)
-        return device.name if device else ip
+        if device is not None:
+            return device.name
+        # Files shared from the terminal come from the host before its page ever connects.
+        return self._host_name if ip == self._host_ip and self._host_name else ip
 
     def add_file(self, file_id: str, name: str, size: int, uploader_ip: str,
                  path: Path | None, kind: str = "stored", page: str = "") -> SharedFile:
@@ -195,6 +217,27 @@ class ShareState:
             }
 
 
+class EventLog:
+    """Last log lines of the session with growing ids, for the page's terminal. Thread-safe."""
+
+    def __init__(self, limit: int = LOG_LIMIT) -> None:
+        self._lock = threading.Lock()
+        self._lines: deque[tuple[int, str]] = deque(maxlen=limit)
+        # Ids start at the clock (ms), so they keep growing across runs:
+        # a page left open from an earlier run still gets the new lines.
+        self._next = time.time_ns() // 1_000_000
+
+    def add(self, text: str) -> None:
+        with self._lock:
+            self._lines.append((self._next, text))
+            self._next += 1
+
+    def since(self, after: int) -> list[dict]:
+        """Lines with an id greater than `after` (0 = all)."""
+        with self._lock:
+            return [{"id": i, "text": text} for i, text in self._lines if i > after]
+
+
 class _PendingSend:
     def __init__(self, stream: BinaryIO, size: int):
         self.stream = stream
@@ -282,6 +325,21 @@ def render_qr(url: str) -> str:
     return buf.getvalue()
 
 
+def qr_svg(url: str) -> str:
+    """QR code of the url as an SVG image: the page's green modules on black."""
+    import qrcode
+    qr = qrcode.QRCode(border=1)  # the page's black around it completes the quiet zone
+    qr.add_data(url)
+    qr.make(fit=True)
+    matrix = qr.get_matrix()
+    size = len(matrix)
+    modules = "".join(f"M{x} {y}h1v1h-1z"
+                      for y, row in enumerate(matrix) for x, dark in enumerate(row) if dark)
+    return (f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {size} {size}" '
+            f'shape-rendering="crispEdges"><rect width="{size}" height="{size}" fill="#000"/>'
+            f'<path d="{modules}" fill="#00ff41"/></svg>')
+
+
 class _HttpServer(ThreadingHTTPServer):
     daemon_threads = True
     # On Windows SO_REUSEADDR lets a second server bind a port already in use.
@@ -347,8 +405,10 @@ class _Handler(BaseHTTPRequestHandler):
         path, query, ip = self._route()
         if path == "/":
             self._send(200, _PAGE.read_bytes(), "text/html; charset=utf-8")
+        elif path == "/qr.svg":
+            self._qr()
         elif path == "/api/state":
-            self._state(query.get("page", ""), ip)
+            self._state(query, ip)
         elif match := _FILE_ROUTE.match(path):
             self._download(match.group(1), ip)
         else:
@@ -375,13 +435,26 @@ class _Handler(BaseHTTPRequestHandler):
         else:
             self._send_json(404, {"error": "not found"})
 
-    def _state(self, page: str, ip: str) -> None:
-        state = self.app.state
+    def _state(self, query: dict[str, str], ip: str) -> None:
+        app = self.app
+        page = query.get("page", "")
         if page and self._is_host(ip):
-            state.set_host_page(page)
+            app.state.set_host_page(page)
+        try:
+            last_log = int(query.get("log", "0"))
+        except ValueError:
+            last_log = 0
         now = time.monotonic()
-        state.prune_offers(now)
-        self._send_json(200, state.snapshot(ip, now))
+        app.state.prune_offers(now)
+        self._send_json(200, {**app.state.snapshot(ip, now), "logs": app.log.since(last_log)})
+
+    def _qr(self) -> None:
+        try:
+            svg = qr_svg(self.app.url)
+        except ImportError:
+            self._send_json(404, {"error": "qrcode not installed"})
+            return
+        self._send(200, svg.encode("utf-8"), "image/svg+xml")
 
     def _offer(self, query: dict[str, str], ip: str) -> None:
         """p2p host announces a file that stays in its browser until someone asks."""
@@ -401,7 +474,7 @@ class _Handler(BaseHTTPRequestHandler):
         app.state.set_host_page(page)
         shared = app.state.add_file(new_file_id(), safe_filename(name), size, ip, None,
                                     kind="offer", page=page)
-        app.on_event(ShareEvent("shared", app.state.device_name(ip), ip, shared.name, size))
+        app.emit(ShareEvent("shared", app.state.device_name(ip), ip, shared.name, size))
         self._send_json(201, {"id": shared.id, "name": shared.name, "size": shared.size})
 
     def _relay_upload(self, name: str, ip: str) -> None:
@@ -486,7 +559,7 @@ class _Handler(BaseHTTPRequestHandler):
             self._send_json(400, {"error": "incomplete upload"})
             return
         shared = app.state.add_file(file_id, safe_filename(name), length, ip, target)
-        app.on_event(ShareEvent("sent", app.state.device_name(ip), ip, shared.name, length))
+        app.emit(ShareEvent("sent", app.state.device_name(ip), ip, shared.name, length))
         self._send_json(201, {"id": shared.id, "name": shared.name, "size": shared.size})
 
     def _download(self, file_id: str, ip: str) -> None:
@@ -498,16 +571,27 @@ class _Handler(BaseHTTPRequestHandler):
         if shared is None:
             self._send_json(410, {"error": "already downloaded"})
             return
-        if shared.kind == "stored":
-            self._send_file_headers(shared.name, shared.size)
+        ok = (self._send_stored(shared) if shared.kind == "stored"
+              else self._pipe_download(shared, ip))
+        if ok:
+            self.app.emit(ShareEvent("downloaded", state.device_name(ip), ip, shared.name))
+
+    def _send_stored(self, shared: SharedFile) -> bool:
+        """Stream a file from disk. False if it is gone or the client left."""
+        try:
+            src = shared.path.open("rb")
+        except OSError:
+            # A file shared from the terminal was moved or deleted after startup.
+            self.app.state.remove_file(shared.id)
+            self._send_json(404, {"error": "file no longer exists"})
+            return False
+        with src:
             try:
-                with shared.path.open("rb") as src:
-                    shutil.copyfileobj(src, self.wfile, CHUNK)
+                self._send_file_headers(shared.name, os.fstat(src.fileno()).st_size)
+                shutil.copyfileobj(src, self.wfile, CHUNK)
             except ConnectionError:
-                return
-        elif not self._pipe_download(shared, ip):
-            return
-        self.app.on_event(ShareEvent("downloaded", state.device_name(ip), ip, shared.name))
+                return False
+        return True
 
     def _pipe_download(self, shared: SharedFile, ip: str) -> bool:
         """Stream a p2p file from the browser that holds it. False if it never came."""
@@ -532,7 +616,7 @@ class _Handler(BaseHTTPRequestHandler):
             pipe.close()
         if ok and shared.kind == "relay":
             uploader = shared.uploader_ip
-            app.on_event(ShareEvent("sent", app.state.device_name(uploader), uploader,
+            app.emit(ShareEvent("sent", app.state.device_name(uploader), uploader,
                                     shared.name, shared.size))
         return ok
 
@@ -567,11 +651,13 @@ class ShareServer:
         self.host_ip = host_ip
         self.p2p = p2p
         self.storage = None if p2p else storage
-        self.on_event = on_event or (lambda event: None)
+        self._on_event = on_event or (lambda event: None)
+        self.log = EventLog()
         self.resolve_name = resolve_name or resolve_hostname
         self.relay_timeout = relay_timeout
         self.relay = Relay()
-        self.state = ShareState(host_ip, p2p)
+        self.state = ShareState(host_ip, p2p, socket.gethostname())
+        self._temp: Path | None = None
         self._httpd = _HttpServer(("0.0.0.0", port), self)
         self.port = self._httpd.server_address[1]
         if self.storage is not None:
@@ -581,13 +667,18 @@ class ShareServer:
     def url(self) -> str:
         return f"http://{self.host_ip}:{self.port}"
 
+    def emit(self, event: ShareEvent) -> None:
+        """Record an event in the page's log and hand it to the on_event callback."""
+        self.log.add(str(event))
+        self._on_event(event)
+
     def seen(self, ip: str, user_agent: str) -> None:
         """Register a request from `ip`, logging new devices right away."""
         if not self.state.touch(ip, device_name_from_ua(user_agent), time.monotonic()):
             return
         if ip == self.host_ip:
             self.state.set_name(ip, socket.gethostname())
-        self.on_event(ShareEvent("connected", self.state.device_name(ip), ip))
+        self.emit(ShareEvent("connected", self.state.device_name(ip), ip))
         if ip != self.host_ip:
             # Reverse DNS can take seconds on Windows: resolve without holding the request.
             threading.Thread(target=self._identify, args=(ip,), daemon=True).start()
@@ -597,7 +688,31 @@ class ShareServer:
         previous = self.state.device_name(ip)
         if name and name != previous:
             self.state.set_name(ip, name)
-            self.on_event(ShareEvent("renamed", name, ip, previous=previous))
+            self.emit(ShareEvent("renamed", name, ip, previous=previous))
+
+    def share_file(self, path: Path, name: str = "") -> SharedFile:
+        """Send a file of this computer to every device, as if the host page sent it.
+
+        The file is read from where it is: nothing is copied and it is never deleted.
+        """
+        shared = self.state.add_file(new_file_id(), safe_filename(name or path.name),
+                                     path.stat().st_size, self.host_ip, path)
+        self.emit(ShareEvent("shared", self.state.device_name(self.host_ip), self.host_ip,
+                             shared.name, shared.size))
+        return shared
+
+    def share_folder(self, folder: Path) -> SharedFile:
+        """Zip a folder of this computer and send the zip to every device."""
+        target = self._scratch() / new_file_id()
+        return self.share_file(target, zip_folder(folder, target))
+
+    def _scratch(self) -> Path:
+        """Folder for generated zips: the storage, or a temp folder in p2p mode."""
+        if self.storage is not None:
+            return self.storage
+        if self._temp is None:
+            self._temp = Path(tempfile.mkdtemp(prefix="lash-share-"))
+        return self._temp
 
     def serve_forever(self) -> None:
         self._httpd.serve_forever()
@@ -609,3 +724,5 @@ class ShareServer:
         self._httpd.server_close()
         if self.storage is not None:
             cleanup_storage(self.storage)
+        if self._temp is not None:
+            cleanup_storage(self._temp)

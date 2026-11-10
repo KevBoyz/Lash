@@ -259,3 +259,116 @@ class TestRenderQr:
         lines = render_qr("http://192.168.0.10:8765").splitlines()
         assert len(lines) >= 10
         assert len({len(line) for line in lines}) == 1
+
+
+class TestQrSvg:
+    def test_gera_svg_quadrado_com_modulos(self):
+        import pytest
+        pytest.importorskip("qrcode")
+        from lash.plugins.share.core import qr_svg
+        svg = qr_svg("http://192.168.0.10:8765")
+        assert svg.startswith("<svg") and svg.endswith("</svg>")
+        size = int(svg.split('viewBox="0 0 ')[1].split(" ")[0])
+        assert size >= 21 + 2  # menor QR (21 módulos) + borda de 1 dos dois lados
+        assert svg.count("h1v1h-1z") > 50
+
+    def test_modulos_verdes_sobre_fundo_preto(self):
+        import pytest
+        pytest.importorskip("qrcode")
+        from lash.plugins.share.core import qr_svg
+        svg = qr_svg("http://192.168.0.10:8765")
+        assert 'fill="#000"/>' in svg.split("<path")[0]
+        assert svg.split("<path")[1].endswith('fill="#00ff41"/></svg>')
+
+
+class TestZipFolder:
+    def _folder(self, tmp_path):
+        folder = tmp_path / "fotos"
+        (folder / "sub").mkdir(parents=True)
+        (folder / "a.txt").write_bytes(b"aaa")
+        (folder / "sub" / "b.txt").write_bytes(b"bb")
+        return folder
+
+    def test_zip_tem_pasta_raiz_e_conteudo(self, tmp_path):
+        import zipfile
+        from lash.plugins.share.core import zip_folder
+        target = tmp_path / "out"
+        assert zip_folder(self._folder(tmp_path), target) == "fotos.zip"
+        with zipfile.ZipFile(target) as zf:
+            assert sorted(zf.namelist()) == ["fotos/a.txt", "fotos/sub/b.txt"]
+            assert zf.read("fotos/sub/b.txt") == b"bb"
+
+    def test_zip_sem_compressao(self, tmp_path):
+        import zipfile
+        from lash.plugins.share.core import zip_folder
+        target = tmp_path / "out"
+        zip_folder(self._folder(tmp_path), target)
+        with zipfile.ZipFile(target) as zf:
+            assert {info.compress_type for info in zf.infolist()} == {zipfile.ZIP_STORED}
+
+    def test_aceita_arquivo_anterior_a_1980(self, tmp_path):
+        import os
+        import zipfile
+        from lash.plugins.share.core import zip_folder
+        folder = self._folder(tmp_path)
+        os.utime(folder / "a.txt", (0, 0))
+        target = tmp_path / "out"
+        zip_folder(folder, target)
+        with zipfile.ZipFile(target) as zf:
+            assert zf.read("fotos/a.txt") == b"aaa"
+
+    def test_pasta_vazia_gera_zip_vazio(self, tmp_path):
+        import zipfile
+        from lash.plugins.share.core import zip_folder
+        (tmp_path / "vazia").mkdir()
+        target = tmp_path / "out"
+        assert zip_folder(tmp_path / "vazia", target) == "vazia.zip"
+        with zipfile.ZipFile(target) as zf:
+            assert zf.namelist() == []
+
+
+class TestEventLog:
+    def test_since_zero_traz_tudo_em_ordem(self):
+        from lash.plugins.share.core import EventLog
+        log = EventLog()
+        log.add("a")
+        log.add("b")
+        assert [line["text"] for line in log.since(0)] == ["a", "b"]
+
+    def test_since_traz_so_depois_do_id(self):
+        from lash.plugins.share.core import EventLog
+        log = EventLog()
+        log.add("a")
+        log.add("b")
+        first = log.since(0)[0]["id"]
+        assert [line["text"] for line in log.since(first)] == ["b"]
+
+    def test_guarda_so_as_ultimas_linhas(self):
+        from lash.plugins.share.core import EventLog
+        log = EventLog(limit=2)
+        for text in ("a", "b", "c"):
+            log.add(text)
+        assert [line["text"] for line in log.since(0)] == ["b", "c"]
+
+    def test_nova_execucao_continua_depois_do_ultimo_id_da_anterior(self):
+        import time
+        from lash.plugins.share.core import EventLog
+        old = EventLog()
+        old.add("a")
+        last = old.since(0)[-1]["id"]
+        time.sleep(0.01)
+        new = EventLog()
+        new.add("b")
+        assert [line["text"] for line in new.since(last)] == ["b"]
+
+
+class TestNomeDoHost:
+    def test_arquivo_do_host_usa_nome_da_maquina_antes_da_pagina_abrir(self, tmp_path):
+        from lash.plugins.share.core import ShareState
+        state = ShareState(A, host_name="meu-pc")
+        state.add_file("f1", "a.txt", 5, A, tmp_path / "f1")
+        assert state.snapshot(B, 0.0)["available"][0]["from"] == "meu-pc"
+
+    def test_ip_desconhecido_que_nao_e_host_continua_ip(self):
+        from lash.plugins.share.core import ShareState
+        assert ShareState(A, host_name="meu-pc").device_name(B) == B

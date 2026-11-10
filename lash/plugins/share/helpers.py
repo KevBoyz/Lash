@@ -1,7 +1,10 @@
 import re
 import socket
+import time
 import unicodedata
-from dataclasses import dataclass
+from collections.abc import Iterable
+from dataclasses import dataclass, field
+from pathlib import Path
 from urllib.parse import quote
 from rich.text import Text
 
@@ -40,13 +43,15 @@ class ShareEvent:
     file: str = ""
     size: int = 0
     previous: str = ""  # old device name, for "renamed"
+    at: float = field(default_factory=time.time)  # when it happened (epoch seconds)
 
     def __str__(self) -> str:
         return format_event(self).plain
 
 
 def format_event(event: ShareEvent) -> Text:
-    """Colored log line of an event."""
+    """Colored log line of an event, starting with its time: 'hh:mm [+] ...'."""
+    clock = time.strftime("%H:%M ", time.localtime(event.at))
     tag, style = _EVENT_TAGS[event.kind]
     ip = (f"({event.ip})", "dim")
     if event.kind == "connected":
@@ -58,7 +63,7 @@ def format_event(event: ShareEvent) -> Text:
     else:
         parts = [(event.device, "bold"), f" {event.kind} ", (event.file, "bright_white"),
                  " ", (f"({format_size(event.size)})", "dim")]
-    return Text.assemble((tag, style), " ", *parts)
+    return Text.assemble(clock, (tag, style), " ", *parts)
 
 
 def device_name_from_ua(user_agent: str) -> str:
@@ -94,6 +99,12 @@ def safe_filename(name: str) -> str:
     base = re.split(r"[/\\]", name)[-1]
     base = _FORBIDDEN.sub("_", base).rstrip(". ")
     return (base or "file")[:_MAX_NAME]
+
+
+def split_paths(values: Iterable[str]) -> list[Path]:
+    """Paths of comma-separated option values, without blanks or repeats."""
+    parts = (part.strip() for value in values for part in value.split(","))
+    return list(dict.fromkeys(Path(part).expanduser() for part in parts if part))
 
 
 def format_size(size: int) -> str:

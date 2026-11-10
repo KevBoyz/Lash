@@ -115,19 +115,36 @@ class TestFormatSize:
         assert format_size(5 * 1024 ** 3) == "5.0 GB"
 
 
+def _at(hour, minute):
+    import time
+    return time.mktime((2026, 11, 10, hour, minute, 30, 0, 0, -1))
+
+
 class TestShareEvent:
     def test_texto_de_cada_tipo(self):
         from lash.plugins.share.helpers import ShareEvent
-        assert str(ShareEvent("connected", "loq", "192.168.0.3")) == \
-            "[+] loq (192.168.0.3) connected"
-        assert str(ShareEvent("renamed", "MOTO-G", "192.168.0.2", previous="Android · Chrome")) == \
-            "[~] Android · Chrome (192.168.0.2) identified as MOTO-G"
-        assert str(ShareEvent("sent", "MOTO-G", "192.168.0.2", file="a.txt", size=5)) == \
-            "[>] MOTO-G sent a.txt (5 B)"
-        assert str(ShareEvent("shared", "loq", "192.168.0.3", file="a.txt", size=1536)) == \
-            "[>] loq shared a.txt (1.5 KB)"
-        assert str(ShareEvent("downloaded", "loq", "192.168.0.3", file="a.txt")) == \
-            "[<] loq downloaded a.txt"
+        at = _at(14, 5)
+        assert str(ShareEvent("connected", "loq", "192.168.0.3", at=at)) == \
+            "14:05 [+] loq (192.168.0.3) connected"
+        assert str(ShareEvent("renamed", "MOTO-G", "192.168.0.2", previous="Android · Chrome",
+                              at=at)) == \
+            "14:05 [~] Android · Chrome (192.168.0.2) identified as MOTO-G"
+        assert str(ShareEvent("sent", "MOTO-G", "192.168.0.2", file="a.txt", size=5, at=at)) == \
+            "14:05 [>] MOTO-G sent a.txt (5 B)"
+        assert str(ShareEvent("shared", "loq", "192.168.0.3", file="a.txt", size=1536, at=at)) == \
+            "14:05 [>] loq shared a.txt (1.5 KB)"
+        assert str(ShareEvent("downloaded", "loq", "192.168.0.3", file="a.txt", at=at)) == \
+            "14:05 [<] loq downloaded a.txt"
+
+    def test_hora_com_dois_digitos_e_24h(self):
+        from lash.plugins.share.helpers import ShareEvent
+        assert str(ShareEvent("connected", "loq", "1.2.3.4", at=_at(9, 7))).startswith("09:07 ")
+        assert str(ShareEvent("connected", "loq", "1.2.3.4", at=_at(23, 59))).startswith("23:59 ")
+
+    def test_hora_padrao_e_o_momento_do_evento(self):
+        import re
+        from lash.plugins.share.helpers import ShareEvent
+        assert re.match(r"^\d\d:\d\d \[\+\] ", str(ShareEvent("connected", "loq", "1.2.3.4")))
 
 
 class TestFormatEvent:
@@ -156,3 +173,24 @@ class TestContentDisposition:
     def test_troca_aspas_no_fallback(self):
         from lash.plugins.share.helpers import content_disposition
         assert content_disposition('a"b.txt').startswith('attachment; filename="a_b.txt"')
+
+
+class TestSplitPaths:
+    def test_separa_por_virgula_e_tira_espacos(self):
+        from pathlib import Path
+        from lash.plugins.share.helpers import split_paths
+        assert split_paths(["a.txt, b/c.pdf"]) == [Path("a.txt"), Path("b/c.pdf")]
+
+    def test_junta_opcao_repetida_e_ignora_vazios_e_repetidos(self):
+        from pathlib import Path
+        from lash.plugins.share.helpers import split_paths
+        assert split_paths(["a.txt,,", "b.txt, a.txt"]) == [Path("a.txt"), Path("b.txt")]
+
+    def test_expande_til(self):
+        from pathlib import Path
+        from lash.plugins.share.helpers import split_paths
+        assert split_paths(["~/x.txt"]) == [Path.home() / "x.txt"]
+
+    def test_sem_valores_retorna_lista_vazia(self):
+        from lash.plugins.share.helpers import split_paths
+        assert split_paths(()) == []

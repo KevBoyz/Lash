@@ -1,6 +1,6 @@
 # Lash — Release Notes
 
-## v1.3.2 — Todo TUI, net defaults and plugin cleanup *(work in progress)*
+## v1.3.2 — Todo TUI, net defaults and plugin cleanup 
 
 - **macro**: preserve virtual key codes when recording shortcuts (Ctrl/Alt/Shift/Windows, punctuation and numpad); recover legacy Ctrl+A–Z recordings and release held keys when playback ends, stops or fails
 - **todo**: new Textual TUI plugin (replaces old `work`) — pending/completed/performance/config tabs, time tracking with pause/resume, 7-day bar chart, persistent config file

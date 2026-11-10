@@ -128,6 +128,14 @@ No test execution during development — run only when explicitly requested.
 | spider  | hacking       | spider                |
 | random  | miscellaneous | random (core)         |
 
+## Release Notes
+
+`RELEASE_NOTES.md` é escrito para o usuário, não para devs:
+
+- Linguagem simples e não técnica: chamar atenção para a novidade e descrevê-la em 1–2 frases.
+- Sem detalhes de implementação (rotas, formatos, nomes de funções, arquivos, flags internas).
+- Coisas mínimas não entram: ajustes visuais, textos/mensagens, pequenas opções, correções triviais.
+
 ## Executando comandos 
 
 Nunca tente instalar coisas no meu python global quando um comando não rodar. Todos os comandos python devem ser executados no .venv do projeto.  Execute testes usando um comando que segue o padrão:

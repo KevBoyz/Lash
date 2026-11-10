@@ -18,6 +18,7 @@ keywords = [
     "screen-recorder", "macro", "automation", "device", "monitor",
     "calculator", "productivity", "news", "rss", "web-scraping", "crawler",
     "remote", "tasks", "calendar", "multimedia", "security", "hacking",
+    "share",
 ]
 classifiers = [
     "Development Status :: 5 - Production/Stable",
@@ -71,6 +72,7 @@ all = [
     "dashing>=0.2.0",
     "plyer>=2.1.0",
     "textual>=0.80.0",
+    "qrcode>=7.4",
 ]
 
 [project.urls]
@@ -85,6 +87,7 @@ where = ["."]
 
 [tool.setuptools.package-data]
 "*" = ["manifest.json"]
+"lash.plugins.share" = ["static/*.html"]
 
 [dependency-groups]
 dev = [

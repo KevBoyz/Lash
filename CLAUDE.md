@@ -123,6 +123,7 @@ No test execution during development — run only when explicitly requested.
 | todo    | productivity  | todo (TUI)            |
 | sched   | productivity  | sched                 |
 | web     | web tools     | web                   |
+| share   | web tools     | share                 |
 | crack   | hacking       | crack (core)          |
 | spider  | hacking       | spider                |
 | random  | miscellaneous | random (core)         |

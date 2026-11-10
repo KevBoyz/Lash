@@ -1,0 +1,14 @@
+{
+  "name": "share",
+  "category": "web tools",
+  "description": "Share files between devices on the local network",
+  "commands": {
+    "share": {
+      "module": "lash.plugins.share.cli:share",
+      "description": "Start a LAN file-sharing page with QR code access",
+      "requires": [
+        "qrcode>=7.4"
+      ]
+    }
+  }
+}

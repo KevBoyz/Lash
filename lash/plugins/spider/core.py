@@ -67,22 +67,64 @@ def discovery_responder(port: int, *, discovery_port: int = DISCOVERY_PORT):
             thread.join(timeout=1)
 
 
+def _local_ipv4s() -> set[str]:
+    """This host's own IPv4 addresses, loopback included."""
+    ips = {"127.0.0.1"}
+    try:
+        ips.update(socket.gethostbyname_ex(socket.gethostname())[2])
+    except OSError:
+        pass
+    return ips
+
+
+def _collapse_same_host(servers: set[tuple[str, int]]) -> list[tuple[str, int]]:
+    """Drop a same-machine server's LAN-IP entry when loopback also found it.
+
+    A server on this host answers both the loopback probe (127.0.0.1) and the
+    broadcast (its LAN IP), so without this the seeker would open two passive
+    clients to the one server. Remote servers keep a non-local IP and are
+    never collapsed.
+    """
+    loopback_ports = {port for ip, port in servers if ip == "127.0.0.1"}
+    if not loopback_ports:
+        return sorted(servers)
+    local = _local_ipv4s()
+    return sorted(
+        (ip, port) for ip, port in servers
+        if not (ip != "127.0.0.1" and ip in local and port in loopback_ports)
+    )
+
+
 def discover_servers(
     timeout: float = DISCOVERY_TIMEOUT,
     *,
     discovery_port: int = DISCOVERY_PORT,
     broadcast_address: str = "255.255.255.255",
 ) -> list[tuple[str, int]]:
-    """Find endpoint pairs from replies to this round's IPv4 broadcast."""
+    """Find endpoint pairs from replies to this round's discovery query.
+
+    The query goes to the IPv4 limited broadcast and to loopback. On a
+    multi-homed host (Wi-Fi plus Hyper-V/WSL/VPN adapters) the limited
+    broadcast leaves through a single interface and may never reach a server
+    — or the host's own listener — on another, so the loopback probe keeps
+    same-machine discovery reliable regardless of adapter routing.
+    """
     nonce = secrets.token_hex(16)
     query = json.dumps({"lash": "discover", "version": 1,
                         "nonce": nonce}).encode("utf-8")
+    targets = [broadcast_address]
+    if "127.0.0.1" not in targets:
+        targets.append("127.0.0.1")
     servers: set[tuple[str, int]] = set()
     deadline = time.monotonic() + timeout
     with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock:
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
         sock.bind(("0.0.0.0", 0))
-        sock.sendto(query, (broadcast_address, discovery_port))
+        for target in targets:
+            try:
+                sock.sendto(query, (target, discovery_port))
+            except OSError:
+                continue
         while (remaining := deadline - time.monotonic()) > 0:
             sock.settimeout(remaining)
             try:
@@ -103,7 +145,7 @@ def discover_servers(
                     and message.get("nonce") == nonce
                     and type(port) is int and 1 <= port <= 65535):
                 servers.add((ip, port))
-    return sorted(servers)
+    return _collapse_same_host(servers)
 
 
 # ── web ─────────────────────────────────────────────────────────────────

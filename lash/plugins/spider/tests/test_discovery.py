@@ -65,7 +65,62 @@ class TestDiscovery:
         assert found == [("192.168.1.10", 8080), ("192.168.1.11", 9090)]
         sock.setsockopt.assert_called_once_with(
             socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
-        assert sock.sendto.call_args.args[1] == ("255.255.255.255", 45873)
+        sent_targets = [c.args[1] for c in sock.sendto.call_args_list]
+        assert ("255.255.255.255", 45873) in sent_targets
+        assert ("127.0.0.1", 45873) in sent_targets
+
+    def test_probes_loopback_so_same_machine_is_found(self):
+        from lash.plugins.spider.core import (
+            discover_servers, discovery_responder,
+        )
+
+        # Server reachable only via loopback (no usable broadcast route);
+        # discovery must still find it because it also probes 127.0.0.1.
+        with discovery_responder(54321, discovery_port=0) as udp_port:
+            found = discover_servers(0.2, discovery_port=udp_port)
+        assert ("127.0.0.1", 54321) in found
+
+    def test_same_server_on_loopback_and_lan_ip_collapses_to_one(self):
+        import json
+        import socket
+        from unittest.mock import patch
+        from lash.plugins.spider.core import discover_servers
+
+        valid = {"lash": "web", "version": 1, "nonce": "query", "port": 8080}
+        local_ip = socket.gethostbyname(socket.gethostname())
+        replies = [
+            (json.dumps(valid).encode(), ("127.0.0.1", 45873)),
+            (json.dumps(valid).encode(), (local_ip, 45873)),
+            socket.timeout(),
+        ]
+        with patch("lash.plugins.spider.core.socket.socket") as factory, \
+                patch("lash.plugins.spider.core.secrets.token_hex",
+                      return_value="query"):
+            sock = factory.return_value.__enter__.return_value
+            sock.recvfrom.side_effect = replies
+            found = discover_servers()
+        # Collapsed to a single loopback entry, not two clients to one server.
+        assert found == [("127.0.0.1", 8080)]
+
+    def test_remote_server_sharing_port_with_local_is_kept(self):
+        import json
+        import socket
+        from unittest.mock import patch
+        from lash.plugins.spider.core import discover_servers
+
+        valid = {"lash": "web", "version": 1, "nonce": "query", "port": 8080}
+        replies = [
+            (json.dumps(valid).encode(), ("127.0.0.1", 45873)),
+            (json.dumps(valid).encode(), ("192.168.1.50", 45873)),
+            socket.timeout(),
+        ]
+        with patch("lash.plugins.spider.core.socket.socket") as factory, \
+                patch("lash.plugins.spider.core.secrets.token_hex",
+                      return_value="query"):
+            sock = factory.return_value.__enter__.return_value
+            sock.recvfrom.side_effect = replies
+            found = discover_servers()
+        assert found == [("127.0.0.1", 8080), ("192.168.1.50", 8080)]
 
     def test_discovery_has_deadline_even_with_unrelated_traffic(self):
         from unittest.mock import patch

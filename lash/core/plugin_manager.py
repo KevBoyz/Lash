@@ -1,4 +1,3 @@
-import re
 import shutil
 import subprocess
 import sys
@@ -8,10 +7,6 @@ from rich.console import Console
 from lash import plugins as plugin_registry
 
 _console = Console()
-
-
-def _package_name(requirement):
-    return re.split(r"[><=!]", requirement)[0].strip()
 
 
 def _detect_installer(requires):
@@ -91,23 +86,27 @@ def make_download_command(*, plugins_dir=None, state_file=None):  # noqa: C901
 
 
 def _install_plugin(plugin_name, available, state_file):  # noqa: C901
-    already_installed = set(
-        plugin_registry._load_state(state_file).get(
-            "installed_commands", {}).keys())
+    state = plugin_registry._load_state(state_file)
+    installed_cmds = state.get("installed_commands", {})
+    removed_cmds = set(state.get("removed_commands", []))
+    manifest = available[plugin_name]
+    is_core = manifest.get("core", False)
     commands_to_install = {
         cmd_name: cmd_info
-        for cmd_name, cmd_info in available[plugin_name]["commands"].items()
-        if cmd_name not in already_installed
+        for cmd_name, cmd_info in manifest["commands"].items()
+        if not plugin_registry.is_command_active(
+            cmd_name, cmd_info, is_core, removed_cmds)
     }
     if not commands_to_install:
         click.echo(f"Plugin '{plugin_name}' already installed.")
         return
 
-    requires = list(
+    requires = sorted(
         {
             req
             for cmd_info in commands_to_install.values()
             for req in cmd_info.get("requires", [])
+            if not plugin_registry.is_package_installed(req)
         }
     )
 
@@ -130,11 +129,17 @@ def _install_plugin(plugin_name, available, state_file):  # noqa: C901
                 f"Dependency install failed:\n{result.stderr}"
             )
 
+    # Record only deps lash installed: pre-existing ones are never
+    # uninstalled by `plugin remove`.
     for cmd_name, cmd_info in commands_to_install.items():
+        previous = installed_cmds.get(cmd_name, {}).get("requires", [])
+        installed_now = [
+            req for req in cmd_info.get("requires", []) if req in requires
+        ]
         plugin_registry.mark_command_installed(
             cmd_name,
             plugin_name,
-            cmd_info.get("requires", []),
+            sorted(set(previous) | set(installed_now)),
             state_file=state_file,
         )
     click.echo(f"Installed: {plugin_name}")
@@ -145,21 +150,16 @@ download = make_download_command()
 
 def _list_installed_plugins(available, state_file):
     state = plugin_registry._load_state(state_file)
-    installed_cmds = state.get("installed_commands", {})
     removed_cmds = set(state.get("removed_commands", []))
-    installed = []
-    for name, manifest in available.items():
-        is_core = manifest.get("core", False)
-        if is_core:
-            any_installed = any(
-                cmd not in removed_cmds for cmd in manifest["commands"])
-            if any_installed:
-                installed.append(name)
-        else:
-            any_installed = any(
-                cmd in installed_cmds for cmd in manifest["commands"])
-            if any_installed:
-                installed.append(name)
+    installed = [
+        name
+        for name, manifest in available.items()
+        if any(
+            plugin_registry.is_command_active(
+                cmd_name, cmd_info, manifest.get("core", False), removed_cmds)
+            for cmd_name, cmd_info in manifest["commands"].items()
+        )
+    ]
     if installed:
         click.echo(f"Installed: {', '.join(sorted(installed))}")
     else:
@@ -206,27 +206,27 @@ def _collect_remove_commands(available, plugins, state_file):
             _list_installed_plugins(available, state_file)
             raise SystemExit(1)
         manifest = available[plugin_name]
-        if manifest.get("core", False):
-            plugin_installed = {
-                c for c in manifest["commands"].keys() if c not in removed_cmds
-            }
-        else:
-            plugin_installed = {
-                k for k, v in installed_cmds.items() if v["plugin"] == plugin_name}
-        commands_to_remove.update(plugin_installed)
+        is_core = manifest.get("core", False)
+        commands_to_remove.update(
+            cmd_name
+            for cmd_name, cmd_info in manifest["commands"].items()
+            if cmd_name in installed_cmds
+            or plugin_registry.is_command_active(
+                cmd_name, cmd_info, is_core, removed_cmds)
+        )
     return commands_to_remove
 
 
 def _execute_remove(commands_to_remove, state_file, plugins_dir):
-    all_orphaned = set()
+    commands_to_remove = sorted(commands_to_remove)
+    orphaned = plugin_registry.remove_commands(
+        commands_to_remove, state_file=state_file, plugins_dir=plugins_dir
+    )
     for cmd_name in commands_to_remove:
-        orphaned = plugin_registry.remove_command(
-            cmd_name, state_file=state_file, plugins_dir=plugins_dir
-        )
-        all_orphaned.update(orphaned)
         click.echo(f"  - {cmd_name}")
-    if all_orphaned:
-        pkg_names = [_package_name(r) for r in all_orphaned]
+    if orphaned:
+        pkg_names = sorted(
+            {plugin_registry.requirement_name(r) for r in orphaned})
         click.echo(
             f"Uninstalling orphaned dependencies: {
                 ', '.join(pkg_names)}")
@@ -369,7 +369,8 @@ def _collect_active_requires(available, installed_cmds, removed_cmds):
         for cmd_name, cmd_info in manifest["commands"].items():
             if cmd_name in removed_cmds:
                 continue
-            if is_core or cmd_name in installed_cmds:
+            if cmd_name in installed_cmds or plugin_registry.is_command_active(
+                    cmd_name, cmd_info, is_core, removed_cmds):
                 active_requires.update(cmd_info.get("requires", []))
     return active_requires
 

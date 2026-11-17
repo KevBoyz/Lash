@@ -29,12 +29,12 @@ def _setup_plugins(tmp_path):
                 "organize": {
                     "module": "lash.plugins.file.cli:organize",
                     "description": "d",
-                    "requires": ["rich>=12.6.0"],
+                    "requires": ["lash-fake-a>=1.0"],
                 },
                 "zip": {
                     "module": "lash.plugins.file.cli:zip_group",
                     "description": "d",
-                    "requires": ["pyzipper>=0.2.6", "rich>=12.6.0"],
+                    "requires": ["lash-fake-zip>=0.2.6", "lash-fake-a>=1.0"],
                 },
             },
         ),
@@ -44,12 +44,27 @@ def _setup_plugins(tmp_path):
                 "autoclick": {
                     "module": "lash.plugins.device.cli:autoclick",
                     "description": "d",
-                    "requires": ["pynput>=1.7.6"],
+                    "requires": ["lash-fake-pynput>=1.7.6"],
                 },
                 "keyhold": {
                     "module": "lash.plugins.device.cli:keyhold",
                     "description": "d",
-                    "requires": ["pynput>=1.7.6"],
+                    "requires": ["lash-fake-pynput>=1.7.6"],
+                },
+            },
+        ),
+        (
+            "net",
+            {
+                "ping": {
+                    "module": "x:ping",
+                    "description": "d",
+                    "requires": ["click>=8.0"],
+                },
+                "scan": {
+                    "module": "x:scan",
+                    "description": "d",
+                    "requires": ["click>=8.0", "lash-fake-scan>=1.0"],
                 },
             },
         ),
@@ -141,27 +156,39 @@ class TestDownloadAll:
         result, mock_run = _invoke(["file"], plugins_dir, state_file)
         assert result.exit_code == 0
         call_args = mock_run.call_args[0][0]
-        assert call_args.count("rich>=12.6.0") == 1
+        assert call_args.count("lash-fake-a>=1.0") == 1
 
-    def test_skips_already_installed_commands(self, tmp_path):
+    def test_skips_commands_with_deps_already_present(self, tmp_path):
+        plugins_dir = _setup_plugins(tmp_path)
+        state_file = tmp_path / "installed.json"
+        result, mock_run = _invoke(["net"], plugins_dir, state_file)
+        assert result.exit_code == 0
+        install_args = mock_run.call_args[0][0]
+        assert "lash-fake-scan>=1.0" in install_args
+        assert "click>=8.0" not in install_args
+        state = json.loads(state_file.read_text())
+        assert "scan" in state["installed_commands"]
+        assert "ping" not in state["installed_commands"]
+
+    def test_reinstala_comando_no_state_mas_sem_deps_no_venv(self, tmp_path):
         plugins_dir = _setup_plugins(tmp_path)
         state_file = tmp_path / "installed.json"
         state_file.write_text(
             json.dumps(
                 {
                     "installed_commands": {
-                        "organize": {
-                            "plugin": "file",
-                            "requires": ["rich>=12.6.0"],
+                        "autoclick": {
+                            "plugin": "device",
+                            "requires": ["lash-fake-pynput>=1.7.6"],
                         }
                     }
                 }
             )
         )
-        result, _ = _invoke(["file"], plugins_dir, state_file)
+        result, mock_run = _invoke(["device"], plugins_dir, state_file)
         assert result.exit_code == 0
-        state = json.loads(state_file.read_text())
-        assert "zip" in state["installed_commands"]
+        assert "already installed" not in result.output
+        assert "lash-fake-pynput>=1.7.6" in mock_run.call_args[0][0]
 
     def test_installs_multiple_plugins_in_one_call(self, tmp_path):
         plugins_dir = _setup_plugins(tmp_path)
@@ -199,6 +226,9 @@ class TestDownloadErrors:
     def test_pip_failure_does_not_break_other_plugins(self, tmp_path):
         plugins_dir = _setup_plugins(tmp_path)
         state_file = tmp_path / "installed.json"
+        state_file.write_text(
+            json.dumps({"installed_commands": {}, "removed_commands": ["crack"]})
+        )
         result, _ = _invoke(
             ["crack", "file"], plugins_dir, state_file, pip_returncode=1
         )
@@ -232,8 +262,8 @@ class TestInstallerDetection:
             "--python",
             sys.executable,
         ]
-        assert "rich>=12.6.0" in install_args
-        assert "pyzipper>=0.2.6" in install_args
+        assert "lash-fake-a>=1.0" in install_args
+        assert "lash-fake-zip>=0.2.6" in install_args
 
     def test_erro_quando_pip_e_uv_indisponiveis(self, tmp_path):
         from lash.core.plugin_manager import make_download_command
@@ -250,5 +280,47 @@ class TestInstallerDetection:
         assert result.exit_code == 0
         assert "No package installer found" in result.output
         assert "pip install" in result.output
-        assert "rich>=12.6.0" in result.output
-        assert "pyzipper>=0.2.6" in result.output
+        assert "lash-fake-a>=1.0" in result.output
+        assert "lash-fake-zip>=0.2.6" in result.output
+
+
+class TestAddComDepsPresentes:
+    def test_registra_apenas_deps_instaladas_pelo_lash(self, tmp_path):
+        plugins_dir = _setup_plugins(tmp_path)
+        state_file = tmp_path / "installed.json"
+        _invoke(["net"], plugins_dir, state_file)
+        state = json.loads(state_file.read_text())
+        assert state["installed_commands"]["scan"]["requires"] == [
+            "lash-fake-scan>=1.0"
+        ]
+
+    def test_plugin_ja_ativo_nao_chama_pip(self, tmp_path):
+        plugins_dir = _setup_plugins(tmp_path)
+        state_file = tmp_path / "installed.json"
+        state_file.write_text(
+            json.dumps(
+                {
+                    "installed_commands": {},
+                    "removed_commands": [],
+                }
+            )
+        )
+        with mock.patch(
+            "lash.plugins.is_package_installed", return_value=True
+        ):
+            result, mock_run = _invoke(["net"], plugins_dir, state_file)
+        assert result.exit_code == 0
+        assert "already installed" in result.output
+        mock_run.assert_not_called()
+
+    def test_readiciona_plugin_removido_sem_chamar_pip(self, tmp_path):
+        plugins_dir = _setup_plugins(tmp_path)
+        state_file = tmp_path / "installed.json"
+        state_file.write_text(
+            json.dumps({"installed_commands": {}, "removed_commands": ["crack"]})
+        )
+        result, mock_run = _invoke(["crack"], plugins_dir, state_file)
+        assert result.exit_code == 0
+        mock_run.assert_not_called()
+        state = json.loads(state_file.read_text())
+        assert "crack" not in state["removed_commands"]

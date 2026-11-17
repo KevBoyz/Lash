@@ -35,13 +35,18 @@ tests/
 - `commands`: map of `cmd_name → {module, description, requires}`
 - `module`: importable path to Click object (e.g. `"lash.plugins.audio.cli:audio_group"`)
 
-**State file**: `~/.lash/installed.json`
+**Disponibilidade de comandos**: um comando está ativo se não está em `removed_commands` **e** (é `core` **ou** todos os seus `requires` estão instalados no ambiente Python atual). O state **não** ativa comandos — instalação fresh (`pip install lash`) mostra só core + plugins cujas deps já existem no venv.
+
+**State file**: `~/.lash/envs/<sha256(sys.prefix)[:16]>.json` — um por ambiente (venv/global), para state de um venv não vazar para outro.
 ```json
 {
-  "installed_commands": { "organize": { "plugin": "file", "requires": ["rich>=12.6.0"] } },
+  "installed_commands": { "file": { "plugin": "file", "requires": ["pyaes>=1.6.1"] } },
   "removed_commands": []
 }
 ```
+- `installed_commands[cmd].requires`: só as deps que o **lash instalou** (via `plugin add`). Só elas podem ser desinstaladas no `plugin remove`.
+- `removed_commands`: comandos removidos explicitamente (core ou não); `plugin add` limpa.
+- `plugin remove` nunca desinstala deps base do lash (`click`, `rich` e transitivas — `protected_packages()`), nem deps usadas por outro comando ativo.
 
 **Plugin data storage**: `~/.lash/data/<plugin>/`  
 Plugins que precisam de armazenamento persistente devem usar `~/.lash/data/<plugin>/` como diretório base. Exemplo: `~/.lash/data/work/tasks.json`. Nunca salvar dados de plugin no CWD ou em `~/.lash/` diretamente.

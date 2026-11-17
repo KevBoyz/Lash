@@ -32,7 +32,7 @@ def _setup_plugins(tmp_path):
                 "zip": {
                     "module": "lash.plugins.file.cli:zip_group",
                     "description": "d",
-                    "requires": ["pyzipper>=0.2.6", "rich>=12.6.0"],
+                    "requires": ["lash-fake-zip>=0.2.6", "rich>=12.6.0"],
                 },
             },
         ),
@@ -42,7 +42,7 @@ def _setup_plugins(tmp_path):
                 "web": {
                     "module": "lash.plugins.web.cli:web",
                     "description": "d",
-                    "requires": ["bs4>=0.0.1", "rich>=12.6.0"],
+                    "requires": ["lash-fake-web>=0.0.1", "rich>=12.6.0"],
                 },
             },
         ),
@@ -87,7 +87,7 @@ class TestUninstallAlias:
                 "organize": {"plugin": "file", "requires": ["rich>=12.6.0"]},
                 "zip": {
                     "plugin": "file",
-                    "requires": ["pyzipper>=0.2.6", "rich>=12.6.0"],
+                    "requires": ["lash-fake-zip>=0.2.6", "rich>=12.6.0"],
                 },
             },
         )
@@ -131,7 +131,7 @@ class TestRemoveAll:
                 "organize": {"plugin": "file", "requires": ["rich>=12.6.0"]},
                 "zip": {
                     "plugin": "file",
-                    "requires": ["pyzipper>=0.2.6", "rich>=12.6.0"],
+                    "requires": ["lash-fake-zip>=0.2.6", "rich>=12.6.0"],
                 },
             },
         )
@@ -150,15 +150,15 @@ class TestRemoveAll:
                 "organize": {"plugin": "file", "requires": ["rich>=12.6.0"]},
                 "zip": {
                     "plugin": "file",
-                    "requires": ["pyzipper>=0.2.6", "rich>=12.6.0"],
+                    "requires": ["lash-fake-zip>=0.2.6", "rich>=12.6.0"],
                 },
             },
         )
         result, mock_run = _invoke(["file"], plugins_dir, state_file)
         assert result.exit_code == 0
         call_args = mock_run.call_args[0][0]
-        assert "rich" in " ".join(call_args)
-        assert "pyzipper" in " ".join(call_args)
+        assert "lash-fake-zip" in call_args
+        assert "rich" not in call_args
 
     def test_preserves_deps_used_by_other_plugins(self, tmp_path):
         plugins_dir = _setup_plugins(tmp_path)
@@ -167,7 +167,7 @@ class TestRemoveAll:
             state_file,
             {
                 "organize": {"plugin": "file", "requires": ["rich>=12.6.0"]},
-                "web": {"plugin": "web", "requires": ["bs4>=0.0.1", "rich>=12.6.0"]},
+                "web": {"plugin": "web", "requires": ["lash-fake-web>=0.0.1", "rich>=12.6.0"]},
             },
         )
         result, mock_run = _invoke(["file"], plugins_dir, state_file)
@@ -180,7 +180,8 @@ class TestRemoveAll:
         plugins_dir = _setup_plugins(tmp_path)
         state_file = tmp_path / "installed.json"
         _setup_state(state_file, {})
-        result, _ = _invoke(["file"], plugins_dir, state_file)
+        # web depende de pacote ausente e nunca foi instalado: nada a remover
+        result, _ = _invoke(["web"], plugins_dir, state_file)
         assert result.exit_code == 0
         assert (
             "nothing" in result.output.lower()
@@ -196,9 +197,9 @@ class TestRemoveAll:
                 "organize": {"plugin": "file", "requires": ["rich>=12.6.0"]},
                 "zip": {
                     "plugin": "file",
-                    "requires": ["pyzipper>=0.2.6", "rich>=12.6.0"],
+                    "requires": ["lash-fake-zip>=0.2.6", "rich>=12.6.0"],
                 },
-                "web": {"plugin": "web", "requires": ["bs4>=0.0.1", "rich>=12.6.0"]},
+                "web": {"plugin": "web", "requires": ["lash-fake-web>=0.0.1", "rich>=12.6.0"]},
             },
         )
         result, _ = _invoke(["file", "web"], plugins_dir, state_file)
@@ -231,7 +232,7 @@ class TestUninstallerDetection:
                 "organize": {"plugin": "file", "requires": ["rich>=12.6.0"]},
                 "zip": {
                     "plugin": "file",
-                    "requires": ["pyzipper>=0.2.6", "rich>=12.6.0"],
+                    "requires": ["lash-fake-zip>=0.2.6", "rich>=12.6.0"],
                 },
             },
         )
@@ -253,5 +254,64 @@ class TestUninstallerDetection:
             "--python",
             sys.executable,
         ]
-        assert "rich" in uninstall_args
-        assert "pyzipper" in uninstall_args
+        assert "lash-fake-zip" in uninstall_args
+        assert "rich" not in uninstall_args
+
+
+class TestRemoveProtegeDependenciasBase:
+    def test_remove_all_nunca_desinstala_click_nem_rich(self, tmp_path):
+        plugins_dir = _setup_plugins(tmp_path)
+        state_file = tmp_path / "installed.json"
+        _setup_state(
+            state_file,
+            {
+                "organize": {
+                    "plugin": "file",
+                    "requires": ["click>=8.1.3", "rich>=12.6.0"],
+                },
+                "zip": {
+                    "plugin": "file",
+                    "requires": ["lash-fake-zip>=0.2.6", "rich>=12.6.0"],
+                },
+                "web": {
+                    "plugin": "web",
+                    "requires": ["lash-fake-web>=0.0.1", "rich>=12.6.0"],
+                },
+            },
+        )
+        result, mock_run = _invoke(["-a"], plugins_dir, state_file)
+        assert result.exit_code == 0
+        uninstall_args = mock_run.call_args[0][0]
+        assert "lash-fake-zip" in uninstall_args
+        assert "lash-fake-web" in uninstall_args
+        assert "click" not in uninstall_args
+        assert "rich" not in uninstall_args
+
+    def test_nao_chama_uninstall_quando_so_sobram_deps_base(self, tmp_path):
+        plugins_dir = _setup_plugins(tmp_path)
+        state_file = tmp_path / "installed.json"
+        _setup_state(
+            state_file,
+            {
+                "organize": {
+                    "plugin": "file",
+                    "requires": ["click>=8.1.3", "rich>=12.6.0"],
+                },
+            },
+        )
+        result, mock_run = _invoke(["file"], plugins_dir, state_file)
+        assert result.exit_code == 0
+        mock_run.assert_not_called()
+
+
+class TestRemovePluginAtivoPorDeps:
+    def test_remove_plugin_com_deps_ja_presentes_sem_desinstalar(self, tmp_path):
+        plugins_dir = _setup_plugins(tmp_path)
+        state_file = tmp_path / "installed.json"
+        _setup_state(state_file, {})
+        result, mock_run = _invoke(["file"], plugins_dir, state_file)
+        assert result.exit_code == 0
+        assert "organize" in result.output
+        mock_run.assert_not_called()
+        state = json.loads(state_file.read_text())
+        assert "organize" in state["removed_commands"]

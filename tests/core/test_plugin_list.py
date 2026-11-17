@@ -41,7 +41,7 @@ def _setup(tmp_path):
                 "zip": {
                     "module": "x:y",
                     "description": "ZIP tools",
-                    "requires": ["pyzipper>=0.2.6"],
+                    "requires": ["lash-fake-zip>=0.2.6"],
                 },
             },
         ),
@@ -134,25 +134,19 @@ class TestPluginList:
         assert "Video Tools" in result.output
         assert "Random Generators" not in result.output
 
-    def test_not_installed_flag_shows_message_when_all_installed(self, tmp_path):
+    def test_not_installed_flag_shows_message_when_all_installed(
+        self, tmp_path, monkeypatch
+    ):
         plugins_dir = _setup(tmp_path)
         state_file = tmp_path / "installed.json"
-        state_file.write_text(
-            json.dumps(
-                {
-                    "installed_commands": {
-                        "organize": {"plugin": "file", "requires": []},
-                        "zip": {"plugin": "file", "requires": []},
-                        "video": {"plugin": "video", "requires": []},
-                    }
-                }
-            )
-        )
+        monkeypatch.setattr("lash.plugins.is_package_installed", lambda req: True)
         result = _invoke(["-ni"], plugins_dir, state_file)
         assert result.exit_code == 0
         assert "All available" in result.output
 
-    def test_installed_flag_shows_message_when_nothing_installed(self, tmp_path):
+    def test_installed_flag_shows_message_when_nothing_installed(
+        self, tmp_path, monkeypatch
+    ):
         plugins_dir = _setup(tmp_path)
         state_file = tmp_path / "installed.json"
         state_file.write_text(
@@ -163,6 +157,7 @@ class TestPluginList:
                 }
             )
         )
+        monkeypatch.setattr("lash.plugins.is_package_installed", lambda req: False)
         result = _invoke(["-i"], plugins_dir, state_file)
         assert result.exit_code == 0
         assert "No plugins installed" in result.output
@@ -182,6 +177,35 @@ class TestPluginList:
         result = _invoke([], plugins_dir, state_file)
         assert "+ organize" in result.output
         assert "- zip" in result.output
+
+
+class TestAmbienteLimpo:
+    def test_sem_state_mostra_core_e_plugins_com_deps_presentes(self, tmp_path):
+        plugins_dir = _setup(tmp_path)
+        state_file = tmp_path / "installed.json"
+        result = _invoke([], plugins_dir, state_file)
+        assert "+ random" in result.output
+        assert "+ crack" in result.output
+        assert "+ organize" in result.output
+        assert "- zip" in result.output
+        assert "- video" in result.output
+
+    def test_state_antigo_nao_ativa_plugin_sem_deps_no_venv(self, tmp_path):
+        plugins_dir = _setup(tmp_path)
+        state_file = tmp_path / "installed.json"
+        state_file.write_text(
+            json.dumps(
+                {
+                    "installed_commands": {
+                        "zip": {"plugin": "file", "requires": ["lash-fake-zip>=0.2.6"]},
+                        "video": {"plugin": "video", "requires": ["cv2"]},
+                    }
+                }
+            )
+        )
+        result = _invoke([], plugins_dir, state_file)
+        assert "- zip" in result.output
+        assert "- video" in result.output
 
 
 class TestPanelContador:

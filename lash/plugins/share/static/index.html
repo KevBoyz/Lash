@@ -48,9 +48,13 @@
     cursor: pointer;
   }
   button:hover, button:focus-visible { background: var(--fg); color: var(--bg); outline: none; }
-  button:disabled { opacity: .4; cursor: wait; }
   #status { min-height: 1.4em; margin: 12px 0 0; color: var(--dim); word-break: break-all; }
   #status.err { color: var(--err); }
+  #status.busy { color: var(--fg); }
+  #jobs { max-height: 10.5em; overflow-y: auto; }
+  #jobs > div { color: var(--dim); word-break: break-all; }
+  #jobs > .busy { color: var(--fg); }
+  #jobs > .err { color: var(--err); }
   .grid {
     display: grid;
     grid-template-columns: minmax(0, 1fr);
@@ -106,6 +110,7 @@
       <input id="file-input" type="file" multiple hidden>
       <input id="folder-input" type="file" webkitdirectory multiple hidden>
       <div id="status" role="status"></div>
+      <div id="jobs" role="status"></div>
     </div>
     <img id="qr" src="/qr.svg" alt="QR code of this page" onerror="this.hidden = true">
     <section id="devices-box">
@@ -135,12 +140,15 @@
   const POLL_MS = 2000;
   const RETRY_MS = 75000;
   const DOWNLOAD_GAP_MS = 700;
-  const TOO_BIG = 'folder too big (max 4 GB / 65535 files)';
   const TYPE_MS = 20;          // log typing: base delay per character...
   const TYPE_JITTER_MS = 45;   // ...plus a random part, like someone typing
   const LINE_PAUSE_MS = 300;
   const LOG_LINES = 200;
   const TYPE_LAST = 3;         // when the page opens, older log lines show at once
+  const MAX_SENDING = 3;       // parallel uploads: the browser keeps ~6 connections per server
+                               // and polling and downloads need some of them
+  const DONE_MS = 5000;        // a finished transfer line stays this long...
+  const FAILED_MS = 20000;     // ...and a failed one this long
   const PAGE = Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
 
   const $ = (id) => document.getElementById(id);
@@ -148,8 +156,9 @@
 
   let state = null;
   let offline = false;
-  let busy = false;
   let draining = false;
+  let sending = 0;                // uploads running now
+  const waitingToSend = [];       // uploads waiting for one of the MAX_SENDING slots
   const inflight = new Map();     // file id -> time of the last download attempt
   const queue = [];               // files waiting to be downloaded
   const offers = new Map();       // p2p host: file id -> {name, blob}
@@ -174,9 +183,17 @@
     return (value / 1024).toFixed(1) + ' TB';
   }
 
-  function setStatus(text, isError) {
+  function setStatus(text, kind) { // kind: 'err', 'busy' or nothing
     $('status').textContent = text;
-    $('status').classList.toggle('err', !!isError);
+    $('status').classList.toggle('err', kind === 'err');
+    $('status').classList.toggle('busy', kind === 'busy');
+  }
+
+  function progressText(action, name, done, total, detail) {
+    const percent = total ? Math.min(100, Math.floor(done * 100 / total)) : 100;
+    const filled = Math.floor(percent / 10);
+    const bar = '[' + '#'.repeat(filled) + '-'.repeat(10 - filled) + ']';
+    return [action + ' ' + name, bar, percent + '%'].join(' ') + (detail ? ' · ' + detail : '');
   }
 
   const isHostP2p = () => !!state && state.mode === 'p2p' && !!state.me && state.me.host;
@@ -289,7 +306,7 @@
       if (isHostP2p()) servePulls(state.pulls || []);
     } catch (err) {
       offline = true;
-      setStatus('offline — trying to reconnect', true);
+      setStatus('offline — trying to reconnect', 'err');
     }
   }
 
@@ -329,29 +346,73 @@
     draining = false;
   }
 
-  // ---------- sending ----------
+  // ---------- sending: each file or folder is a job with its own status line ----------
 
-  function put(url, body, label) {
+  function newJob() {
+    const line = document.createElement('div');
+    $('jobs').appendChild(line);
+    const show = (text, kind) => {
+      line.textContent = text;
+      line.className = kind || '';
+    };
+    return {
+      show,
+      progress: (...args) => show(progressText(...args), 'busy'),
+      finish(text, kind) {
+        show(text, kind);
+        setTimeout(() => line.remove(), kind === 'err' ? FAILED_MS : DONE_MS);
+      },
+    };
+  }
+
+  async function runJob(task) {
+    const job = newJob();
+    try {
+      await task(job);
+    } catch (err) {
+      job.finish(err.message || String(err), 'err');
+    }
+  }
+
+  async function acquireSlot(onWait) {
+    if (sending < MAX_SENDING) {
+      sending++;
+      return;
+    }
+    onWait();
+    await new Promise((resolve) => waitingToSend.push(resolve)); // releaseSlot hands one over
+  }
+
+  function releaseSlot() {
+    const next = waitingToSend.shift();
+    if (next) next();
+    else sending--;
+  }
+
+  function put(url, body, name, job) {
     return new Promise((resolve) => {
       const xhr = new XMLHttpRequest();
       xhr.open('PUT', url);
+      job.progress('sending', name, 0, body.size);
       xhr.upload.onprogress = (ev) => {
-        if (ev.lengthComputable) {
-          setStatus('sending ' + label + ' ' + Math.floor(ev.loaded * 100 / ev.total) + '%');
-        }
+        if (ev.lengthComputable) job.progress('sending', name, ev.loaded, ev.total);
       };
+      xhr.upload.onload = () => job.show('finishing ' + name + '…', 'busy');
       xhr.onload = () => resolve(xhr.status);
       xhr.onerror = () => resolve(0);
       xhr.send(body);
     });
   }
 
-  async function upload(name, blob) {
-    const status = await put('/api/upload?name=' + encodeURIComponent(name), blob, name);
-    if (status >= 200 && status < 300) {
-      setStatus('sent: ' + name);
-      return;
+  async function upload(name, blob, job) {
+    await acquireSlot(() => job.show('waiting to send ' + name + '…', 'busy'));
+    let status;
+    try {
+      status = await put('/api/upload?name=' + encodeURIComponent(name), blob, name, job);
+    } finally {
+      releaseSlot();
     }
+    if (status >= 200 && status < 300) return;
     const p2p = !!state && state.mode === 'p2p';
     if (status === 504 || (p2p && status === 0)) throw new Error('PC offline');
     throw new Error('failed to send ' + name + (status ? ' (HTTP ' + status + ')' : ''));
@@ -364,15 +425,23 @@
     if (!res.ok) throw new Error('failed to share ' + name + ' (HTTP ' + res.status + ')');
     const info = await res.json();
     offers.set(info.id, {name, blob});
-    setStatus('shared: ' + name);
   }
 
-  async function send(entries) {
-    for (const {name, blob} of entries) {
-      if (isHostP2p()) await offer(name, blob);
-      else await upload(name, blob);
-      await poll();
-    }
+  // A warning goes after the final "sent" line, which then shows in red for longer.
+  async function send(name, blob, job, warning = '') {
+    const host = isHostP2p();
+    if (host) await offer(name, blob);
+    else await upload(name, blob, job);
+    job.finish((host ? 'shared: ' : 'sent: ') + name + (warning && ' · ' + warning),
+               warning ? 'err' : '');
+    poll();
+  }
+
+  function skippedWarning(paths) {
+    if (!paths.length) return '';
+    const shown = paths.slice(0, 3).map((path) => path.split('/').pop()).join(', ');
+    return 'left out ' + paths.length + ' file(s) the browser could not read, in use or ' +
+      'changed after picking: ' + shown + (paths.length > 3 ? ', …' : '');
   }
 
   function servePulls(pulls) {
@@ -381,26 +450,12 @@
       handledPulls.add(pull.transfer);
       const entry = offers.get(pull.file);
       if (!entry) continue;
-      put('/api/relay/' + encodeURIComponent(pull.transfer), entry.blob, entry.name)
+      const job = newJob();
+      put('/api/relay/' + encodeURIComponent(pull.transfer), entry.blob, entry.name, job)
         .then((status) => {
-          if (status < 200 || status >= 300) setStatus('failed to send ' + entry.name, true);
+          if (status >= 200 && status < 300) job.finish('sent: ' + entry.name);
+          else job.finish('failed to send ' + entry.name, 'err');
         });
-    }
-  }
-
-  async function exclusive(task) {
-    if (busy) return;
-    busy = true;
-    $('send-files').disabled = true;
-    $('send-folder').disabled = true;
-    try {
-      await task();
-    } catch (err) {
-      setStatus(err.message || String(err), true);
-    } finally {
-      busy = false;
-      $('send-files').disabled = false;
-      $('send-folder').disabled = false;
     }
   }
 
@@ -416,7 +471,7 @@
     return table;
   })();
 
-  async function crc32(file) {
+  async function crc32(file, onBytes) {
     let crc = 0xFFFFFFFF;
     const reader = file.stream().getReader();
     for (;;) {
@@ -425,6 +480,7 @@
       for (let i = 0; i < value.length; i++) {
         crc = CRC_TABLE[(crc ^ value[i]) & 0xFF] ^ (crc >>> 8);
       }
+      onBytes(value.length);
     }
     return (crc ^ 0xFFFFFFFF) >>> 0;
   }
@@ -438,61 +494,121 @@
     };
   }
 
-  async function buildZip(files) {
-    if (files.length > 0xFFFF) throw new Error(TOO_BIG);
+  // Classic zip fields hold up to 4 GB and 65535 files. Values from ZIP64_FROM on are
+  // written as 0xFFFFFFFF / 0xFFFF and the real ones go in ZIP64 records.
+  const ZIP64_FROM = 0xFFFFFFFF;
+  const fit32 = (n) => (n >= ZIP64_FROM ? 0xFFFFFFFF : n);
+  const fit16 = (n) => (n >= 0xFFFF ? 0xFFFF : n);
+
+  function zip64Extra(values) {
+    if (!values.length) return new Uint8Array(0);
+    const extra = new DataView(new ArrayBuffer(4 + 8 * values.length));
+    extra.setUint16(0, 0x0001, true);
+    extra.setUint16(2, 8 * values.length, true);
+    values.forEach((n, i) => extra.setBigUint64(4 + 8 * i, BigInt(n), true));
+    return extra;
+  }
+
+  // onProgress(bytesRead, totalBytes, fileIndex): every file has to be read for its CRC.
+  // Files the browser can't read (changed or locked after being picked, cloud-only, ...)
+  // are left out and listed in `skipped`, so one bad file doesn't sink the whole folder.
+  async function buildZip(files, onProgress = () => {}) {
     const encoder = new TextEncoder();
     const body = [];
     const central = [];
+    const skipped = [];
+    const total = files.reduce((sum, file) => sum + file.size, 0);
+    let read = 0;
     let offset = 0;
     let centralSize = 0;
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
-      setStatus('building zip ' + (i + 1) + '/' + files.length);
-      const name = encoder.encode(file.webkitRelativePath || file.name);
-      const crc = await crc32(file);
+      const path = file.webkitRelativePath || file.name;
+      onProgress(read, total, i);
+      let readHere = 0;
+      let crc;
+      try {
+        crc = await crc32(file, (bytes) => {
+          readHere += bytes;
+          read += bytes;
+          onProgress(read, total, i);
+        });
+      } catch (err) {
+        read += file.size - readHere;
+        onProgress(read, total, i);
+        skipped.push(path);
+        continue;
+      }
+      const name = encoder.encode(path);
       const {time, date} = dosDateTime(file.lastModified);
+      const big = file.size >= ZIP64_FROM;
+      const far = offset >= ZIP64_FROM;
+      const version = big || far ? 45 : 20;
+      const localExtra = zip64Extra(big ? [file.size, file.size] : []);
+      const centralExtra = zip64Extra([...(big ? [file.size, file.size] : []),
+                                       ...(far ? [offset] : [])]);
 
       const local = new DataView(new ArrayBuffer(30));
       local.setUint32(0, 0x04034b50, true);
-      local.setUint16(4, 20, true);
+      local.setUint16(4, version, true);
       local.setUint16(6, 0x0800, true);
       local.setUint16(8, 0, true);
       local.setUint16(10, time, true);
       local.setUint16(12, date, true);
       local.setUint32(14, crc, true);
-      local.setUint32(18, file.size, true);
-      local.setUint32(22, file.size, true);
+      local.setUint32(18, fit32(file.size), true);
+      local.setUint32(22, fit32(file.size), true);
       local.setUint16(26, name.length, true);
-      local.setUint16(28, 0, true);
+      local.setUint16(28, localExtra.byteLength, true);
 
       const header = new DataView(new ArrayBuffer(46));
       header.setUint32(0, 0x02014b50, true);
-      header.setUint16(4, 20, true);
-      header.setUint16(6, 20, true);
+      header.setUint16(4, version, true);
+      header.setUint16(6, version, true);
       header.setUint16(8, 0x0800, true);
       header.setUint16(10, 0, true);
       header.setUint16(12, time, true);
       header.setUint16(14, date, true);
       header.setUint32(16, crc, true);
-      header.setUint32(20, file.size, true);
-      header.setUint32(24, file.size, true);
+      header.setUint32(20, fit32(file.size), true);
+      header.setUint32(24, fit32(file.size), true);
       header.setUint16(28, name.length, true);
+      header.setUint16(30, centralExtra.byteLength, true);
       header.setUint32(38, 0, true);
-      header.setUint32(42, offset, true);
+      header.setUint32(42, fit32(offset), true);
 
-      body.push(local, name, file);
-      central.push(header, name);
-      offset += 30 + name.length + file.size;
-      centralSize += 46 + name.length;
-      if (offset + centralSize + 22 > 0xFFFFFFFF) throw new Error(TOO_BIG);
+      body.push(local, name, localExtra, file);
+      central.push(header, name, centralExtra);
+      offset += 30 + name.length + localExtra.byteLength + file.size;
+      centralSize += 46 + name.length + centralExtra.byteLength;
+    }
+
+    const count = files.length - skipped.length;
+    const tail = [];
+    if (count >= 0xFFFF || centralSize >= ZIP64_FROM || offset >= ZIP64_FROM) {
+      const record = new DataView(new ArrayBuffer(56));
+      record.setUint32(0, 0x06064b50, true);
+      record.setBigUint64(4, BigInt(44), true);
+      record.setUint16(12, 45, true);
+      record.setUint16(14, 45, true);
+      record.setBigUint64(24, BigInt(count), true);
+      record.setBigUint64(32, BigInt(count), true);
+      record.setBigUint64(40, BigInt(centralSize), true);
+      record.setBigUint64(48, BigInt(offset), true);
+      const locator = new DataView(new ArrayBuffer(20));
+      locator.setUint32(0, 0x07064b50, true);
+      locator.setBigUint64(8, BigInt(offset + centralSize), true);
+      locator.setUint32(16, 1, true);
+      tail.push(record, locator);
     }
     const end = new DataView(new ArrayBuffer(22));
     end.setUint32(0, 0x06054b50, true);
-    end.setUint16(8, files.length, true);
-    end.setUint16(10, files.length, true);
-    end.setUint32(12, centralSize, true);
-    end.setUint32(16, offset, true);
-    return new Blob([...body, ...central, end], {type: 'application/zip'});
+    end.setUint16(8, fit16(count), true);
+    end.setUint16(10, fit16(count), true);
+    end.setUint32(12, fit32(centralSize), true);
+    end.setUint32(16, fit32(offset), true);
+    const blob = new Blob([...body, ...central, ...tail, end], {type: 'application/zip'});
+    return {blob, skipped};
   }
 
   // ---------- wiring ----------
@@ -502,24 +618,41 @@
     (navigator.maxTouchPoints > 1 && /Macintosh/.test(ua));
   $('send-folder').hidden = isMobile || !('webkitdirectory' in document.createElement('input'));
 
-  $('send-files').addEventListener('click', () => $('file-input').click());
-  $('send-folder').addEventListener('click', () => $('folder-input').click());
+  // After the picker closes the browser can take a while to read what was chosen
+  // (big folders, phone galleries): say so until the files arrive or the pick is canceled.
+  function pick(input, what) {
+    setStatus('opening ' + what + '…', 'busy');
+    input.click();
+  }
+  function picked() {
+    if (!offline) setStatus('');
+  }
+  $('send-files').addEventListener('click', () => pick($('file-input'), 'files'));
+  $('send-folder').addEventListener('click', () => pick($('folder-input'), 'folder'));
+  $('file-input').addEventListener('cancel', picked);
+  $('folder-input').addEventListener('cancel', picked);
 
+  // Every pick runs on its own, so more files can be picked while others are still going.
   $('file-input').addEventListener('change', (ev) => {
     const files = Array.from(ev.target.files);
     ev.target.value = '';
-    if (!files.length) return;
-    exclusive(() => send(files.map((file) => ({name: file.name, blob: file}))));
+    picked();
+    for (const file of files) runJob((job) => send(file.name, file, job));
   });
 
   $('folder-input').addEventListener('change', (ev) => {
     const files = Array.from(ev.target.files);
     ev.target.value = '';
+    picked();
     if (!files.length) return;
     const folder = files[0].webkitRelativePath.split('/')[0] || 'folder';
-    exclusive(async () => {
-      const blob = await buildZip(files);
-      await send([{name: folder + '.zip', blob}]);
+    runJob(async (job) => {
+      const {blob, skipped} = await buildZip(files, (read, total, index) =>
+        job.progress('zipping', folder, read, total, (index + 1) + '/' + files.length + ' files'));
+      if (skipped.length === files.length) {
+        throw new Error('could not read the files of ' + folder + ': in use or changed after picking');
+      }
+      await send(folder + '.zip', blob, job, skippedWarning(skipped));
     });
   });
 

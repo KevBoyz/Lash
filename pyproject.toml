@@ -88,6 +88,7 @@ where = ["."]
 [tool.setuptools.package-data]
 "*" = ["manifest.json"]
 "lash.plugins.share" = ["static/*.html"]
+"lash.plugins.todo" = ["*.tcss"]
 
 [dependency-groups]
 dev = [

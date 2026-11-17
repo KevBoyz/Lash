@@ -1,5 +1,16 @@
 # Lash — Release Notes
 
+## v1.3.2.1 — Plugin manager fixes
+
+- **plugin**: a fresh install now starts clean — only the built-in plugins plus any plugin that already works with what you have installed. No more broken plugins that require `plugin fix`
+- **plugin**: `plugin remove -a` no longer uninstalls packages Lash itself needs, so Lash keeps working after removing everything
+- **share**: send folders of any size from the page — the old 4 GB limit is gone. Each send shows its own progress, and a file that can't be read is skipped instead of failing the whole folder
+- **todo**: fixed the task screen not opening when Lash was installed with pip
+- **spider**: command output with accents now shows correctly instead of garbled text (e.g. `informações`, not `informa‡äes`)
+- **spider**: seeker now reliably auto-connects to a server on the same machine, even when the server is started after the seeker
+
+---
+
 ## v1.3.2 — Todo TUI, net defaults and plugin cleanup 
 
 - **macro**: preserve virtual key codes when recording shortcuts (Ctrl/Alt/Shift/Windows, punctuation and numpad); recover legacy Ctrl+A–Z recordings and release held keys when playback ends, stops or fails
@@ -53,8 +64,9 @@
 
 ## v1.3.0 — Plugin architecture & Performace improvements
 
-* Plugin system: command groups are now optional (instalation) and managed with `plugin` command.
-* Lazy loading: startup imports only `click`; heavy dependencies load only when the command runs.
+- Plugin system: command groups are now optional (instalation) and managed with `plugin` command.
+- Lazy loading: startup imports only `click`; heavy dependencies load only when the command runs.
+
 ---
 
 ## v1.2.6 — General upgrades

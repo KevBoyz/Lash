@@ -15,7 +15,11 @@ def spider(ctx):
 
 @spider.command(
     "web",
-    help="Remote web shell — host a server or connect as passive client",
+    help=(
+        "Remote web shell — host a server or connect as passive client.\n\n"
+        "While hosting, the shell prompt accepts special '@' commands "
+        "(@conns, @link, @up, @down). Type @help at the prompt to list them."
+    ),
 )
 @click.option(
     "-h",

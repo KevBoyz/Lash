@@ -238,6 +238,8 @@ def run_server(host: str, port: int, *, discoverable: bool = True) -> None:  # n
                 ev = events.get(timeout=0.5)
                 if ev["type"] == "connected":
                     print(f"[green][plugged into][/green] {ev['addr']}")
+                    print("[dim]type [cyan]@help[/cyan] "
+                          "for special commands[/dim]")
                     break
             except queue.Empty:
                 pass
@@ -267,24 +269,24 @@ def run_server(host: str, port: int, *, discoverable: bool = True) -> None:  # n
             if command == "@help":
                 print(
                     "[bold]Internal commands:[/bold]\n"
-                    "  [cyan]@help[/cyan]                       "
+                    "  [cyan]@help[/cyan]                 "
                     "Show this help guide\n"
-                    "  [cyan]@list-clients[/cyan]               "
+                    "  [cyan]@conns[/cyan]                "
                     "List all connected clients\n"
-                    "  [cyan]@client-conn <ip:port>[/cyan]      "
+                    "  [cyan]@link <ip:port>[/cyan]       "
                     "Switch active client\n"
-                    "  [cyan]@up <path>[/cyan]                  "
+                    "  [cyan]@up <path>[/cyan]            "
                     "Upload file to client CWD (path relative to server)\n"
-                    "  [cyan]@down <path>[/cyan]                "
+                    "  [cyan]@down <path>[/cyan]          "
                     "Download file from client CWD (path relative to client)\n"
-                    "  [cyan]kill[/cyan]                        "
+                    "  [cyan]kill[/cyan]                  "
                     "Disconnect and stop server\n"
-                    "  [dim]<any other input>[/dim]             "
+                    "  [dim]<any other input>[/dim]       "
                     "Send shell command to active client"
                 )
                 continue
 
-            if command == "@list-clients":
+            if command == "@conns":
                 with lock:
                     snapshot = list(clients.keys())
                     cur = active[0]
@@ -296,10 +298,10 @@ def run_server(host: str, port: int, *, discoverable: bool = True) -> None:  # n
                     print(f"  {a} ({p}){marker}")
                 continue
 
-            if command.startswith("@client-conn"):
+            if command.split(None, 1)[0] == "@link":
                 parts = command.split(None, 1)
                 if len(parts) < 2:
-                    print("[red]Usage: @client-conn <ip:port>[/red]")
+                    print("[red]Usage: @link <ip:port>[/red]")
                     continue
                 target = parts[1].strip()
                 with lock:

@@ -1,7 +1,26 @@
 import json
 import socket
+import sys
 
 MSG_HEADER = 4
+
+
+def decode_console(data: bytes) -> str:
+    """Decode subprocess output captured from a shell command.
+
+    Windows console builtins (``dir``, ``vol``, ``wmic``) print text in the
+    OEM code page (e.g. cp850 on pt-BR Windows), not UTF-8 or ANSI. Decoding
+    those bytes as UTF-8/ANSI turns accented characters into mojibake such as
+    ``r¢tulo`` / ``informa‡äes``. Try UTF-8 first (modern tools and pure
+    ASCII), then fall back to the OEM code page.
+    """
+    if not data:
+        return ""
+    try:
+        return data.decode("utf-8")
+    except UnicodeDecodeError:
+        fallback = "oem" if sys.platform == "win32" else "latin-1"
+        return data.decode(fallback, errors="replace")
 
 
 def send_msg(sock: socket.socket, data: dict) -> None:

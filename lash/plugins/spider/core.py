@@ -16,7 +16,7 @@ from pathlib import Path
 
 from rich import print
 
-from lash.plugins.spider.helpers import send_msg, recv_msg
+from lash.plugins.spider.helpers import send_msg, recv_msg, decode_console
 
 
 DISCOVERY_PORT = 45873
@@ -493,9 +493,9 @@ def run_web_client(host: str, port: int) -> None:  # noqa: C901
                     command,
                     shell=True,
                     capture_output=True,
-                    text=True,
                     cwd=cwd)
-                output = result.stdout + result.stderr
+                output = (decode_console(result.stdout)
+                          + decode_console(result.stderr))
             send_msg(s, {"type": "result", "data": output,
                      "path": cwd, "addr": local_ip})
 

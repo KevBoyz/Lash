@@ -4,6 +4,40 @@ import pytest
 from unittest.mock import MagicMock
 
 
+class TestDecodeConsole:
+    def test_utf8_output_decodes(self):
+        from lash.plugins.spider.helpers import decode_console
+
+        assert decode_console("informações".encode("utf-8")) == "informações"
+
+    def test_oem_bytes_do_not_become_mojibake(self):
+        import sys
+        from lash.plugins.spider.helpers import decode_console
+
+        if sys.platform != "win32":
+            pytest.skip("OEM code page fallback only applies on Windows")
+        import ctypes
+
+        if ctypes.windll.kernel32.GetOEMCP() != 850:
+            pytest.skip("fixture bytes assume the cp850 OEM code page")
+        # cp850 bytes for "rótulo"/"número"/"série"/"informações" (cmd builtins
+        # like `vol` and `wmic` emit these on pt-BR Windows). Decoding them as
+        # ANSI/UTF-8 would yield "r¢tulo" / "informa‡äes".
+        for text in ("rótulo de volume", "número de série", "informações WMI"):
+            decoded = decode_console(text.encode("cp850"))
+            assert decoded == text
+
+    def test_empty_bytes_return_empty_string(self):
+        from lash.plugins.spider.helpers import decode_console
+
+        assert decode_console(b"") == ""
+
+    def test_pure_ascii_round_trips(self):
+        from lash.plugins.spider.helpers import decode_console
+
+        assert decode_console(b"Directory of C:\\\n") == "Directory of C:\\\n"
+
+
 class TestProtocol:
     def test_send_recv_round_trip(self):
         from lash.plugins.spider.helpers import send_msg, recv_msg
@@ -73,7 +107,7 @@ class TestWebClient:
                 patch("lash.plugins.spider.core.socket.socket") as mock_socket_cls, \
                 patch("lash.plugins.spider.core.subprocess.run") as mock_run:
 
-            mock_run.return_value = MagicMock(stdout="hello\n", stderr="")
+            mock_run.return_value = MagicMock(stdout=b"hello\n", stderr=b"")
             mock_socket_inst = MagicMock()
             mock_socket_cls.return_value.__enter__ = lambda s, *a: mock_socket_inst
             mock_socket_cls.return_value.__exit__ = MagicMock(
